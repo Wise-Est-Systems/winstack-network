@@ -1,0 +1,55 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/canon-types",
+    "crates/crypto",
+    "crates/identity-core",
+    "crates/time-core",
+    "crates/policy-core",
+    "crates/object-store",
+    "crates/graph-index",
+    "crates/verifier",
+    "crates/registry-core",
+    "crates/module-import",
+    "crates/module-ai",
+    "crates/window-api",
+    "crates/cli",
+]
+
+[workspace.dependencies]
+canon-types = { path = "crates/canon-types" }
+winstack-crypto = { path = "crates/crypto" }
+identity-core = { path = "crates/identity-core" }
+time-core = { path = "crates/time-core" }
+policy-core = { path = "crates/policy-core" }
+object-store = { path = "crates/object-store" }
+graph-index = { path = "crates/graph-index" }
+verifier = { path = "crates/verifier" }
+registry-core = { path = "crates/registry-core" }
+module-import = { path = "crates/module-import" }
+module-ai = { path = "crates/module-ai" }
+window-api = { path = "crates/window-api" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+sha2 = { version = "0.10", features = ["oid"] }
+ed25519-dalek = { version = "2", features = ["rand_core", "serde"] }
+rand = "0.8"
+hex = "0.4"
+thiserror = "1"
+rusqlite = { version = "0.31", features = ["bundled"] }
+axum = { version = "0.7", features = ["multipart"] }
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.5", features = ["cors"] }
+clap = { version = "4", features = ["derive"] }
+tempfile = "3"
+base64 = "0.22"
+ureq = "2"
+cms = "0.2"
+x509-cert = "0.2"
+rsa = "0.9"
+p384 = "0.13"
+p256 = "0.13"
+ecdsa = { version = "0.16", features = ["verifying"] }

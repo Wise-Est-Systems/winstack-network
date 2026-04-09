@@ -1,0 +1,3 @@
+/target
+.winstack/
+*.proof.json

@@ -1,0 +1,10 @@
+[package]
+name = "module-ai"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+canon-types = { workspace = true }
+winstack-crypto = { workspace = true }
+uuid = { workspace = true }
+serde = { workspace = true }

@@ -1,0 +1,22 @@
+[package]
+name = "window-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+canon-types = { workspace = true }
+winstack-crypto = { workspace = true }
+identity-core = { workspace = true }
+time-core = { workspace = true }
+policy-core = { workspace = true }
+object-store = { workspace = true }
+graph-index = { workspace = true }
+verifier = { workspace = true }
+registry-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+tower-http = { workspace = true }
+thiserror = { workspace = true }

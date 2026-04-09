@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Winstack &mdash; Verify</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #08080a;
+      --surface:   #101012;
+      --card:      #131316;
+      --border:    #1c1c22;
+      --border2:   #28282f;
+      --dim:       #383842;
+      --muted:     #58586a;
+      --text:      #c8c8d4;
+      --bright:    #ededf4;
+      --white:     #ffffff;
+      --verified:  #2edc8a;
+      --verified-glow: #2edc8a30;
+      --invalid:   #f04848;
+      --invalid-glow: #f0484830;
+      --tampered:  #f0a030;
+      --tampered-glow: #f0a03030;
+      --green-bg:  #0a1f12;
+      --red-bg:    #1f0a0a;
+      --orange-bg: #1f150a;
+      --mono: 'IBM Plex Mono', monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: var(--bg); color: var(--text); font-family: var(--mono); }
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* HEADER */
+    header {
+      border-bottom: 1px solid var(--border); padding: 0 2rem; height: 3rem;
+      display: flex; align-items: center; gap: 1.5rem; background: var(--surface);
+      flex-shrink: 0;
+    }
+    .wordmark { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--bright); }
+    .wordmark span { color: var(--muted); font-weight: 300; }
+    .nav-link {
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--dim); text-decoration: none; margin-left: auto; transition: color 0.15s;
+    }
+    .nav-link:hover { color: var(--muted); }
+
+    /* MAIN */
+    main {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 2rem; min-height: 0;
+    }
+
+    /* --- UPLOAD STATE --- */
+    #upload-state { text-align: center; width: 100%; max-width: 480px; }
+
+    .hero-title {
+      font-size: 1.1rem; font-weight: 500; color: var(--bright);
+      letter-spacing: 0.06em; margin-bottom: 0.4rem;
+    }
+    .hero-sub {
+      font-size: 0.7rem; color: var(--muted); margin-bottom: 2rem;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--border2); background: var(--card);
+      padding: 2.5rem 2rem; cursor: pointer; position: relative;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 0.75rem;
+    }
+    .drop-zone:hover { border-color: var(--dim); }
+    .drop-zone.drag-over { border-color: var(--muted); background: var(--surface); }
+    .drop-zone.has-file { border-style: solid; border-color: var(--dim); }
+    .drop-zone input[type=file] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon {
+      font-size: 1.6rem; margin-bottom: 0.6rem; opacity: 0.25;
+      transition: opacity 0.2s;
+    }
+    .drop-zone:hover .drop-icon, .drop-zone.drag-over .drop-icon { opacity: 0.45; }
+    .drop-zone.has-file .drop-icon { opacity: 0.5; }
+    .drop-label {
+      font-size: 0.68rem; color: var(--dim); pointer-events: none;
+      letter-spacing: 0.03em; transition: color 0.15s;
+    }
+    .drop-zone.has-file .drop-label { color: var(--text); }
+    .drop-hint {
+      font-size: 0.56rem; color: var(--dim); pointer-events: none;
+      margin-top: 0.35rem; letter-spacing: 0.04em;
+    }
+    .drop-zone.has-file .drop-hint { display: none; }
+
+    .file-pair {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .verify-btn {
+      width: 100%; background: var(--bright); color: var(--bg); border: none;
+      font-family: var(--mono); font-size: 0.9rem; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      padding: 1rem; cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+    }
+    .verify-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    .verify-btn:active:not(:disabled) { transform: translateY(0); }
+    .verify-btn:disabled { opacity: 0.15; cursor: default; }
+
+    /* --- LOADING STATE --- */
+    #loading-state {
+      text-align: center; display: none;
+    }
+    .spinner {
+      width: 2.5rem; height: 2.5rem; border: 2px solid var(--border2);
+      border-top-color: var(--bright); border-radius: 50%;
+      animation: spin 0.7s linear infinite; margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-label {
+      font-size: 0.72rem; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase;
+    }
+
+    /* --- RESULT STATE --- */
+    #result-state { display: none; width: 100%; max-width: 520px; }
+
+    .result-card {
+      text-align: center; padding: 3rem 2rem 2.5rem; margin-bottom: 1.5rem;
+      position: relative; overflow: hidden;
+    }
+    .result-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    }
+    .result-card::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+      transition: opacity 0.6s;
+    }
+    .result-card.show::after { opacity: 1; }
+
+    .result-card.is-verified {
+      background: var(--green-bg); border: 1px solid #1a4a2e;
+    }
+    .result-card.is-verified::before { background: var(--verified); }
+    .result-card.is-verified::after {
+      background: radial-gradient(ellipse at center, var(--verified-glow), transparent 70%);
+    }
+
+    .result-card.is-tampered {
+      background: var(--orange-bg); border: 1px solid #4a3010;
+    }
+    .result-card.is-tampered::before { background: var(--tampered); }
+    .result-card.is-tampered::after {
+      background: radial-gradient(ellipse at center, var(--tampered-glow), transparent 70%);
+    }
+
+    .result-card.is-invalid {
+      background: var(--red-bg); border: 1px solid #4a1818;
+    }
+    .result-card.is-invalid::before { background: var(--invalid); }
+    .result-card.is-invalid::after {
+      background: radial-gradient(ellipse at center, var(--invalid-glow), transparent 70%);
+    }
+
+    .result-icon { font-size: 2.2rem; margin-bottom: 0.8rem; }
+    .result-word {
+      font-size: 2.4rem; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; line-height: 1;
+    }
+    .is-verified .result-word { color: var(--verified); }
+    .is-tampered .result-word { color: var(--tampered); }
+    .is-invalid  .result-word { color: var(--invalid); }
+
+    .result-msg {
+      font-size: 0.78rem; color: var(--text); margin-top: 1rem; line-height: 1.55;
+      max-width: 28rem; margin-left: auto; margin-right: auto;
+    }
+
+    .result-oid {
+      font-size: 0.6rem; color: var(--dim); margin-top: 0.8rem;
+      word-break: break-all; letter-spacing: 0.02em;
+    }
+
+    /* HASH COMPARE */
+    .hash-box {
+      border: 1px solid #4a3010; background: var(--orange-bg);
+      padding: 1.1rem 1.4rem; margin-bottom: 1.25rem;
+    }
+    .hash-row { margin-bottom: 0.65rem; }
+    .hash-row:last-child { margin-bottom: 0; }
+    .hash-label {
+      font-size: 0.54rem; letter-spacing: 0.16em; text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+    .hash-label.current { color: var(--tampered); }
+    .hash-label.expected { color: var(--muted); }
+    .hash-val {
+      font-size: 0.64rem; word-break: break-all; line-height: 1.5;
+      font-family: var(--mono);
+    }
+    .hash-val.current { color: var(--bright); }
+    .hash-val.expected { color: var(--dim); }
+
+    /* FAILURES */
+    .failures-box {
+      border: 1px solid #4a1818; background: var(--red-bg);
+      padding: 1.1rem 1.4rem; margin-bottom: 1.25rem;
+    }
+    .failures-title {
+      font-size: 0.54rem; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--invalid); margin-bottom: 0.7rem; padding-bottom: 0.5rem;
+      border-bottom: 1px solid #3a1212;
+    }
+    .fail-item { margin-bottom: 0.55rem; }
+    .fail-item:last-child { margin-bottom: 0; }
+    .fail-code { font-size: 0.66rem; color: var(--invalid); font-weight: 600; }
+    .fail-reason {
+      font-size: 0.64rem; color: #b05050; margin-top: 0.1rem;
+      word-break: break-word; line-height: 1.45;
+    }
+
+    /* SHARE */
+    .share-row {
+      border: 1px solid var(--border); background: var(--card);
+      padding: 0.75rem 1.2rem; display: flex; align-items: center;
+      gap: 0.6rem; margin-bottom: 1.25rem;
+    }
+    .share-label {
+      font-size: 0.54rem; letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--dim); white-space: nowrap;
+    }
+    .share-btns { display: flex; gap: 0.45rem; margin-left: auto; }
+    .s-btn {
+      background: none; border: 1px solid var(--border2); color: var(--muted);
+      font-family: var(--mono); font-size: 0.58rem; padding: 0.25rem 0.65rem;
+      cursor: pointer; letter-spacing: 0.06em; transition: all 0.15s;
+    }
+    .s-btn:hover { border-color: var(--dim); color: var(--text); }
+    .s-btn.done { border-color: #1a4a2e; color: var(--verified); }
+
+    /* DETAILS */
+    .details-btn {
+      background: none; border: none; color: var(--dim); font-family: var(--mono);
+      font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
+      cursor: pointer; padding: 0.2rem 0; transition: color 0.15s;
+    }
+    .details-btn:hover { color: var(--muted); }
+    .details-body { display: none; margin-top: 0.6rem; }
+    .details-body.open { display: block; }
+    .d-row {
+      display: grid; grid-template-columns: 7.5rem 1fr; gap: 0.35rem;
+      margin-bottom: 0.25rem; font-size: 0.6rem;
+    }
+    .d-key { color: var(--dim); }
+    .d-val { color: var(--muted); word-break: break-all; }
+
+    /* RESET */
+    .reset-btn {
+      background: none; border: 1px solid var(--border2); color: var(--dim);
+      font-family: var(--mono); font-size: 0.6rem; padding: 0.4rem 1rem;
+      cursor: pointer; letter-spacing: 0.1em; text-transform: uppercase;
+      margin-top: 1.5rem; transition: all 0.15s; align-self: center;
+    }
+    .reset-btn:hover { border-color: var(--dim); color: var(--muted); }
+
+    /* ERROR */
+    .error-box {
+      border: 1px solid #4a1818; background: var(--red-bg); padding: 1rem 1.4rem;
+      margin-bottom: 1.25rem; font-size: 0.72rem; color: var(--invalid); line-height: 1.5;
+    }
+
+    .hidden { display: none !important; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border); padding: 0.6rem 2rem;
+      display: flex; align-items: center; background: var(--surface); flex-shrink: 0;
+    }
+    .footer-label {
+      font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim);
+    }
+
+    /* ANIMATE */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.35s ease-out both; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">WIN<span>STACK</span></div>
+  <a class="nav-link" href="index.html">Inspector</a>
+</header>
+
+<main>
+  <!-- UPLOAD -->
+  <div id="upload-state">
+    <div class="hero-title">Verify a file</div>
+    <div class="hero-sub">Drop a file and its proof to check if it's real.</div>
+
+    <div class="file-pair">
+      <div class="drop-zone" id="drop-file">
+        <input type="file" id="input-file">
+        <div class="drop-icon">&#9724;</div>
+        <div class="drop-label" id="label-file">File</div>
+        <div class="drop-hint">drop or click</div>
+      </div>
+      <div class="drop-zone" id="drop-proof">
+        <input type="file" id="input-proof" accept=".json,.proof.json">
+        <div class="drop-icon">&#9724;</div>
+        <div class="drop-label" id="label-proof">Proof</div>
+        <div class="drop-hint">.proof.json</div>
+      </div>
+    </div>
+
+    <button class="verify-btn" id="btn-verify" disabled>VERIFY</button>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loading-state">
+    <div class="spinner"></div>
+    <div class="loading-label">Verifying</div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result-state">
+    <div class="error-box hidden" id="error-box"></div>
+
+    <div class="result-card" id="result-card">
+      <div class="result-icon" id="result-icon"></div>
+      <div class="result-word" id="result-word"></div>
+      <div class="result-msg" id="result-msg"></div>
+      <div class="result-oid" id="result-oid"></div>
+    </div>
+
+    <div class="hash-box hidden" id="hash-box">
+      <div class="hash-row">
+        <div class="hash-label current">File now</div>
+        <div class="hash-val current" id="hash-current"></div>
+      </div>
+      <div class="hash-row">
+        <div class="hash-label expected">Sealed as</div>
+        <div class="hash-val expected" id="hash-expected"></div>
+      </div>
+    </div>
+
+    <div class="failures-box hidden" id="failures-box">
+      <div class="failures-title">Why it failed</div>
+      <div id="failures-list"></div>
+    </div>
+
+    <div class="share-row hidden" id="share-row">
+      <div class="share-label">Share</div>
+      <div class="share-btns">
+        <button class="s-btn" id="btn-copy" type="button">COPY LINK</button>
+        <button class="s-btn" id="btn-dl" type="button">DOWNLOAD PROOF</button>
+      </div>
+    </div>
+
+    <button class="details-btn" id="btn-details" type="button">+ details</button>
+    <div class="details-body" id="details-body"></div>
+
+    <button class="reset-btn" id="btn-reset" type="button">Verify another</button>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-label">Winstack</div>
+</footer>
+
+<script>
+  const API = (window.WINSTACK_API_BASE || 'http://127.0.0.1:3001').replace(/\/$/, '');
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  let pickedFile = null, pickedProof = null;
+  let proofBytes = null, objectId = null;
+
+  // ── pickers ──
+
+  function wire(inputId, zoneId, labelId, onPick) {
+    const input = $(inputId), zone = $(zoneId), label = $(labelId);
+
+    input.addEventListener('change', () => {
+      if (input.files[0]) accept(input.files[0]);
+    });
+
+    zone.addEventListener('dragover', e => {
+      e.preventDefault(); e.stopPropagation();
+      zone.classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave', e => {
+      e.preventDefault(); e.stopPropagation();
+      zone.classList.remove('drag-over');
+    });
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      zone.classList.remove('drag-over');
+      if (e.dataTransfer.files[0]) {
+        input.files = e.dataTransfer.files;
+        accept(e.dataTransfer.files[0]);
+      }
+    });
+
+    function accept(f) {
+      zone.classList.add('has-file');
+      label.textContent = f.name;
+      onPick(f);
+    }
+  }
+
+  wire('input-file', 'drop-file', 'label-file', f => { pickedFile = f; checkReady(); });
+  wire('input-proof', 'drop-proof', 'label-proof', f => { pickedProof = f; checkReady(); });
+
+  function checkReady() {
+    $('btn-verify').disabled = !(pickedFile && pickedProof);
+  }
+
+  // ── states ──
+
+  function showUpload()  { $('upload-state').style.display = '';     $('loading-state').style.display = 'none'; $('result-state').style.display = 'none'; }
+  function showLoading() { $('upload-state').style.display = 'none'; $('loading-state').style.display = '';     $('result-state').style.display = 'none'; }
+  function showResult()  { $('upload-state').style.display = 'none'; $('loading-state').style.display = 'none'; $('result-state').style.display = '';     }
+
+  // ── verify ──
+
+  $('btn-verify').addEventListener('click', async () => {
+    if (!pickedFile || !pickedProof) return;
+    showLoading();
+
+    const form = new FormData();
+    form.append('file', pickedFile);
+    const buf = await pickedProof.arrayBuffer();
+    proofBytes = new Uint8Array(buf);
+    form.append('proof', new Blob([proofBytes], { type: 'application/json' }), pickedProof.name);
+
+    try {
+      const res = await fetch(`${API}/verify`, { method: 'POST', body: form });
+      if (!res.ok) {
+        let msg = `Server returned ${res.status}`;
+        try { const j = await res.json(); msg = j?.error?.message || msg; } catch {}
+        showResult(); showError(msg); return;
+      }
+      const d = await res.json();
+      objectId = d.object_id;
+      showResult();
+      render(d);
+    } catch {
+      showResult();
+      showError('Cannot reach the Winstack server. Is it running?');
+    }
+  });
+
+  function showError(msg) {
+    $('result-card').style.display = 'none';
+    $('error-box').classList.remove('hidden');
+    $('error-box').textContent = msg;
+  }
+
+  // ── render ──
+
+  function render(d) {
+    // reset hidden things
+    $('error-box').classList.add('hidden');
+    $('hash-box').classList.add('hidden');
+    $('failures-box').classList.add('hidden');
+    $('share-row').classList.add('hidden');
+    $('details-body').classList.remove('open');
+    $('btn-details').textContent = '+ details';
+
+    const card = $('result-card');
+    card.style.display = '';
+
+    const r = d.result;
+    const cls = r === 'VERIFIED' ? 'is-verified' : r === 'TAMPERED' ? 'is-tampered' : 'is-invalid';
+    card.className = 'result-card fade-up ' + cls;
+    // trigger glow after paint
+    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('show')));
+
+    const icons = { VERIFIED: '\u2713', TAMPERED: '\u2717', INVALID: '\u26A0' };
+    $('result-icon').textContent = icons[r] || '';
+    $('result-word').textContent = r === 'INVALID' ? 'INVALID PROOF' : r;
+    $('result-msg').textContent = r === 'INVALID'
+      ? 'This proof is broken or cannot be used.'
+      : d.message;
+    $('result-oid').textContent = d.object_id;
+
+    if (r === 'TAMPERED') {
+      $('hash-box').classList.remove('hidden');
+      $('hash-current').textContent = d.file_hash;
+      $('hash-expected').textContent = d.expected_hash;
+    }
+
+    if (r === 'INVALID' && d.failures.length) {
+      $('failures-box').classList.remove('hidden');
+      $('failures-list').innerHTML = d.failures.map(f =>
+        `<div class="fail-item"><div class="fail-code">${esc(f.code)}</div><div class="fail-reason">${esc(f.reason)}</div></div>`
+      ).join('');
+    }
+
+    if (r === 'VERIFIED') {
+      $('share-row').classList.remove('hidden');
+    }
+
+    $('details-body').innerHTML = [
+      dRow('object_id', d.object_id),
+      dRow('object_class', d.object_class),
+      dRow('trust_class', d.trust_class),
+      dRow('created_at', d.created_at),
+      dRow('payload_hash', d.payload_hash),
+      dRow('file_hash', d.file_hash),
+    ].join('');
+  }
+
+  function dRow(k, v) {
+    return `<div class="d-row"><span class="d-key">${esc(k)}</span><span class="d-val">${esc(v)}</span></div>`;
+  }
+
+  // ── details ──
+
+  $('btn-details').addEventListener('click', () => {
+    const open = $('details-body').classList.toggle('open');
+    $('btn-details').textContent = open ? '- details' : '+ details';
+  });
+
+  // ── share ──
+
+  $('btn-copy').addEventListener('click', () => {
+    if (!objectId) return;
+    const u = new URL('index.html', window.location.href);
+    u.searchParams.set('id', objectId);
+    navigator.clipboard.writeText(u.toString()).then(() => {
+      $('btn-copy').textContent = 'COPIED';
+      $('btn-copy').classList.add('done');
+      setTimeout(() => { $('btn-copy').textContent = 'COPY LINK'; $('btn-copy').classList.remove('done'); }, 2000);
+    });
+  });
+
+  $('btn-dl').addEventListener('click', () => {
+    if (!proofBytes) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([proofBytes], { type: 'application/json' }));
+    a.download = (objectId || 'proof') + '.proof.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(a.href);
+  });
+
+  // ── reset ──
+
+  $('btn-reset').addEventListener('click', () => {
+    pickedFile = null; pickedProof = null; proofBytes = null; objectId = null;
+    $('input-file').value = ''; $('input-proof').value = '';
+    $('drop-file').classList.remove('has-file'); $('drop-proof').classList.remove('has-file');
+    $('label-file').textContent = 'File'; $('label-proof').textContent = 'Proof';
+    $('btn-verify').disabled = true;
+    showUpload();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+[package]
+name = "graph-index"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+canon-types = { workspace = true }
+uuid = { workspace = true }
+rusqlite = { workspace = true }
+thiserror = { workspace = true }

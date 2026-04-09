@@ -1,0 +1,25 @@
+[package]
+name = "time-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+canon-types = { workspace = true }
+winstack-crypto = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+hex = { workspace = true }
+base64 = { workspace = true }
+thiserror = { workspace = true }
+cms = { workspace = true }
+x509-cert = { workspace = true }
+rsa = { workspace = true }
+p384 = { workspace = true }
+p256 = { workspace = true }
+ecdsa = { workspace = true }
+sha2 = { workspace = true }
+der = "0.7"
+spki = "0.7"
+const-oid = "0.9"
