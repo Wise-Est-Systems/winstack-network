@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Winstack &mdash; Verify</title>
+  <title>Winstack</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -25,215 +25,149 @@
       --invalid-glow: #f0484830;
       --tampered:  #f0a030;
       --tampered-glow: #f0a03030;
+      --sealed:    #6e8efa;
+      --sealed-glow: #6e8efa30;
       --green-bg:  #0a1f12;
       --red-bg:    #1f0a0a;
       --orange-bg: #1f150a;
+      --blue-bg:   #0a0f1f;
       --mono: 'IBM Plex Mono', monospace;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { background: var(--bg); color: var(--text); font-family: var(--mono); }
     body { min-height: 100vh; display: flex; flex-direction: column; }
 
-    /* HEADER */
     header {
       border-bottom: 1px solid var(--border); padding: 0 2rem; height: 3rem;
-      display: flex; align-items: center; gap: 1.5rem; background: var(--surface);
-      flex-shrink: 0;
+      display: flex; align-items: center; gap: 1.5rem; background: var(--surface); flex-shrink: 0;
     }
     .wordmark { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--bright); }
     .wordmark span { color: var(--muted); font-weight: 300; }
-    .nav-link {
-      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--dim); text-decoration: none; margin-left: auto; transition: color 0.15s;
-    }
-    .nav-link:hover { color: var(--muted); }
 
-    /* MAIN */
+    .tabs { display: flex; gap: 0; margin-left: auto; }
+    .tab {
+      font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--dim); background: none; border: 1px solid var(--border);
+      border-right: none; padding: 0.3rem 1rem; cursor: pointer;
+      font-family: var(--mono); transition: all 0.15s;
+    }
+    .tab:last-child { border-right: 1px solid var(--border); }
+    .tab:hover { color: var(--muted); }
+    .tab.active { color: var(--bright); background: var(--card); border-color: var(--border2); }
+
     main {
       flex: 1; display: flex; flex-direction: column; align-items: center;
       justify-content: center; padding: 2rem; min-height: 0;
     }
 
-    /* --- UPLOAD STATE --- */
-    #upload-state { text-align: center; width: 100%; max-width: 480px; }
-
-    .hero-title {
-      font-size: 1.1rem; font-weight: 500; color: var(--bright);
-      letter-spacing: 0.06em; margin-bottom: 0.4rem;
-    }
-    .hero-sub {
-      font-size: 0.7rem; color: var(--muted); margin-bottom: 2rem;
-    }
+    /* SHARED */
+    .page { display: none; text-align: center; width: 100%; max-width: 480px; }
+    .page.active { display: block; }
+    .title { font-size: 1.1rem; font-weight: 500; color: var(--bright); letter-spacing: 0.06em; margin-bottom: 0.3rem; }
+    .sub { font-size: 0.7rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.5; }
 
     .drop-zone {
       border: 2px dashed var(--border2); background: var(--card);
-      padding: 2.5rem 2rem; cursor: pointer; position: relative;
-      transition: border-color 0.2s, background 0.2s;
-      margin-bottom: 0.75rem;
+      padding: 2.2rem 1.5rem; cursor: pointer; position: relative;
+      transition: border-color 0.2s, background 0.2s; margin-bottom: 0.75rem;
     }
-    .drop-zone:hover { border-color: var(--dim); }
-    .drop-zone.drag-over { border-color: var(--muted); background: var(--surface); }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--muted); background: var(--surface); }
     .drop-zone.has-file { border-style: solid; border-color: var(--dim); }
-    .drop-zone input[type=file] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-    }
-    .drop-icon {
-      font-size: 1.6rem; margin-bottom: 0.6rem; opacity: 0.25;
-      transition: opacity 0.2s;
-    }
-    .drop-zone:hover .drop-icon, .drop-zone.drag-over .drop-icon { opacity: 0.45; }
-    .drop-zone.has-file .drop-icon { opacity: 0.5; }
-    .drop-label {
-      font-size: 0.68rem; color: var(--dim); pointer-events: none;
-      letter-spacing: 0.03em; transition: color 0.15s;
-    }
+    .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-label { font-size: 0.68rem; color: var(--dim); pointer-events: none; transition: color 0.15s; }
     .drop-zone.has-file .drop-label { color: var(--text); }
-    .drop-hint {
-      font-size: 0.56rem; color: var(--dim); pointer-events: none;
-      margin-top: 0.35rem; letter-spacing: 0.04em;
-    }
+    .drop-hint { font-size: 0.54rem; color: var(--dim); pointer-events: none; margin-top: 0.3rem; }
     .drop-zone.has-file .drop-hint { display: none; }
 
-    .file-pair {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
-      margin-bottom: 1.25rem;
-    }
+    .file-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
 
-    .verify-btn {
+    .action-btn {
       width: 100%; background: var(--bright); color: var(--bg); border: none;
       font-family: var(--mono); font-size: 0.9rem; font-weight: 700;
       letter-spacing: 0.2em; text-transform: uppercase;
       padding: 1rem; cursor: pointer; transition: opacity 0.15s, transform 0.1s;
     }
-    .verify-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
-    .verify-btn:active:not(:disabled) { transform: translateY(0); }
-    .verify-btn:disabled { opacity: 0.15; cursor: default; }
+    .action-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    .action-btn:disabled { opacity: 0.15; cursor: default; }
 
-    /* --- LOADING STATE --- */
-    #loading-state {
-      text-align: center; display: none;
-    }
+    /* LOADING */
+    .loading { display: none; text-align: center; }
     .spinner {
       width: 2.5rem; height: 2.5rem; border: 2px solid var(--border2);
       border-top-color: var(--bright); border-radius: 50%;
       animation: spin 0.7s linear infinite; margin: 0 auto 1rem;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-label {
-      font-size: 0.72rem; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase;
-    }
+    .loading-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; }
 
-    /* --- RESULT STATE --- */
-    #result-state { display: none; width: 100%; max-width: 520px; }
+    /* RESULT */
+    .result { display: none; width: 100%; max-width: 520px; }
 
     .result-card {
       text-align: center; padding: 3rem 2rem 2.5rem; margin-bottom: 1.5rem;
       position: relative; overflow: hidden;
     }
-    .result-card::before {
-      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
-    }
+    .result-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
     .result-card::after {
-      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0;
-      transition: opacity 0.6s;
+      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.6s;
     }
     .result-card.show::after { opacity: 1; }
-
-    .result-card.is-verified {
-      background: var(--green-bg); border: 1px solid #1a4a2e;
-    }
-    .result-card.is-verified::before { background: var(--verified); }
-    .result-card.is-verified::after {
-      background: radial-gradient(ellipse at center, var(--verified-glow), transparent 70%);
-    }
-
-    .result-card.is-tampered {
-      background: var(--orange-bg); border: 1px solid #4a3010;
-    }
-    .result-card.is-tampered::before { background: var(--tampered); }
-    .result-card.is-tampered::after {
-      background: radial-gradient(ellipse at center, var(--tampered-glow), transparent 70%);
-    }
-
-    .result-card.is-invalid {
-      background: var(--red-bg); border: 1px solid #4a1818;
-    }
-    .result-card.is-invalid::before { background: var(--invalid); }
-    .result-card.is-invalid::after {
-      background: radial-gradient(ellipse at center, var(--invalid-glow), transparent 70%);
-    }
+    .result-card.is-verified  { background: var(--green-bg); border: 1px solid #1a4a2e; }
+    .result-card.is-verified::before  { background: var(--verified); }
+    .result-card.is-verified::after   { background: radial-gradient(ellipse at center, var(--verified-glow), transparent 70%); }
+    .result-card.is-tampered  { background: var(--orange-bg); border: 1px solid #4a3010; }
+    .result-card.is-tampered::before  { background: var(--tampered); }
+    .result-card.is-tampered::after   { background: radial-gradient(ellipse at center, var(--tampered-glow), transparent 70%); }
+    .result-card.is-invalid   { background: var(--red-bg); border: 1px solid #4a1818; }
+    .result-card.is-invalid::before   { background: var(--invalid); }
+    .result-card.is-invalid::after    { background: radial-gradient(ellipse at center, var(--invalid-glow), transparent 70%); }
+    .result-card.is-sealed    { background: var(--blue-bg); border: 1px solid #1a2a4a; }
+    .result-card.is-sealed::before    { background: var(--sealed); }
+    .result-card.is-sealed::after     { background: radial-gradient(ellipse at center, var(--sealed-glow), transparent 70%); }
 
     .result-icon { font-size: 2.2rem; margin-bottom: 0.8rem; }
     .result-word {
-      font-size: 2.4rem; font-weight: 700; letter-spacing: 0.18em;
-      text-transform: uppercase; line-height: 1;
+      font-size: 2.4rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; line-height: 1;
     }
     .is-verified .result-word { color: var(--verified); }
     .is-tampered .result-word { color: var(--tampered); }
     .is-invalid  .result-word { color: var(--invalid); }
+    .is-sealed   .result-word { color: var(--sealed); }
+    .result-msg { font-size: 0.78rem; color: var(--text); margin-top: 1rem; line-height: 1.55; max-width: 28rem; margin-left: auto; margin-right: auto; }
 
-    .result-msg {
-      font-size: 0.78rem; color: var(--text); margin-top: 1rem; line-height: 1.55;
-      max-width: 28rem; margin-left: auto; margin-right: auto;
+    /* TIME BADGE */
+    .time-badge {
+      display: inline-block; font-size: 0.54rem; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 0.2rem 0.6rem; border: 1px solid var(--border2); color: var(--muted); margin-top: 0.8rem;
     }
+    .time-badge.external { border-color: #1a4a2e; color: var(--verified); }
 
-    .result-oid {
-      font-size: 0.6rem; color: var(--dim); margin-top: 0.8rem;
-      word-break: break-all; letter-spacing: 0.02em;
-    }
-
-    /* HASH COMPARE */
-    .hash-box {
-      border: 1px solid #4a3010; background: var(--orange-bg);
-      padding: 1.1rem 1.4rem; margin-bottom: 1.25rem;
-    }
-    .hash-row { margin-bottom: 0.65rem; }
+    /* HASH BOX */
+    .hash-box { border: 1px solid #4a3010; background: var(--orange-bg); padding: 1rem 1.2rem; margin-bottom: 1.25rem; }
+    .hash-row { margin-bottom: 0.5rem; }
     .hash-row:last-child { margin-bottom: 0; }
-    .hash-label {
-      font-size: 0.54rem; letter-spacing: 0.16em; text-transform: uppercase;
-      margin-bottom: 0.2rem;
-    }
+    .hash-label { font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 0.15rem; }
     .hash-label.current { color: var(--tampered); }
     .hash-label.expected { color: var(--muted); }
-    .hash-val {
-      font-size: 0.64rem; word-break: break-all; line-height: 1.5;
-      font-family: var(--mono);
-    }
+    .hash-val { font-size: 0.6rem; word-break: break-all; line-height: 1.45; }
     .hash-val.current { color: var(--bright); }
     .hash-val.expected { color: var(--dim); }
 
     /* FAILURES */
-    .failures-box {
-      border: 1px solid #4a1818; background: var(--red-bg);
-      padding: 1.1rem 1.4rem; margin-bottom: 1.25rem;
-    }
-    .failures-title {
-      font-size: 0.54rem; letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--invalid); margin-bottom: 0.7rem; padding-bottom: 0.5rem;
-      border-bottom: 1px solid #3a1212;
-    }
-    .fail-item { margin-bottom: 0.55rem; }
+    .failures-box { border: 1px solid #4a1818; background: var(--red-bg); padding: 1rem 1.2rem; margin-bottom: 1.25rem; }
+    .failures-title { font-size: 0.52rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--invalid); margin-bottom: 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px solid #3a1212; }
+    .fail-item { margin-bottom: 0.4rem; }
     .fail-item:last-child { margin-bottom: 0; }
-    .fail-code { font-size: 0.66rem; color: var(--invalid); font-weight: 600; }
-    .fail-reason {
-      font-size: 0.64rem; color: #b05050; margin-top: 0.1rem;
-      word-break: break-word; line-height: 1.45;
-    }
+    .fail-code { font-size: 0.62rem; color: var(--invalid); font-weight: 600; }
+    .fail-reason { font-size: 0.6rem; color: #b05050; margin-top: 0.1rem; word-break: break-word; line-height: 1.4; }
 
     /* SHARE */
-    .share-row {
-      border: 1px solid var(--border); background: var(--card);
-      padding: 0.75rem 1.2rem; display: flex; align-items: center;
-      gap: 0.6rem; margin-bottom: 1.25rem;
-    }
-    .share-label {
-      font-size: 0.54rem; letter-spacing: 0.16em; text-transform: uppercase;
-      color: var(--dim); white-space: nowrap;
-    }
-    .share-btns { display: flex; gap: 0.45rem; margin-left: auto; }
+    .share-row { border: 1px solid var(--border); background: var(--card); padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .share-label { font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); white-space: nowrap; }
+    .share-btns { display: flex; gap: 0.4rem; margin-left: auto; }
     .s-btn {
       background: none; border: 1px solid var(--border2); color: var(--muted);
-      font-family: var(--mono); font-size: 0.58rem; padding: 0.25rem 0.65rem;
+      font-family: var(--mono); font-size: 0.56rem; padding: 0.22rem 0.6rem;
       cursor: pointer; letter-spacing: 0.06em; transition: all 0.15s;
     }
     .s-btn:hover { border-color: var(--dim); color: var(--text); }
@@ -242,323 +176,396 @@
     /* DETAILS */
     .details-btn {
       background: none; border: none; color: var(--dim); font-family: var(--mono);
-      font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
+      font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase;
       cursor: pointer; padding: 0.2rem 0; transition: color 0.15s;
     }
     .details-btn:hover { color: var(--muted); }
-    .details-body { display: none; margin-top: 0.6rem; }
+    .details-body { display: none; margin-top: 0.5rem; text-align: left; }
     .details-body.open { display: block; }
-    .d-row {
-      display: grid; grid-template-columns: 7.5rem 1fr; gap: 0.35rem;
-      margin-bottom: 0.25rem; font-size: 0.6rem;
-    }
+    .d-row { display: grid; grid-template-columns: 7rem 1fr; gap: 0.3rem; margin-bottom: 0.2rem; font-size: 0.58rem; }
     .d-key { color: var(--dim); }
     .d-val { color: var(--muted); word-break: break-all; }
 
-    /* RESET */
     .reset-btn {
       background: none; border: 1px solid var(--border2); color: var(--dim);
-      font-family: var(--mono); font-size: 0.6rem; padding: 0.4rem 1rem;
+      font-family: var(--mono); font-size: 0.58rem; padding: 0.35rem 0.9rem;
       cursor: pointer; letter-spacing: 0.1em; text-transform: uppercase;
-      margin-top: 1.5rem; transition: all 0.15s; align-self: center;
+      margin-top: 1.25rem; transition: all 0.15s; align-self: center;
     }
     .reset-btn:hover { border-color: var(--dim); color: var(--muted); }
 
-    /* ERROR */
     .error-box {
-      border: 1px solid #4a1818; background: var(--red-bg); padding: 1rem 1.4rem;
-      margin-bottom: 1.25rem; font-size: 0.72rem; color: var(--invalid); line-height: 1.5;
+      border: 1px solid #4a1818; background: var(--red-bg); padding: 0.9rem 1.2rem;
+      margin-bottom: 1.25rem; font-size: 0.7rem; color: var(--invalid); line-height: 1.5;
     }
 
     .hidden { display: none !important; }
 
-    /* FOOTER */
     footer {
-      border-top: 1px solid var(--border); padding: 0.6rem 2rem;
+      border-top: 1px solid var(--border); padding: 0.5rem 2rem;
       display: flex; align-items: center; background: var(--surface); flex-shrink: 0;
     }
-    .footer-label {
-      font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim);
-    }
+    .footer-label { font-size: 0.5rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
 
-    /* ANIMATE */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(12px); }
       to   { opacity: 1; transform: translateY(0); }
     }
     .fade-up { animation: fadeUp 0.35s ease-out both; }
+
+    /* PROVE NOTE */
+    .prove-note {
+      font-size: 0.58rem; color: var(--dim); margin-top: 1rem; line-height: 1.5;
+      max-width: 28rem; margin-left: auto; margin-right: auto;
+    }
   </style>
 </head>
 <body>
 
 <header>
   <div class="wordmark">WIN<span>STACK</span></div>
-  <a class="nav-link" href="index.html">Inspector</a>
+  <div class="tabs">
+    <button class="tab active" data-tab="verify">Check a file</button>
+    <button class="tab" data-tab="prove">Seal a file</button>
+  </div>
 </header>
 
 <main>
-  <!-- UPLOAD -->
-  <div id="upload-state">
-    <div class="hero-title">Verify a file</div>
-    <div class="hero-sub">Drop a file and its proof to check if it's real.</div>
+  <!-- ═══════════ VERIFY TAB ═══════════ -->
+  <div class="page active" id="page-verify">
+    <div id="v-upload">
+      <div class="title">Check whether a file has changed</div>
+      <div class="sub">Drop a file and its proof. We'll tell you if it still matches.</div>
+      <div class="file-pair">
+        <div class="drop-zone" id="v-drop-file">
+          <input type="file" id="v-input-file">
+          <div class="drop-label" id="v-label-file">Your file</div>
+          <div class="drop-hint">drop or click</div>
+        </div>
+        <div class="drop-zone" id="v-drop-proof">
+          <input type="file" id="v-input-proof" accept=".json,.proof.json">
+          <div class="drop-label" id="v-label-proof">Its proof</div>
+          <div class="drop-hint">.proof.json</div>
+        </div>
+      </div>
+      <button class="action-btn" id="v-btn" disabled>VERIFY</button>
+    </div>
+    <div class="loading" id="v-loading"><div class="spinner"></div><div class="loading-label">Checking</div></div>
+    <div class="result" id="v-result">
+      <div class="error-box hidden" id="v-error"></div>
+      <div class="result-card" id="v-card">
+        <div class="result-icon" id="v-icon"></div>
+        <div class="result-word" id="v-word"></div>
+        <div class="result-msg" id="v-msg"></div>
+        <div class="time-badge hidden" id="v-time"></div>
+      </div>
+      <div class="hash-box hidden" id="v-hashes">
+        <div class="hash-row"><div class="hash-label current">Your file's fingerprint</div><div class="hash-val current" id="v-hash-cur"></div></div>
+        <div class="hash-row"><div class="hash-label expected">Expected fingerprint (from proof)</div><div class="hash-val expected" id="v-hash-exp"></div></div>
+      </div>
+      <div class="failures-box hidden" id="v-fails"><div class="failures-title">Why it failed</div><div id="v-fail-list"></div></div>
+      <div class="share-row hidden" id="v-share">
+        <div class="share-label">Share this result</div>
+        <div class="share-btns">
+          <button class="s-btn" id="v-copy">COPY LINK</button>
+          <button class="s-btn" id="v-dl">DOWNLOAD PROOF</button>
+        </div>
+      </div>
+      <button class="details-btn" id="v-details-btn">+ technical details</button>
+      <div class="details-body" id="v-details"></div>
+      <button class="reset-btn" id="v-reset">Check another file</button>
+    </div>
+  </div>
 
-    <div class="file-pair">
-      <div class="drop-zone" id="drop-file">
-        <input type="file" id="input-file">
-        <div class="drop-icon">&#9724;</div>
-        <div class="drop-label" id="label-file">File</div>
+  <!-- ═══════════ PROVE TAB ═══════════ -->
+  <div class="page" id="page-prove">
+    <div id="p-upload">
+      <div class="title">Seal a file</div>
+      <div class="sub">Create a cryptographic proof that records exactly what this file is right now.</div>
+      <div class="drop-zone" id="p-drop-file" style="margin-bottom:1rem;">
+        <input type="file" id="p-input-file">
+        <div class="drop-label" id="p-label-file">Choose a file</div>
         <div class="drop-hint">drop or click</div>
       </div>
-      <div class="drop-zone" id="drop-proof">
-        <input type="file" id="input-proof" accept=".json,.proof.json">
-        <div class="drop-icon">&#9724;</div>
-        <div class="drop-label" id="label-proof">Proof</div>
-        <div class="drop-hint">.proof.json</div>
+      <button class="action-btn" id="p-btn" disabled>CREATE PROOF</button>
+      <div class="prove-note">
+        The proof file will download automatically.<br>
+        Keep it alongside your original file.
       </div>
     </div>
-
-    <button class="verify-btn" id="btn-verify" disabled>VERIFY</button>
-  </div>
-
-  <!-- LOADING -->
-  <div id="loading-state">
-    <div class="spinner"></div>
-    <div class="loading-label">Verifying</div>
-  </div>
-
-  <!-- RESULT -->
-  <div id="result-state">
-    <div class="error-box hidden" id="error-box"></div>
-
-    <div class="result-card" id="result-card">
-      <div class="result-icon" id="result-icon"></div>
-      <div class="result-word" id="result-word"></div>
-      <div class="result-msg" id="result-msg"></div>
-      <div class="result-oid" id="result-oid"></div>
-    </div>
-
-    <div class="hash-box hidden" id="hash-box">
-      <div class="hash-row">
-        <div class="hash-label current">File now</div>
-        <div class="hash-val current" id="hash-current"></div>
+    <div class="loading" id="p-loading"><div class="spinner"></div><div class="loading-label">Sealing</div></div>
+    <div class="result" id="p-result">
+      <div class="error-box hidden" id="p-error"></div>
+      <div class="result-card" id="p-card">
+        <div class="result-icon" id="p-icon"></div>
+        <div class="result-word" id="p-word"></div>
+        <div class="result-msg" id="p-msg"></div>
+        <div class="time-badge" id="p-time"></div>
       </div>
-      <div class="hash-row">
-        <div class="hash-label expected">Sealed as</div>
-        <div class="hash-val expected" id="hash-expected"></div>
-      </div>
+      <button class="details-btn" id="p-details-btn">+ technical details</button>
+      <div class="details-body" id="p-details"></div>
+      <button class="reset-btn" id="p-reset">Seal another file</button>
     </div>
-
-    <div class="failures-box hidden" id="failures-box">
-      <div class="failures-title">Why it failed</div>
-      <div id="failures-list"></div>
-    </div>
-
-    <div class="share-row hidden" id="share-row">
-      <div class="share-label">Share</div>
-      <div class="share-btns">
-        <button class="s-btn" id="btn-copy" type="button">COPY LINK</button>
-        <button class="s-btn" id="btn-dl" type="button">DOWNLOAD PROOF</button>
-      </div>
-    </div>
-
-    <button class="details-btn" id="btn-details" type="button">+ details</button>
-    <div class="details-body" id="details-body"></div>
-
-    <button class="reset-btn" id="btn-reset" type="button">Verify another</button>
   </div>
 </main>
 
-<footer>
-  <div class="footer-label">Winstack</div>
-</footer>
+<footer><div class="footer-label">Winstack &mdash; deterministic artifact verification</div></footer>
 
 <script>
-  const API = (window.WINSTACK_API_BASE || 'http://127.0.0.1:3001').replace(/\/$/, '');
-  const $ = id => document.getElementById(id);
-  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const API = (window.WINSTACK_API_BASE || 'http://127.0.0.1:3001').replace(/\/$/, '');
+const $ = id => document.getElementById(id);
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-  let pickedFile = null, pickedProof = null;
-  let proofBytes = null, objectId = null;
-
-  // ── pickers ──
-
-  function wire(inputId, zoneId, labelId, onPick) {
-    const input = $(inputId), zone = $(zoneId), label = $(labelId);
-
-    input.addEventListener('change', () => {
-      if (input.files[0]) accept(input.files[0]);
-    });
-
-    zone.addEventListener('dragover', e => {
-      e.preventDefault(); e.stopPropagation();
-      zone.classList.add('drag-over');
-    });
-    zone.addEventListener('dragleave', e => {
-      e.preventDefault(); e.stopPropagation();
-      zone.classList.remove('drag-over');
-    });
-    zone.addEventListener('drop', e => {
-      e.preventDefault(); e.stopPropagation();
-      zone.classList.remove('drag-over');
-      if (e.dataTransfer.files[0]) {
-        input.files = e.dataTransfer.files;
-        accept(e.dataTransfer.files[0]);
-      }
-    });
-
-    function accept(f) {
-      zone.classList.add('has-file');
-      label.textContent = f.name;
-      onPick(f);
-    }
-  }
-
-  wire('input-file', 'drop-file', 'label-file', f => { pickedFile = f; checkReady(); });
-  wire('input-proof', 'drop-proof', 'label-proof', f => { pickedProof = f; checkReady(); });
-
-  function checkReady() {
-    $('btn-verify').disabled = !(pickedFile && pickedProof);
-  }
-
-  // ── states ──
-
-  function showUpload()  { $('upload-state').style.display = '';     $('loading-state').style.display = 'none'; $('result-state').style.display = 'none'; }
-  function showLoading() { $('upload-state').style.display = 'none'; $('loading-state').style.display = '';     $('result-state').style.display = 'none'; }
-  function showResult()  { $('upload-state').style.display = 'none'; $('loading-state').style.display = 'none'; $('result-state').style.display = '';     }
-
-  // ── verify ──
-
-  $('btn-verify').addEventListener('click', async () => {
-    if (!pickedFile || !pickedProof) return;
-    showLoading();
-
-    const form = new FormData();
-    form.append('file', pickedFile);
-    const buf = await pickedProof.arrayBuffer();
-    proofBytes = new Uint8Array(buf);
-    form.append('proof', new Blob([proofBytes], { type: 'application/json' }), pickedProof.name);
-
-    try {
-      const res = await fetch(`${API}/verify`, { method: 'POST', body: form });
-      if (!res.ok) {
-        let msg = `Server returned ${res.status}`;
-        try { const j = await res.json(); msg = j?.error?.message || msg; } catch {}
-        showResult(); showError(msg); return;
-      }
-      const d = await res.json();
-      objectId = d.object_id;
-      showResult();
-      render(d);
-    } catch {
-      showResult();
-      showError('Cannot reach the Winstack server. Is it running?');
-    }
+// ═══ TABS ═══
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    $('page-' + t.dataset.tab).classList.add('active');
   });
+});
 
-  function showError(msg) {
-    $('result-card').style.display = 'none';
-    $('error-box').classList.remove('hidden');
-    $('error-box').textContent = msg;
-  }
+// ═══ DROP ZONE WIRING ═══
+function wire(inputId, zoneId, labelId, onPick) {
+  const input = $(inputId), zone = $(zoneId), label = $(labelId);
+  input.addEventListener('change', () => { if (input.files[0]) accept(input.files[0]); });
+  zone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); zone.classList.remove('drag-over'); });
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); e.stopPropagation(); zone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) { input.files = e.dataTransfer.files; accept(e.dataTransfer.files[0]); }
+  });
+  function accept(f) { zone.classList.add('has-file'); label.textContent = f.name; onPick(f); }
+}
 
-  // ── render ──
+// ═══ VERIFY ═══
+let vFile = null, vProof = null, vProofBytes = null, vObjectId = null;
 
-  function render(d) {
-    // reset hidden things
-    $('error-box').classList.add('hidden');
-    $('hash-box').classList.add('hidden');
-    $('failures-box').classList.add('hidden');
-    $('share-row').classList.add('hidden');
-    $('details-body').classList.remove('open');
-    $('btn-details').textContent = '+ details';
+wire('v-input-file', 'v-drop-file', 'v-label-file', f => { vFile = f; $('v-btn').disabled = !(vFile && vProof); });
+wire('v-input-proof', 'v-drop-proof', 'v-label-proof', f => { vProof = f; $('v-btn').disabled = !(vFile && vProof); });
 
-    const card = $('result-card');
-    card.style.display = '';
+function vShow(s) {
+  $('v-upload').style.display = s === 'upload' ? '' : 'none';
+  $('v-loading').style.display = s === 'loading' ? '' : 'none';
+  $('v-result').style.display = s === 'result' ? '' : 'none';
+}
 
-    const r = d.result;
-    const cls = r === 'VERIFIED' ? 'is-verified' : r === 'TAMPERED' ? 'is-tampered' : 'is-invalid';
-    card.className = 'result-card fade-up ' + cls;
-    // trigger glow after paint
-    requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('show')));
-
-    const icons = { VERIFIED: '\u2713', TAMPERED: '\u2717', INVALID: '\u26A0' };
-    $('result-icon').textContent = icons[r] || '';
-    $('result-word').textContent = r === 'INVALID' ? 'INVALID PROOF' : r;
-    $('result-msg').textContent = r === 'INVALID'
-      ? 'This proof is broken or cannot be used.'
-      : d.message;
-    $('result-oid').textContent = d.object_id;
-
-    if (r === 'TAMPERED') {
-      $('hash-box').classList.remove('hidden');
-      $('hash-current').textContent = d.file_hash;
-      $('hash-expected').textContent = d.expected_hash;
+$('v-btn').addEventListener('click', async () => {
+  if (!vFile || !vProof) return;
+  vShow('loading');
+  const form = new FormData();
+  form.append('file', vFile);
+  const buf = await vProof.arrayBuffer();
+  vProofBytes = new Uint8Array(buf);
+  form.append('proof', new Blob([vProofBytes], { type: 'application/json' }), vProof.name);
+  try {
+    const res = await fetch(`${API}/verify`, { method: 'POST', body: form });
+    if (!res.ok) {
+      let msg = `Server returned ${res.status}`;
+      try { const j = await res.json(); msg = j?.error?.message || msg; } catch {}
+      vShow('result'); vShowError(msg); return;
     }
+    const d = await res.json();
+    vObjectId = d.object_id;
+    vShow('result');
+    vRender(d);
+  } catch {
+    vShow('result');
+    vShowError('Cannot reach the Winstack server. Make sure it is running locally.');
+  }
+});
 
-    if (r === 'INVALID' && d.failures.length) {
-      $('failures-box').classList.remove('hidden');
-      $('failures-list').innerHTML = d.failures.map(f =>
+function vShowError(msg) { $('v-card').style.display = 'none'; $('v-error').classList.remove('hidden'); $('v-error').textContent = msg; }
+
+function vRender(d) {
+  $('v-error').classList.add('hidden');
+  $('v-hashes').classList.add('hidden');
+  $('v-fails').classList.add('hidden');
+  $('v-share').classList.add('hidden');
+  $('v-time').classList.add('hidden');
+  $('v-details').classList.remove('open');
+  $('v-details-btn').textContent = '+ technical details';
+
+  const card = $('v-card');
+  card.style.display = '';
+  const r = d.result;
+  const cls = r === 'VERIFIED' ? 'is-verified' : r === 'TAMPERED' ? 'is-tampered' : 'is-invalid';
+  card.className = 'result-card fade-up ' + cls;
+  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('show')));
+
+  const icons = { VERIFIED: '\u2713', TAMPERED: '\u2717', INVALID: '\u26A0' };
+  $('v-icon').textContent = icons[r] || '';
+
+  if (r === 'VERIFIED') {
+    $('v-word').textContent = 'VERIFIED';
+    $('v-msg').textContent = 'This file is authentic. It has not been changed since it was sealed.';
+    $('v-share').classList.remove('hidden');
+    // Show time info
+    const tb = $('v-time');
+    tb.classList.remove('hidden');
+    if (d.time_source === 'External') {
+      tb.classList.add('external');
+      tb.textContent = d.anchored_time
+        ? 'Externally timestamped: ' + d.anchored_time
+        : 'Externally timestamped';
+    } else {
+      tb.classList.remove('external');
+      tb.textContent = 'Local time (not externally anchored)';
+    }
+  } else if (r === 'TAMPERED') {
+    $('v-word').textContent = 'TAMPERED';
+    $('v-msg').textContent = d.message;
+    $('v-hashes').classList.remove('hidden');
+    $('v-hash-cur').textContent = d.file_hash;
+    $('v-hash-exp').textContent = d.expected_hash;
+  } else {
+    $('v-word').textContent = 'INVALID PROOF';
+    $('v-msg').textContent = 'This proof is broken or cannot be used.';
+    if (d.failures && d.failures.length) {
+      $('v-fails').classList.remove('hidden');
+      $('v-fail-list').innerHTML = d.failures.map(f =>
         `<div class="fail-item"><div class="fail-code">${esc(f.code)}</div><div class="fail-reason">${esc(f.reason)}</div></div>`
       ).join('');
     }
+  }
 
-    if (r === 'VERIFIED') {
-      $('share-row').classList.remove('hidden');
+  $('v-details').innerHTML = [
+    dRow('Sealed at', d.created_at), dRow('Object ID', d.object_id),
+    dRow('File hash', d.file_hash), dRow('Proof hash', d.payload_hash),
+    dRow('Time source', d.time_source === 'External' ? 'External (RFC 3161)' : 'Local'),
+    dRow('Trust', d.time_trust === 'pinned' ? 'Pinned roots' : 'Open'),
+  ].join('');
+}
+
+function dRow(k, v) { return `<div class="d-row"><span class="d-key">${esc(k)}</span><span class="d-val">${esc(v)}</span></div>`; }
+
+$('v-details-btn').addEventListener('click', () => {
+  const open = $('v-details').classList.toggle('open');
+  $('v-details-btn').textContent = open ? '- technical details' : '+ technical details';
+});
+
+$('v-copy').addEventListener('click', () => {
+  if (!vObjectId) return;
+  const u = new URL('index.html', window.location.href);
+  u.searchParams.set('id', vObjectId);
+  navigator.clipboard.writeText(u.toString()).then(() => {
+    $('v-copy').textContent = 'COPIED'; $('v-copy').classList.add('done');
+    setTimeout(() => { $('v-copy').textContent = 'COPY LINK'; $('v-copy').classList.remove('done'); }, 2000);
+  });
+});
+
+$('v-dl').addEventListener('click', () => {
+  if (!vProofBytes) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([vProofBytes], { type: 'application/json' }));
+  a.download = (vObjectId || 'proof') + '.proof.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+});
+
+$('v-reset').addEventListener('click', () => {
+  vFile = null; vProof = null; vProofBytes = null; vObjectId = null;
+  $('v-input-file').value = ''; $('v-input-proof').value = '';
+  $('v-drop-file').classList.remove('has-file'); $('v-drop-proof').classList.remove('has-file');
+  $('v-label-file').textContent = 'Your file'; $('v-label-proof').textContent = 'Its proof';
+  $('v-btn').disabled = true;
+  vShow('upload');
+});
+
+// ═══ PROVE ═══
+let pFile = null;
+
+wire('p-input-file', 'p-drop-file', 'p-label-file', f => { pFile = f; $('p-btn').disabled = !pFile; });
+
+function pShow(s) {
+  $('p-upload').style.display = s === 'upload' ? '' : 'none';
+  $('p-loading').style.display = s === 'loading' ? '' : 'none';
+  $('p-result').style.display = s === 'result' ? '' : 'none';
+}
+
+$('p-btn').addEventListener('click', async () => {
+  if (!pFile) return;
+  pShow('loading');
+  const form = new FormData();
+  form.append('file', pFile);
+  try {
+    const res = await fetch(`${API}/prove`, { method: 'POST', body: form });
+    if (!res.ok) {
+      let msg = `Server returned ${res.status}`;
+      try { const j = await res.json(); msg = j?.error?.message || msg; } catch {}
+      pShow('result'); pShowError(msg); return;
     }
+    // Response is the proof bundle file — trigger download
+    const blob = await res.blob();
+    const cd = res.headers.get('content-disposition') || '';
+    const fname = cd.match(/filename="(.+)"/)?.[1] || pFile.name + '.proof.json';
 
-    $('details-body').innerHTML = [
-      dRow('object_id', d.object_id),
-      dRow('object_class', d.object_class),
-      dRow('trust_class', d.trust_class),
-      dRow('created_at', d.created_at),
-      dRow('payload_hash', d.payload_hash),
-      dRow('file_hash', d.file_hash),
-    ].join('');
-  }
-
-  function dRow(k, v) {
-    return `<div class="d-row"><span class="d-key">${esc(k)}</span><span class="d-val">${esc(v)}</span></div>`;
-  }
-
-  // ── details ──
-
-  $('btn-details').addEventListener('click', () => {
-    const open = $('details-body').classList.toggle('open');
-    $('btn-details').textContent = open ? '- details' : '+ details';
-  });
-
-  // ── share ──
-
-  $('btn-copy').addEventListener('click', () => {
-    if (!objectId) return;
-    const u = new URL('index.html', window.location.href);
-    u.searchParams.set('id', objectId);
-    navigator.clipboard.writeText(u.toString()).then(() => {
-      $('btn-copy').textContent = 'COPIED';
-      $('btn-copy').classList.add('done');
-      setTimeout(() => { $('btn-copy').textContent = 'COPY LINK'; $('btn-copy').classList.remove('done'); }, 2000);
-    });
-  });
-
-  $('btn-dl').addEventListener('click', () => {
-    if (!proofBytes) return;
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([proofBytes], { type: 'application/json' }));
-    a.download = (objectId || 'proof') + '.proof.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(a.href);
-  });
+    a.href = URL.createObjectURL(blob);
+    a.download = fname;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
 
-  // ── reset ──
+    // Parse the proof to show summary
+    const text = await blob.text();
+    let info = {};
+    try {
+      const bundle = JSON.parse(text);
+      info = {
+        object_id: bundle.object?.object_id || '',
+        payload_hash: bundle.object?.payload_hash || '',
+        created_at: bundle.object?.origin?.created_at || '',
+        time_source: bundle.object?.time_event?.time_source || 'Local',
+      };
+    } catch {}
 
-  $('btn-reset').addEventListener('click', () => {
-    pickedFile = null; pickedProof = null; proofBytes = null; objectId = null;
-    $('input-file').value = ''; $('input-proof').value = '';
-    $('drop-file').classList.remove('has-file'); $('drop-proof').classList.remove('has-file');
-    $('label-file').textContent = 'File'; $('label-proof').textContent = 'Proof';
-    $('btn-verify').disabled = true;
-    showUpload();
-  });
+    pShow('result');
+    pRender(pFile.name, fname, info);
+  } catch {
+    pShow('result');
+    pShowError('Cannot reach the Winstack server. Make sure it is running locally.');
+  }
+});
+
+function pShowError(msg) { $('p-card').style.display = 'none'; $('p-error').classList.remove('hidden'); $('p-error').textContent = msg; }
+
+function pRender(originalName, proofName, info) {
+  $('p-error').classList.add('hidden');
+  $('p-details').classList.remove('open');
+  $('p-details-btn').textContent = '+ technical details';
+
+  const card = $('p-card');
+  card.style.display = '';
+  card.className = 'result-card fade-up is-sealed';
+  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('show')));
+
+  $('p-icon').textContent = '\u2713';
+  $('p-word').textContent = 'SEALED';
+  $('p-msg').textContent = `Proof created for ${originalName}. The proof file has been downloaded as ${proofName}. Keep it alongside your original file.`;
+
+  const tb = $('p-time');
+  tb.textContent = info.time_source === 'External' ? 'Externally timestamped' : 'Local time';
+  tb.className = 'time-badge' + (info.time_source === 'External' ? ' external' : '');
+
+  $('p-details').innerHTML = [
+    dRow('File', originalName), dRow('Proof', proofName),
+    dRow('Object ID', info.object_id), dRow('File hash', info.payload_hash),
+    dRow('Sealed at', info.created_at),
+  ].join('');
+}
+
+$('p-details-btn').addEventListener('click', () => {
+  const open = $('p-details').classList.toggle('open');
+  $('p-details-btn').textContent = open ? '- technical details' : '+ technical details';
+});
+
+$('p-reset').addEventListener('click', () => {
+  pFile = null;
+  $('p-input-file').value = '';
+  $('p-drop-file').classList.remove('has-file');
+  $('p-label-file').textContent = 'Choose a file';
+  $('p-btn').disabled = true;
+  pShow('upload');
+});
 </script>
 </body>
 </html>

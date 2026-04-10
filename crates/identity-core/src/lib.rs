@@ -158,6 +158,10 @@ impl IdentityStore {
         self.identities.insert(id, record);
         self.keys.insert(id, kp);
     }
+
+    pub fn all_identity_ids(&self) -> Vec<Uuid> {
+        self.identities.keys().copied().collect()
+    }
 }
 
 pub struct ModuleRegistry {
@@ -260,6 +264,10 @@ impl ModuleRegistry {
 
     pub fn insert_module(&mut self, reg: ModuleRegistration) {
         self.modules.insert(reg.module_id, reg);
+    }
+
+    pub fn first_module_id(&self) -> Option<Uuid> {
+        self.modules.keys().next().copied()
     }
 }
 

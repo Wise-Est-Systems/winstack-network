@@ -589,6 +589,147 @@ async fn verify_upload(
     }
 }
 
+#[derive(Serialize)]
+pub struct ProveResponse {
+    pub result: String,
+    pub object_id: String,
+    pub payload_hash: String,
+    pub created_at: String,
+    pub time_source: String,
+    pub message: String,
+}
+
+async fn prove_upload(
+    State(registry): State<SharedRegistry>,
+    mut multipart: Multipart,
+) -> Result<(StatusCode, [(&'static str, String); 2], Vec<u8>), (StatusCode, Json<ErrorResponse>)> {
+    let mut file_bytes: Option<Vec<u8>> = None;
+    let mut file_name: Option<String> = None;
+
+    while let Some(field) = multipart.next_field().await.map_err(|e| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: format!("multipart error: {}", e),
+                },
+            }),
+        )
+    })? {
+        let name = field.name().unwrap_or("").to_string();
+        let fname = field.file_name().unwrap_or("").to_string();
+        let data = field.bytes().await.map_err(|e| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: format!("read error: {}", e),
+                    },
+                }),
+            )
+        })?;
+        if name == "file" {
+            file_name = Some(fname);
+            file_bytes = Some(data.to_vec());
+        }
+    }
+
+    let artifact_bytes = file_bytes.ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: "missing 'file' field".into(),
+                },
+            }),
+        )
+    })?;
+
+    let mut reg = registry.lock().unwrap();
+
+    // Find the creator and module IDs from the identity store
+    let all_ids = reg.identity_store.all_identity_ids();
+    let creator_id = all_ids
+        .iter()
+        .find(|id| {
+            reg.identity_store
+                .get(id)
+                .map(|r| r.kind == IdentityKind::Personal)
+                .unwrap_or(false)
+        })
+        .copied()
+        .ok_or_else(|| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: "no creator identity found — run 'winstack prove' first to initialize the node".into(),
+                    },
+                }),
+            )
+        })?;
+
+    let module_id = reg.module_registry.first_module_id().ok_or_else(|| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message:
+                        "no module registered — run 'winstack prove' first to initialize the node"
+                            .into(),
+                },
+            }),
+        )
+    })?;
+
+    let obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes,
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+        })
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: format!("sealing failed: {}", e),
+                    },
+                }),
+            )
+        })?;
+
+    let bundle = reg.build_proof_bundle(&obj.object_id).ok_or_else(|| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: "could not build proof bundle".into(),
+                },
+            }),
+        )
+    })?;
+
+    let proof_json = serde_json::to_string_pretty(&bundle).unwrap();
+    let download_name = file_name
+        .map(|n| format!("{}.proof.json", n))
+        .unwrap_or_else(|| format!("{}.proof.json", obj.object_id));
+
+    Ok((
+        StatusCode::OK,
+        [
+            ("content-type", "application/json".to_string()),
+            (
+                "content-disposition",
+                format!("attachment; filename=\"{}\"", download_name),
+            ),
+        ],
+        proof_json.into_bytes(),
+    ))
+}
+
 pub fn build_router(registry: SharedRegistry) -> Router {
     Router::new()
         .route("/objects/:id", get(inspect_object))
@@ -596,6 +737,10 @@ pub fn build_router(registry: SharedRegistry) -> Router {
         .route(
             "/verify",
             post(verify_upload).layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
+        )
+        .route(
+            "/prove",
+            post(prove_upload).layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
         )
         .layer(CorsLayer::permissive())
         .with_state(registry)
