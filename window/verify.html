@@ -312,7 +312,7 @@
 <footer><div class="footer-label">Winstack &mdash; deterministic artifact verification</div></footer>
 
 <script>
-const API = (window.WINSTACK_API_BASE || 'http://127.0.0.1:3001').replace(/\/$/, '');
+function getAPI() { return (window.WINSTACK_API_BASE || 'http://127.0.0.1:3001').replace(/\/$/, ''); }
 const $ = id => document.getElementById(id);
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
@@ -360,7 +360,7 @@ $('v-btn').addEventListener('click', async () => {
   vProofBytes = new Uint8Array(buf);
   form.append('proof', new Blob([vProofBytes], { type: 'application/json' }), vProof.name);
   try {
-    const res = await fetch(`${API}/verify`, { method: 'POST', body: form });
+    const res = await fetch(`${getAPI()}/verify`, { method: 'POST', body: form });
     if (!res.ok) {
       let msg = `Server returned ${res.status}`;
       try { const j = await res.json(); msg = j?.error?.message || msg; } catch {}
@@ -489,7 +489,7 @@ $('p-btn').addEventListener('click', async () => {
   const form = new FormData();
   form.append('file', pFile);
   try {
-    const res = await fetch(`${API}/prove`, { method: 'POST', body: form });
+    const res = await fetch(`${getAPI()}/prove`, { method: 'POST', body: form });
     if (!res.ok) {
       let msg = `Server returned ${res.status}`;
       try { const j = await res.json(); msg = j?.error?.message || msg; } catch {}

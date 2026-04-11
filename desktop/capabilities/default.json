@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for Winstack",
+  "windows": ["main"],
+  "permissions": []
+}

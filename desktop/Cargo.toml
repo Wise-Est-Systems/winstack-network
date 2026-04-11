@@ -1,0 +1,26 @@
+[package]
+name = "winstack-desktop"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+canon-types = { path = "../crates/canon-types" }
+winstack-crypto = { path = "../crates/crypto" }
+identity-core = { path = "../crates/identity-core" }
+time-core = { path = "../crates/time-core" }
+policy-core = { path = "../crates/policy-core" }
+object-store = { path = "../crates/object-store" }
+graph-index = { path = "../crates/graph-index" }
+registry-core = { path = "../crates/registry-core" }
+window-api = { path = "../crates/window-api" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tauri = { version = "2", features = [] }
+tauri-build = { version = "2", features = [] }
+hex = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }

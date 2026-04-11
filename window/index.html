@@ -308,7 +308,7 @@
 </footer>
 
 <script>
-  const API_BASE = (window.WINSTACK_API_BASE || 'http://127.0.0.1:3001').replace(/\/$/, '');
+  function getAPI() { return (window.WINSTACK_API_BASE || 'http://127.0.0.1:3001').replace(/\/$/, ''); }
 
   const $ = id => document.getElementById(id);
 
@@ -352,7 +352,7 @@
     $('footer-url').textContent = '';
     $('footer-ts').textContent = '';
 
-    const url = `${API_BASE}/objects/${encodeURIComponent(objectId)}`;
+    const url = `${getAPI()}/objects/${encodeURIComponent(objectId)}`;
     try {
       const res = await fetch(url);
       if (res.status === 404) throw new Error(`Not found: ${objectId}`);
@@ -555,7 +555,7 @@
 
   $('btn-download-proof').addEventListener('click', async () => {
     if (!_currentObjectId) return;
-    const url = `${API_BASE}/objects/${encodeURIComponent(_currentObjectId)}/export`;
+    const url = `${getAPI()}/objects/${encodeURIComponent(_currentObjectId)}/export`;
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

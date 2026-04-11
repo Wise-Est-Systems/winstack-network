@@ -14,6 +14,7 @@ members = [
     "crates/module-ai",
     "crates/window-api",
     "crates/cli",
+    "desktop",
 ]
 
 [workspace.dependencies]
