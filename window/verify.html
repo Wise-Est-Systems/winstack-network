@@ -1,570 +1,535 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Winstack</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg:        #08080a;
-      --surface:   #101012;
-      --card:      #131316;
-      --border:    #1c1c22;
-      --border2:   #28282f;
-      --dim:       #383842;
-      --muted:     #58586a;
-      --text:      #c8c8d4;
-      --bright:    #ededf4;
-      --white:     #ffffff;
-      --verified:  #2edc8a;
-      --verified-glow: #2edc8a30;
-      --invalid:   #f04848;
-      --invalid-glow: #f0484830;
-      --tampered:  #f0a030;
-      --tampered-glow: #f0a03030;
-      --sealed:    #6e8efa;
-      --sealed-glow: #6e8efa30;
-      --green-bg:  #0a1f12;
-      --red-bg:    #1f0a0a;
-      --orange-bg: #1f150a;
-      --blue-bg:   #0a0f1f;
-      --mono: 'IBM Plex Mono', monospace;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { background: var(--bg); color: var(--text); font-family: var(--mono); }
-    body { min-height: 100vh; display: flex; flex-direction: column; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Winstack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #09090b;
+  --surface: #0f0f12;
+  --card: #141418;
+  --elevated: #1a1a20;
+  --border: #1f1f28;
+  --border-h: #2a2a36;
+  --muted: #4a4a5a;
+  --subtle: #6a6a7e;
+  --text: #d0d0dc;
+  --bright: #f0f0f6;
+  --white: #fafafa;
+  --green: #34d399;
+  --green-soft: #34d39918;
+  --green-border: #166534;
+  --red: #f87171;
+  --red-soft: #f8717118;
+  --red-border: #7f1d1d;
+  --amber: #fbbf24;
+  --amber-soft: #fbbf2418;
+  --amber-border: #78350f;
+  --blue: #60a5fa;
+  --blue-soft: #60a5fa18;
+  --blue-border: #1e3a5f;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:flex;flex-direction:column}
+::selection{background:var(--green);color:var(--bg)}
 
-    header {
-      border-bottom: 1px solid var(--border); padding: 0 2rem; height: 3rem;
-      display: flex; align-items: center; gap: 1.5rem; background: var(--surface); flex-shrink: 0;
-    }
-    .wordmark { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--bright); }
-    .wordmark span { color: var(--muted); font-weight: 300; }
+/* ── NAV ── */
+nav{
+  padding:0 24px;height:48px;display:flex;align-items:center;gap:16px;
+  border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;
+  -webkit-app-region:drag;
+}
+.logo{font-size:13px;font-weight:600;letter-spacing:0.08em;color:var(--bright)}
+.logo span{color:var(--muted);font-weight:400}
+.mode-switch{
+  display:flex;margin-left:auto;background:var(--bg);border-radius:6px;padding:2px;
+  -webkit-app-region:no-drag;
+}
+.mode-btn{
+  font-size:12px;font-weight:500;padding:5px 14px;border:none;background:none;
+  color:var(--muted);cursor:pointer;border-radius:4px;font-family:var(--sans);
+  transition:color 0.2s,background 0.2s;
+}
+.mode-btn:hover{color:var(--subtle)}
+.mode-btn.on{background:var(--elevated);color:var(--bright)}
 
-    .tabs { display: flex; gap: 0; margin-left: auto; }
-    .tab {
-      font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase;
-      color: var(--dim); background: none; border: 1px solid var(--border);
-      border-right: none; padding: 0.3rem 1rem; cursor: pointer;
-      font-family: var(--mono); transition: all 0.15s;
-    }
-    .tab:last-child { border-right: 1px solid var(--border); }
-    .tab:hover { color: var(--muted); }
-    .tab.active { color: var(--bright); background: var(--card); border-color: var(--border2); }
+/* ── MAIN ── */
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 24px}
+.view{display:none;width:100%;max-width:440px;text-align:center}
+.view.on{display:block}
 
-    main {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      justify-content: center; padding: 2rem; min-height: 0;
-    }
+/* ── TYPOGRAPHY ── */
+h1{font-size:20px;font-weight:600;color:var(--bright);letter-spacing:-0.01em;margin-bottom:6px}
+.lead{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:32px}
 
-    /* SHARED */
-    .page { display: none; text-align: center; width: 100%; max-width: 480px; }
-    .page.active { display: block; }
-    .title { font-size: 1.1rem; font-weight: 500; color: var(--bright); letter-spacing: 0.06em; margin-bottom: 0.3rem; }
-    .sub { font-size: 0.7rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.5; }
+/* ── DROP ZONES ── */
+.drops{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.drop{
+  position:relative;border:1.5px dashed var(--border);background:var(--card);
+  border-radius:var(--radius);padding:28px 16px;cursor:pointer;
+  transition:border-color 0.2s,background 0.2s,box-shadow 0.2s;
+}
+.drop:hover{border-color:var(--border-h);background:var(--elevated)}
+.drop.over{border-color:var(--green);background:var(--green-soft);box-shadow:0 0 0 1px var(--green)}
+.drop.picked{border-style:solid;border-color:var(--border-h);background:var(--elevated)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:20px;margin-bottom:8px;opacity:0.2;transition:opacity 0.2s}
+.drop:hover .drop-icon,.drop.over .drop-icon{opacity:0.4}
+.drop.picked .drop-icon{opacity:0.5}
+.drop-name{font-size:13px;font-weight:500;color:var(--muted);pointer-events:none;transition:color 0.15s;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;margin:0 auto}
+.drop.picked .drop-name{color:var(--bright)}
+.drop-sub{font-size:11px;color:var(--muted);opacity:0.5;margin-top:4px;pointer-events:none}
+.drop.picked .drop-sub{display:none}
+.drop-single{margin-bottom:16px}
 
-    .drop-zone {
-      border: 2px dashed var(--border2); background: var(--card);
-      padding: 2.2rem 1.5rem; cursor: pointer; position: relative;
-      transition: border-color 0.2s, background 0.2s; margin-bottom: 0.75rem;
-    }
-    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--muted); background: var(--surface); }
-    .drop-zone.has-file { border-style: solid; border-color: var(--dim); }
-    .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-    .drop-label { font-size: 0.68rem; color: var(--dim); pointer-events: none; transition: color 0.15s; }
-    .drop-zone.has-file .drop-label { color: var(--text); }
-    .drop-hint { font-size: 0.54rem; color: var(--dim); pointer-events: none; margin-top: 0.3rem; }
-    .drop-zone.has-file .drop-hint { display: none; }
+/* ── BUTTON ── */
+.btn-primary{
+  width:100%;padding:14px;border:none;border-radius:var(--radius-sm);
+  background:var(--white);color:var(--bg);font-family:var(--sans);
+  font-size:15px;font-weight:600;letter-spacing:0.02em;cursor:pointer;
+  transition:opacity 0.15s,transform 0.1s;
+}
+.btn-primary:hover:not(:disabled){opacity:0.92;transform:translateY(-1px)}
+.btn-primary:active:not(:disabled){transform:translateY(0)}
+.btn-primary:disabled{opacity:0.12;cursor:default}
 
-    .file-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
+/* ── CHECKING ── */
+.checking{display:none;text-align:center}
+.check-dot{
+  width:6px;height:6px;background:var(--subtle);border-radius:50%;
+  display:inline-block;margin:0 3px;animation:pulse 1.2s ease-in-out infinite;
+}
+.check-dot:nth-child(2){animation-delay:0.15s}
+.check-dot:nth-child(3){animation-delay:0.3s}
+@keyframes pulse{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+.check-label{font-size:13px;color:var(--muted);margin-top:16px}
 
-    .action-btn {
-      width: 100%; background: var(--bright); color: var(--bg); border: none;
-      font-family: var(--mono); font-size: 0.9rem; font-weight: 700;
-      letter-spacing: 0.2em; text-transform: uppercase;
-      padding: 1rem; cursor: pointer; transition: opacity 0.15s, transform 0.1s;
-    }
-    .action-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
-    .action-btn:disabled { opacity: 0.15; cursor: default; }
+/* ── RESULT ── */
+.outcome{display:none;width:100%;max-width:480px}
 
-    /* LOADING */
-    .loading { display: none; text-align: center; }
-    .spinner {
-      width: 2.5rem; height: 2.5rem; border: 2px solid var(--border2);
-      border-top-color: var(--bright); border-radius: 50%;
-      animation: spin 0.7s linear infinite; margin: 0 auto 1rem;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-label { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.14em; text-transform: uppercase; }
+.verdict{
+  text-align:center;padding:48px 32px 40px;border-radius:var(--radius);
+  margin-bottom:20px;position:relative;overflow:hidden;
+}
+.verdict::after{
+  content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 0.5s;
+}
+.verdict.show::after{opacity:1}
+.verdict.ok{background:var(--green-soft);border:1px solid var(--green-border)}
+.verdict.ok::after{background:radial-gradient(ellipse at 50% 40%,#34d39920,transparent 70%)}
+.verdict.bad{background:var(--red-soft);border:1px solid var(--red-border)}
+.verdict.bad::after{background:radial-gradient(ellipse at 50% 40%,#f8717120,transparent 70%)}
+.verdict.warn{background:var(--amber-soft);border:1px solid var(--amber-border)}
+.verdict.warn::after{background:radial-gradient(ellipse at 50% 40%,#fbbf2420,transparent 70%)}
+.verdict.sealed{background:var(--blue-soft);border:1px solid var(--blue-border)}
+.verdict.sealed::after{background:radial-gradient(ellipse at 50% 40%,#60a5fa20,transparent 70%)}
 
-    /* RESULT */
-    .result { display: none; width: 100%; max-width: 520px; }
+.verdict-status{font-size:36px;font-weight:700;letter-spacing:0.04em;line-height:1}
+.verdict.ok .verdict-status{color:var(--green)}
+.verdict.bad .verdict-status{color:var(--red)}
+.verdict.warn .verdict-status{color:var(--amber)}
+.verdict.sealed .verdict-status{color:var(--blue)}
 
-    .result-card {
-      text-align: center; padding: 3rem 2rem 2.5rem; margin-bottom: 1.5rem;
-      position: relative; overflow: hidden;
-    }
-    .result-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
-    .result-card::after {
-      content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.6s;
-    }
-    .result-card.show::after { opacity: 1; }
-    .result-card.is-verified  { background: var(--green-bg); border: 1px solid #1a4a2e; }
-    .result-card.is-verified::before  { background: var(--verified); }
-    .result-card.is-verified::after   { background: radial-gradient(ellipse at center, var(--verified-glow), transparent 70%); }
-    .result-card.is-tampered  { background: var(--orange-bg); border: 1px solid #4a3010; }
-    .result-card.is-tampered::before  { background: var(--tampered); }
-    .result-card.is-tampered::after   { background: radial-gradient(ellipse at center, var(--tampered-glow), transparent 70%); }
-    .result-card.is-invalid   { background: var(--red-bg); border: 1px solid #4a1818; }
-    .result-card.is-invalid::before   { background: var(--invalid); }
-    .result-card.is-invalid::after    { background: radial-gradient(ellipse at center, var(--invalid-glow), transparent 70%); }
-    .result-card.is-sealed    { background: var(--blue-bg); border: 1px solid #1a2a4a; }
-    .result-card.is-sealed::before    { background: var(--sealed); }
-    .result-card.is-sealed::after     { background: radial-gradient(ellipse at center, var(--sealed-glow), transparent 70%); }
+.verdict-explain{font-size:14px;color:var(--text);margin-top:14px;line-height:1.55}
+.verdict-meta{
+  display:inline-block;font-size:11px;color:var(--muted);margin-top:14px;
+  padding:3px 10px;border:1px solid var(--border);border-radius:4px;
+}
+.verdict-meta.ext{border-color:var(--green-border);color:var(--green)}
 
-    .result-icon { font-size: 2.2rem; margin-bottom: 0.8rem; }
-    .result-word {
-      font-size: 2.4rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; line-height: 1;
-    }
-    .is-verified .result-word { color: var(--verified); }
-    .is-tampered .result-word { color: var(--tampered); }
-    .is-invalid  .result-word { color: var(--invalid); }
-    .is-sealed   .result-word { color: var(--sealed); }
-    .result-msg { font-size: 0.78rem; color: var(--text); margin-top: 1rem; line-height: 1.55; max-width: 28rem; margin-left: auto; margin-right: auto; }
+/* ── MISMATCH ── */
+.mismatch{
+  border:1px solid var(--red-border);background:var(--red-soft);
+  border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:16px;text-align:left;
+}
+.mm-label{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px}
+.mm-label.a{color:var(--red)}
+.mm-label.b{color:var(--muted)}
+.mm-val{font-size:11px;font-family:var(--mono);word-break:break-all;line-height:1.5}
+.mm-val.a{color:var(--bright)}
+.mm-val.b{color:var(--muted)}
+.mm-sep{height:1px;background:var(--red-border);margin:10px 0}
 
-    /* TIME BADGE */
-    .time-badge {
-      display: inline-block; font-size: 0.54rem; letter-spacing: 0.12em; text-transform: uppercase;
-      padding: 0.2rem 0.6rem; border: 1px solid var(--border2); color: var(--muted); margin-top: 0.8rem;
-    }
-    .time-badge.external { border-color: #1a4a2e; color: var(--verified); }
+/* ── ISSUES ── */
+.issues{
+  border:1px solid var(--amber-border);background:var(--amber-soft);
+  border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:16px;text-align:left;
+}
+.issues-head{font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--amber);margin-bottom:10px}
+.issue{margin-bottom:8px}
+.issue:last-child{margin-bottom:0}
+.issue-code{font-size:11px;font-weight:600;color:var(--amber)}
+.issue-why{font-size:12px;color:var(--text);opacity:0.7;margin-top:2px;line-height:1.4}
 
-    /* HASH BOX */
-    .hash-box { border: 1px solid #4a3010; background: var(--orange-bg); padding: 1rem 1.2rem; margin-bottom: 1.25rem; }
-    .hash-row { margin-bottom: 0.5rem; }
-    .hash-row:last-child { margin-bottom: 0; }
-    .hash-label { font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 0.15rem; }
-    .hash-label.current { color: var(--tampered); }
-    .hash-label.expected { color: var(--muted); }
-    .hash-val { font-size: 0.6rem; word-break: break-all; line-height: 1.45; }
-    .hash-val.current { color: var(--bright); }
-    .hash-val.expected { color: var(--dim); }
+/* ── ACTIONS ── */
+.actions{display:flex;gap:8px;margin-bottom:16px}
+.btn-secondary{
+  flex:1;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--card);color:var(--muted);font-family:var(--sans);
+  font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;
+}
+.btn-secondary:hover{border-color:var(--border-h);color:var(--text)}
+.btn-secondary.done{border-color:var(--green-border);color:var(--green)}
 
-    /* FAILURES */
-    .failures-box { border: 1px solid #4a1818; background: var(--red-bg); padding: 1rem 1.2rem; margin-bottom: 1.25rem; }
-    .failures-title { font-size: 0.52rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--invalid); margin-bottom: 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px solid #3a1212; }
-    .fail-item { margin-bottom: 0.4rem; }
-    .fail-item:last-child { margin-bottom: 0; }
-    .fail-code { font-size: 0.62rem; color: var(--invalid); font-weight: 600; }
-    .fail-reason { font-size: 0.6rem; color: #b05050; margin-top: 0.1rem; word-break: break-word; line-height: 1.4; }
+/* ── DETAILS ── */
+.details-toggle{
+  font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;
+  font-family:var(--sans);transition:color 0.15s;
+}
+.details-toggle:hover{color:var(--subtle)}
+.details-panel{
+  display:none;margin-top:12px;text-align:left;background:var(--card);
+  border-radius:var(--radius-sm);padding:16px 20px;
+}
+.details-panel.open{display:block}
+.detail{display:flex;gap:8px;margin-bottom:6px;font-size:12px}
+.detail:last-child{margin-bottom:0}
+.detail-k{color:var(--muted);white-space:nowrap;min-width:80px}
+.detail-v{color:var(--subtle);word-break:break-all;font-family:var(--mono);font-size:11px}
 
-    /* SHARE */
-    .share-row { border: 1px solid var(--border); background: var(--card); padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem; }
-    .share-label { font-size: 0.52rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); white-space: nowrap; }
-    .share-btns { display: flex; gap: 0.4rem; margin-left: auto; }
-    .s-btn {
-      background: none; border: 1px solid var(--border2); color: var(--muted);
-      font-family: var(--mono); font-size: 0.56rem; padding: 0.22rem 0.6rem;
-      cursor: pointer; letter-spacing: 0.06em; transition: all 0.15s;
-    }
-    .s-btn:hover { border-color: var(--dim); color: var(--text); }
-    .s-btn.done { border-color: #1a4a2e; color: var(--verified); }
+.again{
+  margin-top:20px;font-size:12px;color:var(--muted);background:none;border:none;
+  cursor:pointer;font-family:var(--sans);text-decoration:underline;
+  text-underline-offset:3px;transition:color 0.15s;
+}
+.again:hover{color:var(--text)}
 
-    /* DETAILS */
-    .details-btn {
-      background: none; border: none; color: var(--dim); font-family: var(--mono);
-      font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase;
-      cursor: pointer; padding: 0.2rem 0; transition: color 0.15s;
-    }
-    .details-btn:hover { color: var(--muted); }
-    .details-body { display: none; margin-top: 0.5rem; text-align: left; }
-    .details-body.open { display: block; }
-    .d-row { display: grid; grid-template-columns: 7rem 1fr; gap: 0.3rem; margin-bottom: 0.2rem; font-size: 0.58rem; }
-    .d-key { color: var(--dim); }
-    .d-val { color: var(--muted); word-break: break-all; }
+/* ── ERROR ── */
+.err{
+  border:1px solid var(--red-border);background:var(--red-soft);
+  border-radius:var(--radius-sm);padding:14px 20px;margin-bottom:16px;
+  font-size:13px;color:var(--red);line-height:1.5;text-align:left;
+}
 
-    .reset-btn {
-      background: none; border: 1px solid var(--border2); color: var(--dim);
-      font-family: var(--mono); font-size: 0.58rem; padding: 0.35rem 0.9rem;
-      cursor: pointer; letter-spacing: 0.1em; text-transform: uppercase;
-      margin-top: 1.25rem; transition: all 0.15s; align-self: center;
-    }
-    .reset-btn:hover { border-color: var(--dim); color: var(--muted); }
+/* ── TRUST ── */
+.trust-note{
+  font-size:11px;color:var(--muted);opacity:0.6;margin-bottom:16px;
+}
 
-    .error-box {
-      border: 1px solid #4a1818; background: var(--red-bg); padding: 0.9rem 1.2rem;
-      margin-bottom: 1.25rem; font-size: 0.7rem; color: var(--invalid); line-height: 1.5;
-    }
+/* ── FOOTER ── */
+footer{
+  padding:8px 24px;display:flex;align-items:center;justify-content:center;
+  border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;
+}
+.footer-text{font-size:10px;color:var(--muted);opacity:0.5;letter-spacing:0.04em}
 
-    .hidden { display: none !important; }
+.hidden{display:none!important}
 
-    footer {
-      border-top: 1px solid var(--border); padding: 0.5rem 2rem;
-      display: flex; align-items: center; background: var(--surface); flex-shrink: 0;
-    }
-    .footer-label { font-size: 0.5rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .fade-up { animation: fadeUp 0.35s ease-out both; }
-
-    /* PROVE NOTE */
-    .prove-note {
-      font-size: 0.58rem; color: var(--dim); margin-top: 1rem; line-height: 1.5;
-      max-width: 28rem; margin-left: auto; margin-right: auto;
-    }
-  </style>
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.enter{animation:enter 0.25s ease-out both}
+</style>
 </head>
 <body>
 
-<header>
-  <div class="wordmark">WIN<span>STACK</span></div>
-  <div class="tabs">
-    <button class="tab active" data-tab="verify">Check a file</button>
-    <button class="tab" data-tab="prove">Seal a file</button>
+<nav>
+  <div class="logo">Winstack</div>
+  <div class="mode-switch">
+    <button class="mode-btn on" data-mode="check">Check</button>
+    <button class="mode-btn" data-mode="seal">Seal</button>
   </div>
-</header>
+</nav>
 
 <main>
-  <!-- ═══════════ VERIFY TAB ═══════════ -->
-  <div class="page active" id="page-verify">
-    <div id="v-upload">
-      <div class="title">Check whether a file has changed</div>
-      <div class="sub">Drop a file and its proof. We'll tell you if it still matches.</div>
-      <div class="file-pair">
-        <div class="drop-zone" id="v-drop-file">
-          <input type="file" id="v-input-file">
-          <div class="drop-label" id="v-label-file">Your file</div>
-          <div class="drop-hint">drop or click</div>
+  <!-- CHECK -->
+  <div class="view on" id="v-check">
+    <div id="vc-input">
+      <h1>Check whether a file has changed</h1>
+      <p class="lead">Drop a file and its proof. We'll tell you if it still matches.</p>
+      <div class="drops">
+        <div class="drop" id="d-file">
+          <input type="file" id="i-file">
+          <div class="drop-icon">&#9724;</div>
+          <div class="drop-name" id="n-file">Your file</div>
+          <div class="drop-sub">drop or click</div>
         </div>
-        <div class="drop-zone" id="v-drop-proof">
-          <input type="file" id="v-input-proof" accept=".json,.proof.json">
-          <div class="drop-label" id="v-label-proof">Its proof</div>
-          <div class="drop-hint">.proof.json</div>
+        <div class="drop" id="d-proof">
+          <input type="file" id="i-proof" accept=".json,.proof.json">
+          <div class="drop-icon">&#9724;</div>
+          <div class="drop-name" id="n-proof">Its proof</div>
+          <div class="drop-sub">.proof.json</div>
         </div>
       </div>
-      <button class="action-btn" id="v-btn" disabled>VERIFY</button>
+      <button class="btn-primary" id="btn-check" disabled>Verify</button>
+      <p class="trust-note">Runs locally. Nothing is uploaded to any server.</p>
     </div>
-    <div class="loading" id="v-loading"><div class="spinner"></div><div class="loading-label">Checking</div></div>
-    <div class="result" id="v-result">
-      <div class="error-box hidden" id="v-error"></div>
-      <div class="result-card" id="v-card">
-        <div class="result-icon" id="v-icon"></div>
-        <div class="result-word" id="v-word"></div>
-        <div class="result-msg" id="v-msg"></div>
-        <div class="time-badge hidden" id="v-time"></div>
+    <div class="checking" id="vc-loading">
+      <div><span class="check-dot"></span><span class="check-dot"></span><span class="check-dot"></span></div>
+      <div class="check-label">Checking</div>
+    </div>
+    <div class="outcome" id="vc-result">
+      <div class="err hidden" id="vc-err"></div>
+      <div class="verdict" id="vc-verdict">
+        <div class="verdict-status" id="vc-status"></div>
+        <div class="verdict-explain" id="vc-explain"></div>
+        <div class="verdict-meta hidden" id="vc-meta"></div>
       </div>
-      <div class="hash-box hidden" id="v-hashes">
-        <div class="hash-row"><div class="hash-label current">Your file's fingerprint</div><div class="hash-val current" id="v-hash-cur"></div></div>
-        <div class="hash-row"><div class="hash-label expected">Expected fingerprint (from proof)</div><div class="hash-val expected" id="v-hash-exp"></div></div>
+      <div class="mismatch hidden" id="vc-mm">
+        <div class="mm-label a">This file's fingerprint</div>
+        <div class="mm-val a" id="vc-mm-a"></div>
+        <div class="mm-sep"></div>
+        <div class="mm-label b">Expected (from proof)</div>
+        <div class="mm-val b" id="vc-mm-b"></div>
       </div>
-      <div class="failures-box hidden" id="v-fails"><div class="failures-title">Why it failed</div><div id="v-fail-list"></div></div>
-      <div class="share-row hidden" id="v-share">
-        <div class="share-label">Share this result</div>
-        <div class="share-btns">
-          <button class="s-btn" id="v-copy">COPY LINK</button>
-          <button class="s-btn" id="v-dl">DOWNLOAD PROOF</button>
-        </div>
+      <div class="issues hidden" id="vc-issues">
+        <div class="issues-head">What went wrong</div>
+        <div id="vc-issue-list"></div>
       </div>
-      <button class="details-btn" id="v-details-btn">+ technical details</button>
-      <div class="details-body" id="v-details"></div>
-      <button class="reset-btn" id="v-reset">Check another file</button>
+      <div class="actions hidden" id="vc-actions">
+        <button class="btn-secondary" id="vc-dl">Download proof</button>
+      </div>
+      <button class="details-toggle" id="vc-dtoggle">View details</button>
+      <div class="details-panel" id="vc-dpanel"></div>
+      <button class="again" id="vc-again">Check another file</button>
     </div>
   </div>
 
-  <!-- ═══════════ PROVE TAB ═══════════ -->
-  <div class="page" id="page-prove">
-    <div id="p-upload">
-      <div class="title">Seal a file</div>
-      <div class="sub">Create a cryptographic proof that records exactly what this file is right now.</div>
-      <div class="drop-zone" id="p-drop-file" style="margin-bottom:1rem;">
-        <input type="file" id="p-input-file">
-        <div class="drop-label" id="p-label-file">Choose a file</div>
-        <div class="drop-hint">drop or click</div>
+  <!-- SEAL -->
+  <div class="view" id="v-seal">
+    <div id="vs-input">
+      <h1>Seal a file</h1>
+      <p class="lead">Create a proof that records exactly what this file is right now. If anyone changes it later, the proof will catch it.</p>
+      <div class="drop drop-single" id="d-seal">
+        <input type="file" id="i-seal">
+        <div class="drop-icon">&#9724;</div>
+        <div class="drop-name" id="n-seal">Choose a file</div>
+        <div class="drop-sub">drop or click</div>
       </div>
-      <button class="action-btn" id="p-btn" disabled>CREATE PROOF</button>
-      <div class="prove-note">
-        The proof file will download automatically.<br>
-        Keep it alongside your original file.
-      </div>
+      <button class="btn-primary" id="btn-seal" disabled>Create proof</button>
+      <p class="trust-note">The proof downloads automatically. Keep it with the original file.</p>
     </div>
-    <div class="loading" id="p-loading"><div class="spinner"></div><div class="loading-label">Sealing</div></div>
-    <div class="result" id="p-result">
-      <div class="error-box hidden" id="p-error"></div>
-      <div class="result-card" id="p-card">
-        <div class="result-icon" id="p-icon"></div>
-        <div class="result-word" id="p-word"></div>
-        <div class="result-msg" id="p-msg"></div>
-        <div class="time-badge" id="p-time"></div>
+    <div class="checking" id="vs-loading">
+      <div><span class="check-dot"></span><span class="check-dot"></span><span class="check-dot"></span></div>
+      <div class="check-label">Creating proof</div>
+    </div>
+    <div class="outcome" id="vs-result">
+      <div class="err hidden" id="vs-err"></div>
+      <div class="verdict" id="vs-verdict">
+        <div class="verdict-status" id="vs-status"></div>
+        <div class="verdict-explain" id="vs-explain"></div>
+        <div class="verdict-meta" id="vs-meta"></div>
       </div>
-      <button class="details-btn" id="p-details-btn">+ technical details</button>
-      <div class="details-body" id="p-details"></div>
-      <button class="reset-btn" id="p-reset">Seal another file</button>
+      <button class="details-toggle" id="vs-dtoggle">View details</button>
+      <div class="details-panel" id="vs-dpanel"></div>
+      <button class="again" id="vs-again">Seal another file</button>
     </div>
   </div>
 </main>
 
-<footer><div class="footer-label">Winstack &mdash; deterministic artifact verification</div></footer>
+<footer><span class="footer-text">Deterministic file verification</span></footer>
 
 <script>
-function getAPI() { return (window.WINSTACK_API_BASE || 'http://127.0.0.1:3001').replace(/\/$/, ''); }
-const $ = id => document.getElementById(id);
-const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function getAPI(){return(window.WINSTACK_API_BASE||'http://127.0.0.1:3001').replace(/\/$/,'')}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const trunc=(s,n=28)=>s.length>n?s.slice(0,n-1)+'\u2026':s;
 
-// ═══ TABS ═══
-document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
-    t.classList.add('active');
-    $('page-' + t.dataset.tab).classList.add('active');
+// ── MODE SWITCH ──
+document.querySelectorAll('.mode-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.mode-btn').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    $('v-'+b.dataset.mode).classList.add('on');
   });
 });
 
-// ═══ DROP ZONE WIRING ═══
-function wire(inputId, zoneId, labelId, onPick) {
-  const input = $(inputId), zone = $(zoneId), label = $(labelId);
-  input.addEventListener('change', () => { if (input.files[0]) accept(input.files[0]); });
-  zone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); zone.classList.add('drag-over'); });
-  zone.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); zone.classList.remove('drag-over'); });
-  zone.addEventListener('drop', e => {
-    e.preventDefault(); e.stopPropagation(); zone.classList.remove('drag-over');
-    if (e.dataTransfer.files[0]) { input.files = e.dataTransfer.files; accept(e.dataTransfer.files[0]); }
+// ── DROP WIRING ──
+function wire(inputId,zoneId,nameId,onPick){
+  const input=$(inputId),zone=$(zoneId),name=$(nameId);
+  input.addEventListener('change',()=>{if(input.files[0])pick(input.files[0])});
+  zone.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();zone.classList.add('over')});
+  zone.addEventListener('dragleave',e=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over')});
+  zone.addEventListener('drop',e=>{
+    e.preventDefault();e.stopPropagation();zone.classList.remove('over');
+    if(e.dataTransfer.files[0]){input.files=e.dataTransfer.files;pick(e.dataTransfer.files[0])}
   });
-  function accept(f) { zone.classList.add('has-file'); label.textContent = f.name; onPick(f); }
+  function pick(f){zone.classList.add('picked');name.textContent=trunc(f.name);onPick(f)}
 }
 
-// ═══ VERIFY ═══
-let vFile = null, vProof = null, vProofBytes = null, vObjectId = null;
+// ── CHECK FLOW ──
+let cFile=null,cProof=null,cProofBytes=null,cObjId=null;
 
-wire('v-input-file', 'v-drop-file', 'v-label-file', f => { vFile = f; $('v-btn').disabled = !(vFile && vProof); });
-wire('v-input-proof', 'v-drop-proof', 'v-label-proof', f => { vProof = f; $('v-btn').disabled = !(vFile && vProof); });
+wire('i-file','d-file','n-file',f=>{cFile=f;$('btn-check').disabled=!(cFile&&cProof)});
+wire('i-proof','d-proof','n-proof',f=>{cProof=f;$('btn-check').disabled=!(cFile&&cProof)});
 
-function vShow(s) {
-  $('v-upload').style.display = s === 'upload' ? '' : 'none';
-  $('v-loading').style.display = s === 'loading' ? '' : 'none';
-  $('v-result').style.display = s === 'result' ? '' : 'none';
+function cShow(s){
+  $('vc-input').style.display=s==='input'?'':'none';
+  $('vc-loading').style.display=s==='loading'?'':'none';
+  $('vc-result').style.display=s==='result'?'':'none';
 }
 
-$('v-btn').addEventListener('click', async () => {
-  if (!vFile || !vProof) return;
-  vShow('loading');
-  const form = new FormData();
-  form.append('file', vFile);
-  const buf = await vProof.arrayBuffer();
-  vProofBytes = new Uint8Array(buf);
-  form.append('proof', new Blob([vProofBytes], { type: 'application/json' }), vProof.name);
-  try {
-    const res = await fetch(`${getAPI()}/verify`, { method: 'POST', body: form });
-    if (!res.ok) {
-      let msg = `Server returned ${res.status}`;
-      try { const j = await res.json(); msg = j?.error?.message || msg; } catch {}
-      vShow('result'); vShowError(msg); return;
-    }
-    const d = await res.json();
-    vObjectId = d.object_id;
-    vShow('result');
-    vRender(d);
-  } catch {
-    vShow('result');
-    vShowError('Cannot reach the Winstack server. Make sure it is running locally.');
-  }
+$('btn-check').addEventListener('click',async()=>{
+  if(!cFile||!cProof)return;
+  cShow('loading');
+  const form=new FormData();
+  form.append('file',cFile);
+  const buf=await cProof.arrayBuffer();
+  cProofBytes=new Uint8Array(buf);
+  form.append('proof',new Blob([cProofBytes],{type:'application/json'}),cProof.name);
+  try{
+    const res=await fetch(`${getAPI()}/verify`,{method:'POST',body:form});
+    if(!res.ok){let m=`Something went wrong (${res.status})`;try{const j=await res.json();m=j?.error?.message||m}catch{};cShow('result');cErr(m);return}
+    const d=await res.json();
+    cObjId=d.object_id;
+    cShow('result');
+    cRender(d);
+  }catch{cShow('result');cErr('Cannot connect to Winstack. Make sure the app is running.')}
 });
 
-function vShowError(msg) { $('v-card').style.display = 'none'; $('v-error').classList.remove('hidden'); $('v-error').textContent = msg; }
+function cErr(m){$('vc-verdict').style.display='none';$('vc-err').classList.remove('hidden');$('vc-err').textContent=m}
 
-function vRender(d) {
-  $('v-error').classList.add('hidden');
-  $('v-hashes').classList.add('hidden');
-  $('v-fails').classList.add('hidden');
-  $('v-share').classList.add('hidden');
-  $('v-time').classList.add('hidden');
-  $('v-details').classList.remove('open');
-  $('v-details-btn').textContent = '+ technical details';
+function cRender(d){
+  $('vc-err').classList.add('hidden');
+  $('vc-mm').classList.add('hidden');
+  $('vc-issues').classList.add('hidden');
+  $('vc-actions').classList.add('hidden');
+  $('vc-meta').classList.add('hidden');
+  $('vc-dpanel').classList.remove('open');
+  $('vc-dtoggle').textContent='View details';
 
-  const card = $('v-card');
-  card.style.display = '';
-  const r = d.result;
-  const cls = r === 'VERIFIED' ? 'is-verified' : r === 'TAMPERED' ? 'is-tampered' : 'is-invalid';
-  card.className = 'result-card fade-up ' + cls;
-  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('show')));
+  const v=$('vc-verdict');v.style.display='';
+  const r=d.result;
 
-  const icons = { VERIFIED: '\u2713', TAMPERED: '\u2717', INVALID: '\u26A0' };
-  $('v-icon').textContent = icons[r] || '';
-
-  if (r === 'VERIFIED') {
-    $('v-word').textContent = 'VERIFIED';
-    $('v-msg').textContent = 'This file is authentic. It has not been changed since it was sealed.';
-    $('v-share').classList.remove('hidden');
-    // Show time info
-    const tb = $('v-time');
-    tb.classList.remove('hidden');
-    if (d.time_source === 'External') {
-      tb.classList.add('external');
-      tb.textContent = d.anchored_time
-        ? 'Externally timestamped: ' + d.anchored_time
-        : 'Externally timestamped';
-    } else {
-      tb.classList.remove('external');
-      tb.textContent = 'Local time (not externally anchored)';
+  if(r==='VERIFIED'){
+    v.className='verdict enter ok';
+    $('vc-status').textContent='Verified';
+    $('vc-explain').textContent='This file has not changed.';
+    $('vc-actions').classList.remove('hidden');
+    const m=$('vc-meta');m.classList.remove('hidden');
+    if(d.time_source==='External'){
+      m.className='verdict-meta ext';
+      m.textContent='Externally timestamped';
+    }else{
+      m.className='verdict-meta';
+      m.textContent='Checked using local time';
     }
-  } else if (r === 'TAMPERED') {
-    $('v-word').textContent = 'TAMPERED';
-    $('v-msg').textContent = d.message;
-    $('v-hashes').classList.remove('hidden');
-    $('v-hash-cur').textContent = d.file_hash;
-    $('v-hash-exp').textContent = d.expected_hash;
-  } else {
-    $('v-word').textContent = 'INVALID PROOF';
-    $('v-msg').textContent = 'This proof is broken or cannot be used.';
-    if (d.failures && d.failures.length) {
-      $('v-fails').classList.remove('hidden');
-      $('v-fail-list').innerHTML = d.failures.map(f =>
-        `<div class="fail-item"><div class="fail-code">${esc(f.code)}</div><div class="fail-reason">${esc(f.reason)}</div></div>`
+  }else if(r==='TAMPERED'){
+    v.className='verdict enter bad';
+    $('vc-status').textContent='Tampered';
+    $('vc-explain').textContent='This file does not match the proof. It was modified, or you selected the wrong file.';
+    $('vc-mm').classList.remove('hidden');
+    $('vc-mm-a').textContent=d.file_hash;
+    $('vc-mm-b').textContent=d.expected_hash;
+  }else{
+    v.className='verdict enter warn';
+    $('vc-status').textContent='Invalid proof';
+    $('vc-explain').textContent='This proof is broken or cannot be used to verify this file.';
+    if(d.failures&&d.failures.length){
+      $('vc-issues').classList.remove('hidden');
+      $('vc-issue-list').innerHTML=d.failures.map(f=>
+        `<div class="issue"><div class="issue-code">${esc(f.code)}</div><div class="issue-why">${esc(f.reason)}</div></div>`
       ).join('');
     }
   }
+  requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));
 
-  $('v-details').innerHTML = [
-    dRow('Sealed at', d.created_at), dRow('Object ID', d.object_id),
-    dRow('File hash', d.file_hash), dRow('Proof hash', d.payload_hash),
-    dRow('Time source', d.time_source === 'External' ? 'External (RFC 3161)' : 'Local'),
-    dRow('Trust', d.time_trust === 'pinned' ? 'Pinned roots' : 'Open'),
+  $('vc-dpanel').innerHTML=[
+    dt('Sealed',d.created_at),dt('Object',d.object_id),
+    dt('File hash',d.file_hash),dt('Proof hash',d.payload_hash),
+    dt('Time',d.time_source==='External'?'External (RFC 3161)':'Local'),
   ].join('');
 }
 
-function dRow(k, v) { return `<div class="d-row"><span class="d-key">${esc(k)}</span><span class="d-val">${esc(v)}</span></div>`; }
+function dt(k,v){return `<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`}
 
-$('v-details-btn').addEventListener('click', () => {
-  const open = $('v-details').classList.toggle('open');
-  $('v-details-btn').textContent = open ? '- technical details' : '+ technical details';
+$('vc-dtoggle').addEventListener('click',()=>{
+  const o=$('vc-dpanel').classList.toggle('open');
+  $('vc-dtoggle').textContent=o?'Hide details':'View details';
 });
 
-$('v-copy').addEventListener('click', () => {
-  if (!vObjectId) return;
-  const u = new URL('index.html', window.location.href);
-  u.searchParams.set('id', vObjectId);
-  navigator.clipboard.writeText(u.toString()).then(() => {
-    $('v-copy').textContent = 'COPIED'; $('v-copy').classList.add('done');
-    setTimeout(() => { $('v-copy').textContent = 'COPY LINK'; $('v-copy').classList.remove('done'); }, 2000);
-  });
+$('vc-dl').addEventListener('click',()=>{
+  if(!cProofBytes)return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([cProofBytes],{type:'application/json'}));
+  a.download=(cObjId||'proof')+'.proof.json';
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
 });
 
-$('v-dl').addEventListener('click', () => {
-  if (!vProofBytes) return;
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([vProofBytes], { type: 'application/json' }));
-  a.download = (vObjectId || 'proof') + '.proof.json';
-  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+$('vc-again').addEventListener('click',()=>{
+  cFile=null;cProof=null;cProofBytes=null;cObjId=null;
+  $('i-file').value='';$('i-proof').value='';
+  $('d-file').classList.remove('picked');$('d-proof').classList.remove('picked');
+  $('n-file').textContent='Your file';$('n-proof').textContent='Its proof';
+  $('btn-check').disabled=true;
+  cShow('input');
 });
 
-$('v-reset').addEventListener('click', () => {
-  vFile = null; vProof = null; vProofBytes = null; vObjectId = null;
-  $('v-input-file').value = ''; $('v-input-proof').value = '';
-  $('v-drop-file').classList.remove('has-file'); $('v-drop-proof').classList.remove('has-file');
-  $('v-label-file').textContent = 'Your file'; $('v-label-proof').textContent = 'Its proof';
-  $('v-btn').disabled = true;
-  vShow('upload');
-});
+// ── SEAL FLOW ──
+let sFile=null;
 
-// ═══ PROVE ═══
-let pFile = null;
+wire('i-seal','d-seal','n-seal',f=>{sFile=f;$('btn-seal').disabled=!sFile});
 
-wire('p-input-file', 'p-drop-file', 'p-label-file', f => { pFile = f; $('p-btn').disabled = !pFile; });
-
-function pShow(s) {
-  $('p-upload').style.display = s === 'upload' ? '' : 'none';
-  $('p-loading').style.display = s === 'loading' ? '' : 'none';
-  $('p-result').style.display = s === 'result' ? '' : 'none';
+function sShow(s){
+  $('vs-input').style.display=s==='input'?'':'none';
+  $('vs-loading').style.display=s==='loading'?'':'none';
+  $('vs-result').style.display=s==='result'?'':'none';
 }
 
-$('p-btn').addEventListener('click', async () => {
-  if (!pFile) return;
-  pShow('loading');
-  const form = new FormData();
-  form.append('file', pFile);
-  try {
-    const res = await fetch(`${getAPI()}/prove`, { method: 'POST', body: form });
-    if (!res.ok) {
-      let msg = `Server returned ${res.status}`;
-      try { const j = await res.json(); msg = j?.error?.message || msg; } catch {}
-      pShow('result'); pShowError(msg); return;
-    }
-    // Response is the proof bundle file — trigger download
-    const blob = await res.blob();
-    const cd = res.headers.get('content-disposition') || '';
-    const fname = cd.match(/filename="(.+)"/)?.[1] || pFile.name + '.proof.json';
+$('btn-seal').addEventListener('click',async()=>{
+  if(!sFile)return;
+  sShow('loading');
+  const form=new FormData();
+  form.append('file',sFile);
+  try{
+    const res=await fetch(`${getAPI()}/prove`,{method:'POST',body:form});
+    if(!res.ok){let m=`Something went wrong (${res.status})`;try{const j=await res.json();m=j?.error?.message||m}catch{};sShow('result');sErr(m);return}
+    const blob=await res.blob();
+    const cd=res.headers.get('content-disposition')||'';
+    const fname=cd.match(/filename="(.+)"/)?.[1]||sFile.name+'.proof.json';
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download=fname;
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
 
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = fname;
-    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+    let info={};
+    try{const b=JSON.parse(await blob.text());info={id:b.object?.object_id||'',hash:b.object?.payload_hash||'',at:b.object?.origin?.created_at||'',ts:b.object?.time_event?.time_source||'Local'}}catch{}
 
-    // Parse the proof to show summary
-    const text = await blob.text();
-    let info = {};
-    try {
-      const bundle = JSON.parse(text);
-      info = {
-        object_id: bundle.object?.object_id || '',
-        payload_hash: bundle.object?.payload_hash || '',
-        created_at: bundle.object?.origin?.created_at || '',
-        time_source: bundle.object?.time_event?.time_source || 'Local',
-      };
-    } catch {}
-
-    pShow('result');
-    pRender(pFile.name, fname, info);
-  } catch {
-    pShow('result');
-    pShowError('Cannot reach the Winstack server. Make sure it is running locally.');
-  }
+    sShow('result');
+    sRender(sFile.name,fname,info);
+  }catch{sShow('result');sErr('Cannot connect to Winstack. Make sure the app is running.')}
 });
 
-function pShowError(msg) { $('p-card').style.display = 'none'; $('p-error').classList.remove('hidden'); $('p-error').textContent = msg; }
+function sErr(m){$('vs-verdict').style.display='none';$('vs-err').classList.remove('hidden');$('vs-err').textContent=m}
 
-function pRender(originalName, proofName, info) {
-  $('p-error').classList.add('hidden');
-  $('p-details').classList.remove('open');
-  $('p-details-btn').textContent = '+ technical details';
+function sRender(orig,proof,info){
+  $('vs-err').classList.add('hidden');
+  $('vs-dpanel').classList.remove('open');
+  $('vs-dtoggle').textContent='View details';
 
-  const card = $('p-card');
-  card.style.display = '';
-  card.className = 'result-card fade-up is-sealed';
-  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('show')));
+  const v=$('vs-verdict');v.style.display='';
+  v.className='verdict enter sealed';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));
 
-  $('p-icon').textContent = '\u2713';
-  $('p-word').textContent = 'SEALED';
-  $('p-msg').textContent = `Proof created for ${originalName}. The proof file has been downloaded as ${proofName}. Keep it alongside your original file.`;
+  $('vs-status').textContent='Sealed';
+  $('vs-explain').textContent=`Proof created for ${orig}. It has been saved as ${proof}.`;
+  const m=$('vs-meta');
+  m.textContent=info.ts==='External'?'Externally timestamped':'Local time';
+  m.className='verdict-meta'+(info.ts==='External'?' ext':'');
 
-  const tb = $('p-time');
-  tb.textContent = info.time_source === 'External' ? 'Externally timestamped' : 'Local time';
-  tb.className = 'time-badge' + (info.time_source === 'External' ? ' external' : '');
-
-  $('p-details').innerHTML = [
-    dRow('File', originalName), dRow('Proof', proofName),
-    dRow('Object ID', info.object_id), dRow('File hash', info.payload_hash),
-    dRow('Sealed at', info.created_at),
+  $('vs-dpanel').innerHTML=[
+    dt('File',orig),dt('Proof',proof),
+    dt('Object',info.id),dt('Hash',info.hash),dt('Created',info.at),
   ].join('');
 }
 
-$('p-details-btn').addEventListener('click', () => {
-  const open = $('p-details').classList.toggle('open');
-  $('p-details-btn').textContent = open ? '- technical details' : '+ technical details';
+$('vs-dtoggle').addEventListener('click',()=>{
+  const o=$('vs-dpanel').classList.toggle('open');
+  $('vs-dtoggle').textContent=o?'Hide details':'View details';
 });
 
-$('p-reset').addEventListener('click', () => {
-  pFile = null;
-  $('p-input-file').value = '';
-  $('p-drop-file').classList.remove('has-file');
-  $('p-label-file').textContent = 'Choose a file';
-  $('p-btn').disabled = true;
-  pShow('upload');
+$('vs-again').addEventListener('click',()=>{
+  sFile=null;$('i-seal').value='';$('d-seal').classList.remove('picked');
+  $('n-seal').textContent='Choose a file';$('btn-seal').disabled=true;
+  sShow('input');
 });
 </script>
 </body>
