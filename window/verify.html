@@ -42,36 +42,20 @@ html{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
 body{min-height:100vh;display:flex;flex-direction:column}
 ::selection{background:var(--green);color:var(--bg)}
 
-/* ── NAV ── */
 nav{
-  padding:0 24px;height:48px;display:flex;align-items:center;gap:16px;
+  padding:0 24px;height:48px;display:flex;align-items:center;
   border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;
   -webkit-app-region:drag;
 }
 .logo{font-size:13px;font-weight:600;letter-spacing:0.08em;color:var(--bright)}
-.logo span{color:var(--muted);font-weight:400}
-.mode-switch{
-  display:flex;margin-left:auto;background:var(--bg);border-radius:6px;padding:2px;
-  -webkit-app-region:no-drag;
-}
-.mode-btn{
-  font-size:12px;font-weight:500;padding:5px 14px;border:none;background:none;
-  color:var(--muted);cursor:pointer;border-radius:4px;font-family:var(--sans);
-  transition:color 0.2s,background 0.2s;
-}
-.mode-btn:hover{color:var(--subtle)}
-.mode-btn.on{background:var(--elevated);color:var(--bright)}
 
-/* ── MAIN ── */
 main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 24px}
-.view{display:none;width:100%;max-width:440px;text-align:center}
-.view.on{display:block}
+.app{width:100%;max-width:440px;text-align:center}
 
-/* ── TYPOGRAPHY ── */
 h1{font-size:20px;font-weight:600;color:var(--bright);letter-spacing:-0.01em;margin-bottom:6px}
-.lead{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:32px}
+.sub{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:32px}
 
-/* ── DROP ZONES ── */
+/* ── DROPS ── */
 .drops{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .drop{
   position:relative;border:1.5px dashed var(--border);background:var(--card);
@@ -82,15 +66,14 @@ h1{font-size:20px;font-weight:600;color:var(--bright);letter-spacing:-0.01em;mar
 .drop.over{border-color:var(--green);background:var(--green-soft);box-shadow:0 0 0 1px var(--green)}
 .drop.picked{border-style:solid;border-color:var(--border-h);background:var(--elevated)}
 .drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.drop-icon{font-size:20px;margin-bottom:8px;opacity:0.2;transition:opacity 0.2s}
-.drop:hover .drop-icon,.drop.over .drop-icon{opacity:0.4}
-.drop.picked .drop-icon{opacity:0.5}
+.drop-icon{font-size:20px;margin-bottom:8px;opacity:0.15;transition:opacity 0.2s}
+.drop:hover .drop-icon,.drop.over .drop-icon{opacity:0.35}
+.drop.picked .drop-icon{opacity:0.4}
 .drop-name{font-size:13px;font-weight:500;color:var(--muted);pointer-events:none;transition:color 0.15s;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;margin:0 auto}
 .drop.picked .drop-name{color:var(--bright)}
-.drop-sub{font-size:11px;color:var(--muted);opacity:0.5;margin-top:4px;pointer-events:none}
+.drop-sub{font-size:11px;color:var(--muted);opacity:0.4;margin-top:4px;pointer-events:none}
 .drop.picked .drop-sub{display:none}
-.drop-single{margin-bottom:16px}
 
 /* ── BUTTON ── */
 .btn-primary{
@@ -103,27 +86,37 @@ h1{font-size:20px;font-weight:600;color:var(--bright);letter-spacing:-0.01em;mar
 .btn-primary:active:not(:disabled){transform:translateY(0)}
 .btn-primary:disabled{opacity:0.12;cursor:default}
 
-/* ── CHECKING ── */
-.checking{display:none;text-align:center}
-.check-dot{
+/* ── NO PROOF PROMPT ── */
+.no-proof{
+  margin-top:20px;padding:20px;border:1px solid var(--border);border-radius:var(--radius);
+  background:var(--card);text-align:center;
+}
+.no-proof-text{font-size:13px;color:var(--text);margin-bottom:12px}
+.btn-create{
+  padding:10px 24px;border:none;border-radius:var(--radius-sm);
+  background:var(--blue);color:var(--white);font-family:var(--sans);
+  font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.15s;
+}
+.btn-create:hover{opacity:0.88}
+
+/* ── PROCESSING ── */
+.processing{display:none;text-align:center}
+.dot{
   width:6px;height:6px;background:var(--subtle);border-radius:50%;
   display:inline-block;margin:0 3px;animation:pulse 1.2s ease-in-out infinite;
 }
-.check-dot:nth-child(2){animation-delay:0.15s}
-.check-dot:nth-child(3){animation-delay:0.3s}
+.dot:nth-child(2){animation-delay:0.15s}
+.dot:nth-child(3){animation-delay:0.3s}
 @keyframes pulse{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
-.check-label{font-size:13px;color:var(--muted);margin-top:16px}
+.proc-label{font-size:13px;color:var(--muted);margin-top:16px}
 
 /* ── RESULT ── */
 .outcome{display:none;width:100%;max-width:480px}
-
 .verdict{
   text-align:center;padding:48px 32px 40px;border-radius:var(--radius);
   margin-bottom:20px;position:relative;overflow:hidden;
 }
-.verdict::after{
-  content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 0.5s;
-}
+.verdict::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 0.5s}
 .verdict.show::after{opacity:1}
 .verdict.ok{background:var(--green-soft);border:1px solid var(--green-border)}
 .verdict.ok::after{background:radial-gradient(ellipse at 50% 40%,#34d39920,transparent 70%)}
@@ -147,7 +140,6 @@ h1{font-size:20px;font-weight:600;color:var(--bright);letter-spacing:-0.01em;mar
 }
 .verdict-meta.ext{border-color:var(--green-border);color:var(--green)}
 
-/* ── MISMATCH ── */
 .mismatch{
   border:1px solid var(--red-border);background:var(--red-soft);
   border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:16px;text-align:left;
@@ -160,7 +152,6 @@ h1{font-size:20px;font-weight:600;color:var(--bright);letter-spacing:-0.01em;mar
 .mm-val.b{color:var(--muted)}
 .mm-sep{height:1px;background:var(--red-border);margin:10px 0}
 
-/* ── ISSUES ── */
 .issues{
   border:1px solid var(--amber-border);background:var(--amber-soft);
   border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:16px;text-align:left;
@@ -171,7 +162,6 @@ h1{font-size:20px;font-weight:600;color:var(--bright);letter-spacing:-0.01em;mar
 .issue-code{font-size:11px;font-weight:600;color:var(--amber)}
 .issue-why{font-size:12px;color:var(--text);opacity:0.7;margin-top:2px;line-height:1.4}
 
-/* ── ACTIONS ── */
 .actions{display:flex;gap:8px;margin-bottom:16px}
 .btn-secondary{
   flex:1;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);
@@ -179,18 +169,10 @@ h1{font-size:20px;font-weight:600;color:var(--bright);letter-spacing:-0.01em;mar
   font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;
 }
 .btn-secondary:hover{border-color:var(--border-h);color:var(--text)}
-.btn-secondary.done{border-color:var(--green-border);color:var(--green)}
 
-/* ── DETAILS ── */
-.details-toggle{
-  font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;
-  font-family:var(--sans);transition:color 0.15s;
-}
+.details-toggle{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans);transition:color 0.15s}
 .details-toggle:hover{color:var(--subtle)}
-.details-panel{
-  display:none;margin-top:12px;text-align:left;background:var(--card);
-  border-radius:var(--radius-sm);padding:16px 20px;
-}
+.details-panel{display:none;margin-top:12px;text-align:left;background:var(--card);border-radius:var(--radius-sm);padding:16px 20px}
 .details-panel.open{display:block}
 .detail{display:flex;gap:8px;margin-bottom:6px;font-size:12px}
 .detail:last-child{margin-bottom:0}
@@ -204,157 +186,106 @@ h1{font-size:20px;font-weight:600;color:var(--bright);letter-spacing:-0.01em;mar
 }
 .again:hover{color:var(--text)}
 
-/* ── ERROR ── */
 .err{
   border:1px solid var(--red-border);background:var(--red-soft);
   border-radius:var(--radius-sm);padding:14px 20px;margin-bottom:16px;
   font-size:13px;color:var(--red);line-height:1.5;text-align:left;
 }
 
-/* ── TRUST ── */
-.trust-note{
-  font-size:11px;color:var(--muted);opacity:0.6;margin-bottom:16px;
-}
+.local-note{font-size:11px;color:var(--muted);opacity:0.5;margin-top:16px}
 
-/* ── FOOTER ── */
 footer{
   padding:8px 24px;display:flex;align-items:center;justify-content:center;
   border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;
 }
-.footer-text{font-size:10px;color:var(--muted);opacity:0.5;letter-spacing:0.04em}
+.foot{font-size:10px;color:var(--muted);opacity:0.4}
 
 .hidden{display:none!important}
-
 @keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .enter{animation:enter 0.25s ease-out both}
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="logo">Winstack</div>
-  <div class="mode-switch">
-    <button class="mode-btn on" data-mode="check">Check</button>
-    <button class="mode-btn" data-mode="seal">Seal</button>
-  </div>
-</nav>
+<nav><div class="logo">Winstack</div></nav>
 
 <main>
-  <!-- CHECK -->
-  <div class="view on" id="v-check">
-    <div id="vc-input">
-      <h1>Check whether a file has changed</h1>
-      <p class="lead">Drop a file and its proof. We'll tell you if it still matches.</p>
+  <div class="app" id="app">
+    <!-- INPUT -->
+    <div id="input-state">
+      <h1>Check if a file has changed</h1>
+      <p class="sub">Drop a file and its proof. Don't have a proof? We'll create one.</p>
       <div class="drops">
         <div class="drop" id="d-file">
           <input type="file" id="i-file">
           <div class="drop-icon">&#9724;</div>
-          <div class="drop-name" id="n-file">Drop your file here</div>
-          <div class="drop-sub">or click to browse</div>
+          <div class="drop-name" id="n-file">Your file</div>
+          <div class="drop-sub">drop or click</div>
         </div>
         <div class="drop" id="d-proof">
           <input type="file" id="i-proof" accept=".json,.proof.json">
           <div class="drop-icon">&#9724;</div>
-          <div class="drop-name" id="n-proof">Drop its proof here</div>
-          <div class="drop-sub">.proof.json file</div>
+          <div class="drop-name" id="n-proof">Its proof</div>
+          <div class="drop-sub">.proof.json</div>
         </div>
       </div>
-      <button class="btn-primary" id="btn-check" disabled>Verify</button>
-      <p class="trust-note">Runs locally. Nothing leaves your computer.</p>
-      <p class="trust-note" id="onboard-hint">Don't have a proof yet? <a href="#" id="go-seal" style="color:var(--subtle);text-decoration:underline;text-underline-offset:2px">Seal a file first</a></p>
-    </div>
-    <div class="checking" id="vc-loading">
-      <div><span class="check-dot"></span><span class="check-dot"></span><span class="check-dot"></span></div>
-      <div class="check-label">Checking</div>
-    </div>
-    <div class="outcome" id="vc-result">
-      <div class="err hidden" id="vc-err"></div>
-      <div class="verdict" id="vc-verdict">
-        <div class="verdict-status" id="vc-status"></div>
-        <div class="verdict-explain" id="vc-explain"></div>
-        <div class="verdict-meta hidden" id="vc-meta"></div>
+      <button class="btn-primary" id="btn-go" disabled>Verify</button>
+      <!-- shown when file picked but no proof -->
+      <div class="no-proof hidden" id="no-proof">
+        <div class="no-proof-text">No proof yet for this file.</div>
+        <button class="btn-create" id="btn-create">Create one now</button>
       </div>
-      <div class="mismatch hidden" id="vc-mm">
+      <p class="local-note">Runs locally. Nothing leaves your computer.</p>
+    </div>
+
+    <!-- PROCESSING -->
+    <div class="processing" id="proc-state">
+      <div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+      <div class="proc-label" id="proc-label">Checking</div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="outcome" id="result-state">
+      <div class="err hidden" id="r-err"></div>
+      <div class="verdict" id="r-verdict">
+        <div class="verdict-status" id="r-status"></div>
+        <div class="verdict-explain" id="r-explain"></div>
+        <div class="verdict-meta hidden" id="r-meta"></div>
+      </div>
+      <div class="mismatch hidden" id="r-mm">
         <div class="mm-label a">This file's fingerprint</div>
-        <div class="mm-val a" id="vc-mm-a"></div>
+        <div class="mm-val a" id="r-mm-a"></div>
         <div class="mm-sep"></div>
         <div class="mm-label b">Expected (from proof)</div>
-        <div class="mm-val b" id="vc-mm-b"></div>
+        <div class="mm-val b" id="r-mm-b"></div>
       </div>
-      <div class="issues hidden" id="vc-issues">
+      <div class="issues hidden" id="r-issues">
         <div class="issues-head">What went wrong</div>
-        <div id="vc-issue-list"></div>
+        <div id="r-issue-list"></div>
       </div>
-      <div class="actions hidden" id="vc-actions">
-        <button class="btn-secondary" id="vc-dl">Download proof</button>
+      <div class="actions hidden" id="r-actions">
+        <button class="btn-secondary" id="r-dl">Download proof</button>
       </div>
-      <button class="details-toggle" id="vc-dtoggle">View details</button>
-      <div class="details-panel" id="vc-dpanel"></div>
-      <button class="again" id="vc-again">Check another file</button>
-    </div>
-  </div>
-
-  <!-- SEAL -->
-  <div class="view" id="v-seal">
-    <div id="vs-input">
-      <h1>Seal a file</h1>
-      <p class="lead">Create a proof that records exactly what this file is right now. If anyone changes it later, the proof will catch it.</p>
-      <div class="drop drop-single" id="d-seal">
-        <input type="file" id="i-seal">
-        <div class="drop-icon">&#9724;</div>
-        <div class="drop-name" id="n-seal">Drop a file here</div>
-        <div class="drop-sub">or click to browse</div>
-      </div>
-      <button class="btn-primary" id="btn-seal" disabled>Create proof</button>
-      <p class="trust-note">The proof downloads automatically. Keep it with your original file.</p>
-    </div>
-    <div class="checking" id="vs-loading">
-      <div><span class="check-dot"></span><span class="check-dot"></span><span class="check-dot"></span></div>
-      <div class="check-label">Creating proof</div>
-    </div>
-    <div class="outcome" id="vs-result">
-      <div class="err hidden" id="vs-err"></div>
-      <div class="verdict" id="vs-verdict">
-        <div class="verdict-status" id="vs-status"></div>
-        <div class="verdict-explain" id="vs-explain"></div>
-        <div class="verdict-meta" id="vs-meta"></div>
-      </div>
-      <button class="details-toggle" id="vs-dtoggle">View details</button>
-      <div class="details-panel" id="vs-dpanel"></div>
-      <button class="again" id="vs-again">Seal another file</button>
+      <button class="details-toggle" id="r-dtoggle">View details</button>
+      <div class="details-panel" id="r-dpanel"></div>
+      <button class="again" id="r-again">Start over</button>
     </div>
   </div>
 </main>
 
-<footer><span class="footer-text">Deterministic file verification</span></footer>
+<footer><span class="foot">Runs entirely on your device</span></footer>
 
 <script>
 function getAPI(){return(window.WINSTACK_API_BASE||'http://127.0.0.1:3001').replace(/\/$/,'')}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const trunc=(s,n=28)=>s.length>n?s.slice(0,n-1)+'\u2026':s;
+const trunc=(s,n=24)=>s.length>n?s.slice(0,n-1)+'\u2026':s;
+function dt(k,v){return`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`}
 
-// ── MODE SWITCH ──
-document.querySelectorAll('.mode-btn').forEach(b=>{
-  b.addEventListener('click',()=>{
-    document.querySelectorAll('.mode-btn').forEach(x=>x.classList.remove('on'));
-    document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on');
-    $('v-'+b.dataset.mode).classList.add('on');
-  });
-});
-
-// ── ONBOARDING HINT ──
-$('go-seal').addEventListener('click',e=>{
-  e.preventDefault();
-  document.querySelectorAll('.mode-btn').forEach(x=>x.classList.remove('on'));
-  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
-  document.querySelector('[data-mode="seal"]').classList.add('on');
-  $('v-seal').classList.add('on');
-});
+let theFile=null,theProof=null,proofBytes=null,objId=null;
 
 // ── DROP WIRING ──
-function wire(inputId,zoneId,nameId,onPick){
+function wire(inputId,zoneId,nameId,cb){
   const input=$(inputId),zone=$(zoneId),name=$(nameId);
   input.addEventListener('change',()=>{if(input.files[0])pick(input.files[0])});
   zone.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();zone.classList.add('over')});
@@ -363,183 +294,188 @@ function wire(inputId,zoneId,nameId,onPick){
     e.preventDefault();e.stopPropagation();zone.classList.remove('over');
     if(e.dataTransfer.files[0]){input.files=e.dataTransfer.files;pick(e.dataTransfer.files[0])}
   });
-  function pick(f){zone.classList.add('picked');name.textContent=trunc(f.name);onPick(f)}
+  function pick(f){zone.classList.add('picked');name.textContent=trunc(f.name);cb(f)}
 }
 
-// ── CHECK FLOW ──
-let cFile=null,cProof=null,cProofBytes=null,cObjId=null;
-
-wire('i-file','d-file','n-file',f=>{cFile=f;$('btn-check').disabled=!(cFile&&cProof)});
-wire('i-proof','d-proof','n-proof',f=>{cProof=f;$('btn-check').disabled=!(cFile&&cProof)});
-
-function cShow(s){
-  $('vc-input').style.display=s==='input'?'':'none';
-  $('vc-loading').style.display=s==='loading'?'':'none';
-  $('vc-result').style.display=s==='result'?'':'none';
-}
-
-$('btn-check').addEventListener('click',async()=>{
-  if(!cFile||!cProof)return;
-  cShow('loading');
-  const form=new FormData();
-  form.append('file',cFile);
-  const buf=await cProof.arrayBuffer();
-  cProofBytes=new Uint8Array(buf);
-  form.append('proof',new Blob([cProofBytes],{type:'application/json'}),cProof.name);
-  try{
-    const res=await fetch(`${getAPI()}/verify`,{method:'POST',body:form});
-    if(!res.ok){let m=`Something went wrong (${res.status})`;try{const j=await res.json();m=j?.error?.message||m}catch{};cShow('result');cErr(m);return}
-    const d=await res.json();
-    cObjId=d.object_id;
-    cShow('result');
-    cRender(d);
-  }catch{cShow('result');cErr('Cannot connect to Winstack. Make sure the app is running.')}
+wire('i-file','d-file','n-file',f=>{
+  theFile=f;
+  update();
 });
 
-function cErr(m){$('vc-verdict').style.display='none';$('vc-err').classList.remove('hidden');$('vc-err').textContent=m}
+wire('i-proof','d-proof','n-proof',f=>{
+  theProof=f;
+  $('no-proof').classList.add('hidden');
+  update();
+});
 
-function cRender(d){
-  $('vc-err').classList.add('hidden');
-  $('vc-mm').classList.add('hidden');
-  $('vc-issues').classList.add('hidden');
-  $('vc-actions').classList.add('hidden');
-  $('vc-meta').classList.add('hidden');
-  $('vc-dpanel').classList.remove('open');
-  $('vc-dtoggle').textContent='View details';
+function update(){
+  // Both present → enable verify
+  if(theFile&&theProof){
+    $('btn-go').disabled=false;
+    $('no-proof').classList.add('hidden');
+  }
+  // File only, no proof → show "create one" prompt
+  else if(theFile&&!theProof){
+    $('btn-go').disabled=true;
+    $('no-proof').classList.remove('hidden');
+  }
+  else{
+    $('btn-go').disabled=true;
+    $('no-proof').classList.add('hidden');
+  }
+}
 
-  const v=$('vc-verdict');v.style.display='';
+// ── STATES ──
+function show(s){
+  $('input-state').style.display=s==='input'?'':'none';
+  $('proc-state').style.display=s==='proc'?'':'none';
+  $('result-state').style.display=s==='result'?'':'none';
+}
+
+// ── VERIFY ──
+$('btn-go').addEventListener('click',async()=>{
+  if(!theFile||!theProof)return;
+  $('proc-label').textContent='Checking';
+  show('proc');
+  const form=new FormData();
+  form.append('file',theFile);
+  const buf=await theProof.arrayBuffer();
+  proofBytes=new Uint8Array(buf);
+  form.append('proof',new Blob([proofBytes],{type:'application/json'}),theProof.name);
+  try{
+    const res=await fetch(`${getAPI()}/verify`,{method:'POST',body:form});
+    if(!res.ok){let m=`Something went wrong (${res.status})`;try{const j=await res.json();m=j?.error?.message||m}catch{};show('result');showErr(m);return}
+    const d=await res.json();
+    objId=d.object_id;
+    show('result');
+    renderVerify(d);
+  }catch{show('result');showErr('Cannot connect. Make sure Winstack is running.')}
+});
+
+// ── CREATE PROOF ──
+$('btn-create').addEventListener('click',async()=>{
+  if(!theFile)return;
+  $('proc-label').textContent='Creating proof';
+  show('proc');
+  const form=new FormData();
+  form.append('file',theFile);
+  try{
+    const res=await fetch(`${getAPI()}/prove`,{method:'POST',body:form});
+    if(!res.ok){let m=`Something went wrong (${res.status})`;try{const j=await res.json();m=j?.error?.message||m}catch{};show('result');showErr(m);return}
+    const blob=await res.blob();
+    const cd=res.headers.get('content-disposition')||'';
+    const fname=cd.match(/filename="(.+)"/)?.[1]||theFile.name+'.proof.json';
+    // trigger download
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download=fname;
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+    // parse for display
+    let info={};
+    try{const b=JSON.parse(await blob.text());info={id:b.object?.object_id||'',hash:b.object?.payload_hash||'',at:b.object?.origin?.created_at||'',ts:b.object?.time_event?.time_source||'Local'}}catch{}
+    show('result');
+    renderSeal(theFile.name,fname,info);
+  }catch{show('result');showErr('Cannot connect. Make sure Winstack is running.')}
+});
+
+// ── ERROR ──
+function showErr(m){$('r-verdict').style.display='none';$('r-err').classList.remove('hidden');$('r-err').textContent=m}
+
+// ── RENDER VERIFY ──
+function renderVerify(d){
+  $('r-err').classList.add('hidden');
+  $('r-mm').classList.add('hidden');
+  $('r-issues').classList.add('hidden');
+  $('r-actions').classList.add('hidden');
+  $('r-meta').classList.add('hidden');
+  $('r-dpanel').classList.remove('open');
+  $('r-dtoggle').textContent='View details';
+
+  const v=$('r-verdict');v.style.display='';
   const r=d.result;
 
   if(r==='VERIFIED'){
     v.className='verdict enter ok';
-    $('vc-status').textContent='Verified';
-    $('vc-explain').textContent='This file has not changed.';
-    $('vc-actions').classList.remove('hidden');
-    const m=$('vc-meta');m.classList.remove('hidden');
-    if(d.time_source==='External'){
-      m.className='verdict-meta ext';
-      m.textContent='Externally timestamped';
-    }else{
-      m.className='verdict-meta';
-      m.textContent='Checked using local time';
-    }
+    $('r-status').textContent='Verified';
+    $('r-explain').textContent='This file has not changed.';
+    $('r-actions').classList.remove('hidden');
+    const m=$('r-meta');m.classList.remove('hidden');
+    m.className='verdict-meta'+(d.time_source==='External'?' ext':'');
+    m.textContent=d.time_source==='External'?'Externally timestamped':'Checked using local time';
   }else if(r==='TAMPERED'){
     v.className='verdict enter bad';
-    $('vc-status').textContent='Tampered';
-    $('vc-explain').textContent='This file does not match the proof. It was modified, or you selected the wrong file.';
-    $('vc-mm').classList.remove('hidden');
-    $('vc-mm-a').textContent=d.file_hash;
-    $('vc-mm-b').textContent=d.expected_hash;
+    $('r-status').textContent='Tampered';
+    $('r-explain').textContent='This file does not match the proof. It was modified, or you selected the wrong file.';
+    $('r-mm').classList.remove('hidden');
+    $('r-mm-a').textContent=d.file_hash;
+    $('r-mm-b').textContent=d.expected_hash;
   }else{
     v.className='verdict enter warn';
-    $('vc-status').textContent='Invalid proof';
-    $('vc-explain').textContent='This proof is broken or cannot be used to verify this file.';
+    $('r-status').textContent='Invalid proof';
+    $('r-explain').textContent='This proof is broken or cannot be used to verify this file.';
     if(d.failures&&d.failures.length){
-      $('vc-issues').classList.remove('hidden');
-      $('vc-issue-list').innerHTML=d.failures.map(f=>
+      $('r-issues').classList.remove('hidden');
+      $('r-issue-list').innerHTML=d.failures.map(f=>
         `<div class="issue"><div class="issue-code">${esc(f.code)}</div><div class="issue-why">${esc(f.reason)}</div></div>`
       ).join('');
     }
   }
   requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));
-
-  $('vc-dpanel').innerHTML=[
+  $('r-dpanel').innerHTML=[
     dt('Sealed',d.created_at),dt('Object',d.object_id),
     dt('File hash',d.file_hash),dt('Proof hash',d.payload_hash),
     dt('Time',d.time_source==='External'?'External (RFC 3161)':'Local'),
   ].join('');
 }
 
-function dt(k,v){return `<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`}
+// ── RENDER SEAL ──
+function renderSeal(orig,proof,info){
+  $('r-err').classList.add('hidden');
+  $('r-mm').classList.add('hidden');
+  $('r-issues').classList.add('hidden');
+  $('r-actions').classList.add('hidden');
+  $('r-meta').classList.add('hidden');
+  $('r-dpanel').classList.remove('open');
+  $('r-dtoggle').textContent='View details';
 
-$('vc-dtoggle').addEventListener('click',()=>{
-  const o=$('vc-dpanel').classList.toggle('open');
-  $('vc-dtoggle').textContent=o?'Hide details':'View details';
-});
-
-$('vc-dl').addEventListener('click',()=>{
-  if(!cProofBytes)return;
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([cProofBytes],{type:'application/json'}));
-  a.download=(cObjId||'proof')+'.proof.json';
-  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
-});
-
-$('vc-again').addEventListener('click',()=>{
-  cFile=null;cProof=null;cProofBytes=null;cObjId=null;
-  $('i-file').value='';$('i-proof').value='';
-  $('d-file').classList.remove('picked');$('d-proof').classList.remove('picked');
-  $('n-file').textContent='Drop your file here';$('n-proof').textContent='Drop its proof here';
-  $('btn-check').disabled=true;
-  cShow('input');
-});
-
-// ── SEAL FLOW ──
-let sFile=null;
-
-wire('i-seal','d-seal','n-seal',f=>{sFile=f;$('btn-seal').disabled=!sFile});
-
-function sShow(s){
-  $('vs-input').style.display=s==='input'?'':'none';
-  $('vs-loading').style.display=s==='loading'?'':'none';
-  $('vs-result').style.display=s==='result'?'':'none';
-}
-
-$('btn-seal').addEventListener('click',async()=>{
-  if(!sFile)return;
-  sShow('loading');
-  const form=new FormData();
-  form.append('file',sFile);
-  try{
-    const res=await fetch(`${getAPI()}/prove`,{method:'POST',body:form});
-    if(!res.ok){let m=`Something went wrong (${res.status})`;try{const j=await res.json();m=j?.error?.message||m}catch{};sShow('result');sErr(m);return}
-    const blob=await res.blob();
-    const cd=res.headers.get('content-disposition')||'';
-    const fname=cd.match(/filename="(.+)"/)?.[1]||sFile.name+'.proof.json';
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);a.download=fname;
-    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
-
-    let info={};
-    try{const b=JSON.parse(await blob.text());info={id:b.object?.object_id||'',hash:b.object?.payload_hash||'',at:b.object?.origin?.created_at||'',ts:b.object?.time_event?.time_source||'Local'}}catch{}
-
-    sShow('result');
-    sRender(sFile.name,fname,info);
-  }catch{sShow('result');sErr('Cannot connect to Winstack. Make sure the app is running.')}
-});
-
-function sErr(m){$('vs-verdict').style.display='none';$('vs-err').classList.remove('hidden');$('vs-err').textContent=m}
-
-function sRender(orig,proof,info){
-  $('vs-err').classList.add('hidden');
-  $('vs-dpanel').classList.remove('open');
-  $('vs-dtoggle').textContent='View details';
-
-  const v=$('vs-verdict');v.style.display='';
+  const v=$('r-verdict');v.style.display='';
   v.className='verdict enter sealed';
   requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));
 
-  $('vs-status').textContent='Sealed';
-  $('vs-explain').textContent=`Proof created for ${orig}. It has been saved as ${proof}.`;
-  const m=$('vs-meta');
-  m.textContent=info.ts==='External'?'Externally timestamped':'Local time';
+  $('r-status').textContent='Proof created';
+  $('r-explain').textContent=`Your proof for ${orig} has been saved. Keep it with the original file \u2014 you'll need both to verify later.`;
+  const m=$('r-meta');m.classList.remove('hidden');
   m.className='verdict-meta'+(info.ts==='External'?' ext':'');
+  m.textContent=info.ts==='External'?'Externally timestamped':'Local time';
 
-  $('vs-dpanel').innerHTML=[
+  $('r-dpanel').innerHTML=[
     dt('File',orig),dt('Proof',proof),
     dt('Object',info.id),dt('Hash',info.hash),dt('Created',info.at),
   ].join('');
 }
 
-$('vs-dtoggle').addEventListener('click',()=>{
-  const o=$('vs-dpanel').classList.toggle('open');
-  $('vs-dtoggle').textContent=o?'Hide details':'View details';
+// ── DETAILS ──
+$('r-dtoggle').addEventListener('click',()=>{
+  const o=$('r-dpanel').classList.toggle('open');
+  $('r-dtoggle').textContent=o?'Hide details':'View details';
 });
 
-$('vs-again').addEventListener('click',()=>{
-  sFile=null;$('i-seal').value='';$('d-seal').classList.remove('picked');
-  $('n-seal').textContent='Drop a file here';$('btn-seal').disabled=true;
-  sShow('input');
+// ── DOWNLOAD ──
+$('r-dl').addEventListener('click',()=>{
+  if(!proofBytes)return;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([proofBytes],{type:'application/json'}));
+  a.download=(objId||'proof')+'.proof.json';
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+});
+
+// ── RESET ──
+$('r-again').addEventListener('click',()=>{
+  theFile=null;theProof=null;proofBytes=null;objId=null;
+  $('i-file').value='';$('i-proof').value='';
+  $('d-file').classList.remove('picked');$('d-proof').classList.remove('picked');
+  $('n-file').textContent='Your file';$('n-proof').textContent='Its proof';
+  $('btn-go').disabled=true;$('no-proof').classList.add('hidden');
+  show('input');
 });
 </script>
 </body>
