@@ -249,18 +249,19 @@ footer{
         <div class="drop" id="d-file">
           <input type="file" id="i-file">
           <div class="drop-icon">&#9724;</div>
-          <div class="drop-name" id="n-file">Your file</div>
-          <div class="drop-sub">drop or click</div>
+          <div class="drop-name" id="n-file">Drop your file here</div>
+          <div class="drop-sub">or click to browse</div>
         </div>
         <div class="drop" id="d-proof">
           <input type="file" id="i-proof" accept=".json,.proof.json">
           <div class="drop-icon">&#9724;</div>
-          <div class="drop-name" id="n-proof">Its proof</div>
-          <div class="drop-sub">.proof.json</div>
+          <div class="drop-name" id="n-proof">Drop its proof here</div>
+          <div class="drop-sub">.proof.json file</div>
         </div>
       </div>
       <button class="btn-primary" id="btn-check" disabled>Verify</button>
-      <p class="trust-note">Runs locally. Nothing is uploaded to any server.</p>
+      <p class="trust-note">Runs locally. Nothing leaves your computer.</p>
+      <p class="trust-note" id="onboard-hint">Don't have a proof yet? <a href="#" id="go-seal" style="color:var(--subtle);text-decoration:underline;text-underline-offset:2px">Seal a file first</a></p>
     </div>
     <div class="checking" id="vc-loading">
       <div><span class="check-dot"></span><span class="check-dot"></span><span class="check-dot"></span></div>
@@ -301,11 +302,11 @@ footer{
       <div class="drop drop-single" id="d-seal">
         <input type="file" id="i-seal">
         <div class="drop-icon">&#9724;</div>
-        <div class="drop-name" id="n-seal">Choose a file</div>
-        <div class="drop-sub">drop or click</div>
+        <div class="drop-name" id="n-seal">Drop a file here</div>
+        <div class="drop-sub">or click to browse</div>
       </div>
       <button class="btn-primary" id="btn-seal" disabled>Create proof</button>
-      <p class="trust-note">The proof downloads automatically. Keep it with the original file.</p>
+      <p class="trust-note">The proof downloads automatically. Keep it with your original file.</p>
     </div>
     <div class="checking" id="vs-loading">
       <div><span class="check-dot"></span><span class="check-dot"></span><span class="check-dot"></span></div>
@@ -341,6 +342,15 @@ document.querySelectorAll('.mode-btn').forEach(b=>{
     b.classList.add('on');
     $('v-'+b.dataset.mode).classList.add('on');
   });
+});
+
+// ── ONBOARDING HINT ──
+$('go-seal').addEventListener('click',e=>{
+  e.preventDefault();
+  document.querySelectorAll('.mode-btn').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  document.querySelector('[data-mode="seal"]').classList.add('on');
+  $('v-seal').classList.add('on');
 });
 
 // ── DROP WIRING ──
@@ -459,7 +469,7 @@ $('vc-again').addEventListener('click',()=>{
   cFile=null;cProof=null;cProofBytes=null;cObjId=null;
   $('i-file').value='';$('i-proof').value='';
   $('d-file').classList.remove('picked');$('d-proof').classList.remove('picked');
-  $('n-file').textContent='Your file';$('n-proof').textContent='Its proof';
+  $('n-file').textContent='Drop your file here';$('n-proof').textContent='Drop its proof here';
   $('btn-check').disabled=true;
   cShow('input');
 });
@@ -528,7 +538,7 @@ $('vs-dtoggle').addEventListener('click',()=>{
 
 $('vs-again').addEventListener('click',()=>{
   sFile=null;$('i-seal').value='';$('d-seal').classList.remove('picked');
-  $('n-seal').textContent='Choose a file';$('btn-seal').disabled=true;
+  $('n-seal').textContent='Drop a file here';$('btn-seal').disabled=true;
   sShow('input');
 });
 </script>
