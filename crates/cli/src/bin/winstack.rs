@@ -21,6 +21,9 @@ enum Commands {
         file: PathBuf,
         #[arg(long)]
         tsa_url: Option<String>,
+        /// Link to a predecessor proof to create a chain
+        #[arg(long)]
+        from: Option<PathBuf>,
     },
     Verify {
         file: PathBuf,
@@ -149,7 +152,11 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Prove { file, tsa_url } => {
+        Commands::Prove {
+            file,
+            tsa_url,
+            from,
+        } => {
             eprintln!("node: {}", resolve_node_dir().display());
             if !file.exists() {
                 eprintln!("ERROR: file not found: {}", file.display());
@@ -184,6 +191,36 @@ fn main() {
                 None
             };
 
+            // Build proof chain linkage
+            let proof_chain = if let Some(ref from_path) = from {
+                let pred_data = std::fs::read_to_string(from_path).unwrap_or_else(|e| {
+                    eprintln!("ERROR: could not read predecessor proof: {}", e);
+                    std::process::exit(2);
+                });
+                let pred_bundle: ProofBundle =
+                    serde_json::from_str(&pred_data).unwrap_or_else(|e| {
+                        eprintln!("ERROR: invalid predecessor proof: {}", e);
+                        std::process::exit(2);
+                    });
+                let lineage_id = pred_bundle
+                    .object
+                    .proof_chain
+                    .as_ref()
+                    .map(|c| c.lineage_id)
+                    .unwrap_or(pred_bundle.object.object_id);
+                eprintln!(
+                    "  chain: extending {} (lineage {})",
+                    pred_bundle.object.object_id, lineage_id
+                );
+                Some(ProofChain {
+                    lineage_id,
+                    predecessor_proof_id: Some(pred_bundle.object.object_id),
+                    predecessor_payload_hash: Some(pred_bundle.object.payload_hash.clone()),
+                })
+            } else {
+                None
+            };
+
             let obj = reg
                 .seal_native(NativeBirthProposal {
                     artifact_bytes,
@@ -191,6 +228,7 @@ fn main() {
                     module_id: node_cfg.module_id,
                     parent_ids: vec![],
                     tsa_attachment,
+                    proof_chain,
                 })
                 .unwrap_or_else(|e| {
                     eprintln!("ERROR: sealing failed: {}", e);

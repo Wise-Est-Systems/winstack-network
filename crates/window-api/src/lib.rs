@@ -258,6 +258,8 @@ async fn inspect_object(
                     artifact_size_bytes: u64,
                     parent_ids: &'a [Uuid],
                     protocol: &'a str,
+                    #[serde(skip_serializing_if = "Option::is_none")]
+                    proof_chain: &'a Option<ProofChain>,
                 }
                 let payload = ObjSignPayload {
                     object_id: &obj.object_id,
@@ -266,6 +268,7 @@ async fn inspect_object(
                     artifact_size_bytes: obj.artifact_size_bytes,
                     parent_ids: &obj.parent_ids,
                     protocol: &obj.protocol,
+                    proof_chain: &obj.proof_chain,
                 };
                 winstack_crypto::verify_json_signature(
                     &creator_ident.public_key_hex,
@@ -605,6 +608,7 @@ async fn prove_upload(
 ) -> Result<(StatusCode, [(&'static str, String); 2], Vec<u8>), (StatusCode, Json<ErrorResponse>)> {
     let mut file_bytes: Option<Vec<u8>> = None;
     let mut file_name: Option<String> = None;
+    let mut predecessor_bytes: Option<Vec<u8>> = None;
 
     while let Some(field) = multipart.next_field().await.map_err(|e| {
         (
@@ -631,6 +635,8 @@ async fn prove_upload(
         if name == "file" {
             file_name = Some(fname);
             file_bytes = Some(data.to_vec());
+        } else if name == "predecessor" {
+            predecessor_bytes = Some(data.to_vec());
         }
     }
 
@@ -689,6 +695,21 @@ async fn prove_upload(
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: predecessor_bytes.and_then(|pb| {
+                serde_json::from_slice::<ProofBundle>(&pb).ok().map(|pred| {
+                    let lineage_id = pred
+                        .object
+                        .proof_chain
+                        .as_ref()
+                        .map(|c| c.lineage_id)
+                        .unwrap_or(pred.object.object_id);
+                    ProofChain {
+                        lineage_id,
+                        predecessor_proof_id: Some(pred.object.object_id),
+                        predecessor_payload_hash: Some(pred.object.payload_hash.clone()),
+                    }
+                })
+            }),
         })
         .map_err(|e| {
             (

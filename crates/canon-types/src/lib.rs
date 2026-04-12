@@ -187,6 +187,14 @@ pub struct ImportDeclaration {
     pub signature: String,
 }
 
+/// Chain linkage for proof continuity.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProofChain {
+    pub lineage_id: Uuid,
+    pub predecessor_proof_id: Option<Uuid>,
+    pub predecessor_payload_hash: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SealedObject {
     pub object_id: Uuid,
@@ -201,6 +209,8 @@ pub struct SealedObject {
     pub import_declaration: Option<ImportDeclaration>,
     pub object_signature: String,
     pub protocol: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proof_chain: Option<ProofChain>,
 }
 
 // ---------------------------------------------------------------------------
@@ -249,6 +259,8 @@ pub enum FailureCode {
     TsaCertificateChainInvalid,
     TsaCertificateExpired,
     TsaNotTrusted,
+    ChainPredecessorHashMismatch,
+    ChainPredecessorMissing,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -329,6 +341,8 @@ pub struct NativeBirthProposal {
     pub parent_ids: Vec<Uuid>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tsa_attachment: Option<TsaAttachment>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proof_chain: Option<ProofChain>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

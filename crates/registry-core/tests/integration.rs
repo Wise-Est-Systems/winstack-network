@@ -16,6 +16,7 @@ fn valid_native_object() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -114,6 +115,7 @@ fn valid_lineage_chain() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -127,6 +129,7 @@ fn valid_lineage_chain() {
             module_id,
             parent_ids: vec![parent.object_id],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -151,6 +154,7 @@ fn valid_non_genesis_time_chain() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -162,6 +166,7 @@ fn valid_non_genesis_time_chain() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -186,6 +191,7 @@ fn missing_policy_proof_fails() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -317,6 +323,7 @@ fn missing_parent_fails() {
         module_id,
         parent_ids: vec![fake_parent],
         tsa_attachment: None,
+        proof_chain: None,
     });
 
     assert!(result.is_err());
@@ -342,6 +349,7 @@ fn invalid_parent_fails_verification() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -354,6 +362,7 @@ fn invalid_parent_fails_verification() {
             module_id,
             parent_ids: vec![parent.object_id],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -424,6 +433,7 @@ fn self_cycle_fails() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -486,6 +496,7 @@ fn wrong_predecessor_fails() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -496,6 +507,7 @@ fn wrong_predecessor_fails() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -572,6 +584,7 @@ fn missing_predecessor_fails() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -582,6 +595,7 @@ fn missing_predecessor_fails() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -658,6 +672,7 @@ fn module_scope_mismatch_fails() {
         module_id: import_mod_id, // wrong kind for native
         parent_ids: vec![],
         tsa_attachment: None,
+        proof_chain: None,
     });
 
     // The registry should still succeed for Native (any module kind is allowed)
@@ -692,6 +707,7 @@ fn proof_bundle_self_contained() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -718,6 +734,7 @@ fn session_cannot_create_native() {
         module_id,
         parent_ids: vec![],
         tsa_attachment: None,
+        proof_chain: None,
     });
 
     assert!(result.is_err());
@@ -744,6 +761,7 @@ fn proof_bundle_verifies_without_node_state() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -772,6 +790,7 @@ fn proof_bundle_detects_tamper_without_node_state() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -801,6 +820,7 @@ fn time_source_is_local() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
     assert_eq!(obj.time_event.time_source, canon_types::TimeSource::Local);
@@ -834,6 +854,7 @@ fn synthetic_tsa_token_rejected_by_full_verification() {
             token_base64: B64.encode(&tsa_resp),
             anchored_time: info.gen_time,
         }),
+        proof_chain: None,
     });
 
     // Must be rejected: unsigned test fixture cannot pass CMS verification
@@ -893,6 +914,7 @@ fn external_timestamp_wrong_hash_fails() {
             token_base64: B64.encode(&tsa_resp),
             anchored_time: info.gen_time,
         }),
+        proof_chain: None,
     });
 
     assert!(result.is_err());
@@ -919,6 +941,7 @@ fn external_time_without_token_fails() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -959,6 +982,7 @@ fn malformed_tsa_token_fails() {
             token_base64: B64.encode(b"not valid DER"),
             anchored_time: "bad".into(),
         }),
+        proof_chain: None,
     });
 
     assert!(result.is_err());
@@ -985,6 +1009,7 @@ fn local_time_backward_compat() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -1033,6 +1058,7 @@ fn time_source_downgrade_invalidates_signature() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -1064,6 +1090,7 @@ fn rfc3161_token_tampering_invalidates_signature() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -1095,6 +1122,7 @@ fn policy_version_forgery_blocked() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -1126,6 +1154,7 @@ fn unknown_protocol_version_rejected() {
             module_id,
             parent_ids: vec![],
             tsa_attachment: None,
+            proof_chain: None,
         })
         .unwrap();
 
@@ -1134,4 +1163,225 @@ fn unknown_protocol_version_rejected() {
 
     let result = verifier::verify_from_proof_bundle(&bundle, &artifact);
     assert_eq!(result.status, VerificationStatus::Invalid);
+}
+
+// ===========================================================================
+// PROOF CHAINING TESTS
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// CHAIN: origin proof creation (no predecessor)
+// ---------------------------------------------------------------------------
+#[test]
+fn chain_origin_proof() {
+    let (mut reg, creator_id, module_id, _) = test_registry();
+    let artifact = b"origin content".to_vec();
+    let lineage_id = uuid::Uuid::new_v4();
+
+    let obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: artifact.clone(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id,
+                predecessor_proof_id: None,
+                predecessor_payload_hash: None,
+            }),
+        })
+        .unwrap();
+
+    assert!(obj.proof_chain.is_some());
+    let chain = obj.proof_chain.as_ref().unwrap();
+    assert_eq!(chain.lineage_id, lineage_id);
+    assert!(chain.predecessor_proof_id.is_none());
+
+    let result = reg.verify_object(&obj.object_id).unwrap();
+    assert_eq!(result.status, VerificationStatus::Verified);
+}
+
+// ---------------------------------------------------------------------------
+// CHAIN: successor proof creation
+// ---------------------------------------------------------------------------
+#[test]
+fn chain_successor_proof() {
+    let (mut reg, creator_id, module_id, _) = test_registry();
+    let lineage_id = uuid::Uuid::new_v4();
+
+    // Create origin
+    let origin_obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"version 1".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id,
+                predecessor_proof_id: None,
+                predecessor_payload_hash: None,
+            }),
+        })
+        .unwrap();
+
+    std::thread::sleep(std::time::Duration::from_millis(10));
+
+    // Create successor
+    let succ_obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"version 2".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id,
+                predecessor_proof_id: Some(origin_obj.object_id),
+                predecessor_payload_hash: Some(origin_obj.payload_hash.clone()),
+            }),
+        })
+        .unwrap();
+
+    let chain = succ_obj.proof_chain.as_ref().unwrap();
+    assert_eq!(chain.lineage_id, lineage_id);
+    assert_eq!(chain.predecessor_proof_id, Some(origin_obj.object_id));
+    assert_eq!(
+        chain.predecessor_payload_hash.as_deref(),
+        Some(origin_obj.payload_hash.as_str())
+    );
+
+    let result = reg.verify_object(&succ_obj.object_id).unwrap();
+    assert_eq!(result.status, VerificationStatus::Verified);
+}
+
+// ---------------------------------------------------------------------------
+// CHAIN: tampering with chain fields invalidates signature
+// ---------------------------------------------------------------------------
+#[test]
+fn chain_tamper_invalidates_signature() {
+    let (mut reg, creator_id, module_id, _) = test_registry();
+    let lineage_id = uuid::Uuid::new_v4();
+
+    let obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"chain tamper test".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id,
+                predecessor_proof_id: None,
+                predecessor_payload_hash: None,
+            }),
+        })
+        .unwrap();
+
+    let mut bundle = reg.build_proof_bundle(&obj.object_id).unwrap();
+    // Tamper: change the lineage_id
+    bundle.object.proof_chain.as_mut().unwrap().lineage_id = uuid::Uuid::new_v4();
+
+    let result = verifier::verify_from_proof_bundle(&bundle, b"chain tamper test");
+    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result
+        .failures
+        .iter()
+        .any(|f| f.code == FailureCode::ObjectSignatureInvalid));
+}
+
+// ---------------------------------------------------------------------------
+// CHAIN: standalone proof (no chain) still verifies
+// ---------------------------------------------------------------------------
+#[test]
+fn chain_standalone_backward_compat() {
+    let (mut reg, creator_id, module_id, _) = test_registry();
+    let artifact = b"standalone".to_vec();
+
+    let obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: artifact.clone(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: None,
+        })
+        .unwrap();
+
+    assert!(obj.proof_chain.is_none());
+
+    let result = reg.verify_object(&obj.object_id).unwrap();
+    assert_eq!(result.status, VerificationStatus::Verified);
+
+    // Also verify from bundle
+    let bundle = reg.build_proof_bundle(&obj.object_id).unwrap();
+    let result = verifier::verify_from_proof_bundle(&bundle, &artifact);
+    assert_eq!(result.status, VerificationStatus::Verified);
+}
+
+// ---------------------------------------------------------------------------
+// CHAIN: successor with missing predecessor hash → INVALID
+// ---------------------------------------------------------------------------
+#[test]
+fn chain_missing_predecessor_hash_rejected_at_seal() {
+    let (mut reg, creator_id, module_id, _) = test_registry();
+
+    // Declaring a predecessor without a hash should be rejected at seal time (fail-closed)
+    let result = reg.seal_native(NativeBirthProposal {
+        artifact_bytes: b"missing pred hash".to_vec(),
+        creator_identity_id: creator_id,
+        module_id,
+        parent_ids: vec![],
+        tsa_attachment: None,
+        proof_chain: Some(ProofChain {
+            lineage_id: uuid::Uuid::new_v4(),
+            predecessor_proof_id: Some(uuid::Uuid::new_v4()),
+            predecessor_payload_hash: None,
+        }),
+    });
+
+    assert!(result.is_err());
+    match result {
+        Err(registry_core::RegistryError::Rejected(r)) => {
+            assert_eq!(r.code, RejectCode::VerificationFailed);
+        }
+        other => panic!("expected VerificationFailed, got {:?}", other),
+    }
+}
+
+// ---------------------------------------------------------------------------
+// CHAIN: old proof without chain fields deserializes and verifies
+// ---------------------------------------------------------------------------
+#[test]
+fn chain_old_proof_format_compat() {
+    let (mut reg, creator_id, module_id, _) = test_registry();
+    let artifact = b"old format".to_vec();
+
+    let obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: artifact.clone(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: None,
+        })
+        .unwrap();
+
+    let bundle = reg.build_proof_bundle(&obj.object_id).unwrap();
+    let mut json_val: serde_json::Value = serde_json::to_value(&bundle).unwrap();
+
+    // Strip proof_chain from JSON to simulate old format
+    json_val["object"]
+        .as_object_mut()
+        .unwrap()
+        .remove("proof_chain");
+
+    let old_bundle: ProofBundle = serde_json::from_value(json_val).unwrap();
+    assert!(old_bundle.object.proof_chain.is_none());
+
+    let result = verifier::verify_from_proof_bundle(&old_bundle, &artifact);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }

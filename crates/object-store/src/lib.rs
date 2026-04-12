@@ -193,6 +193,7 @@ mod tests {
             import_declaration: None,
             object_signature: "sig".to_string(),
             protocol: "V1".to_string(),
+            proof_chain: None,
         }
     }
 

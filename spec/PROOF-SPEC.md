@@ -216,3 +216,53 @@ The current implementation verifies that the TSA token contains the correct payl
 ## 10. Protocol version
 
 All records carry `"protocol": "V1"`. This spec describes V1 exclusively. Future versions will use a different protocol string and may change field layouts or verification rules.
+
+## 11. Proof chaining
+
+Proofs can optionally form a chain to track artifact version history.
+
+### ProofChain structure
+
+```
+ProofChain {
+  lineage_id:                UUID    — stable identifier for this artifact lineage
+  predecessor_proof_id:      UUID?   — object_id of the previous proof (null for origin)
+  predecessor_payload_hash:  string? — payload_hash of the previous proof (null for origin)
+}
+```
+
+The `proof_chain` field is optional on `SealedObject`. If absent, the proof is standalone. All chain fields are included in the object signature payload via `#[serde(skip_serializing_if = "Option::is_none")]`, ensuring backward compatibility — old proofs without chain fields verify identically.
+
+### Chain types
+
+| Type | predecessor_proof_id | Meaning |
+|---|---|---|
+| Standalone | field absent | Not part of any chain |
+| Origin | `null` | First proof in a lineage |
+| Successor | present | Extends a previous proof |
+
+### Verification rules
+
+- If `predecessor_proof_id` is present but `predecessor_payload_hash` is absent: `ChainPredecessorMissing` → INVALID
+- Tampering with any chain field (lineage_id, predecessor_proof_id, predecessor_payload_hash) invalidates the object signature → INVALID
+- Standalone proofs with no `proof_chain` field remain valid (backward compatible)
+- The verifier validates chain structure within a single proof. Full chain walk (loading and verifying predecessor bundles) is the caller's responsibility.
+
+### CLI usage
+
+```bash
+# Create origin proof (standalone or first in chain)
+winstack prove document.pdf
+
+# Create successor proof linked to a prior version
+winstack prove document-v2.pdf --from document.pdf.proof.json
+```
+
+The `--from` flag extracts the predecessor's `object_id`, `payload_hash`, and `lineage_id` (or derives lineage from the predecessor's own `object_id` if it has no chain).
+
+### Limitations
+
+- This does not prove absolute first creation in the world
+- It proves continuity from a chosen origin
+- Chain integrity depends on the creator holding the same keys
+- No cross-chain linking or merging

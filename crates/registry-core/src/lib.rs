@@ -185,6 +185,9 @@ impl Registry {
             signature: String::new(), // will be signed below
         };
 
+        // Chain linkage
+        let sealed_chain = proposal.proof_chain.clone();
+
         // Sign object
         let creator_key = self
             .identity_store
@@ -199,6 +202,8 @@ impl Registry {
             artifact_size_bytes: u64,
             parent_ids: &'a [Uuid],
             protocol: &'a str,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            proof_chain: &'a Option<ProofChain>,
         }
 
         let sign_payload = ObjSignPayload {
@@ -208,6 +213,7 @@ impl Registry {
             artifact_size_bytes: artifact_size,
             parent_ids: &proposal.parent_ids,
             protocol: "V1",
+            proof_chain: &sealed_chain,
         };
         let object_signature = creator_key.sign_json(&sign_payload);
 
@@ -231,6 +237,7 @@ impl Registry {
             import_declaration: None,
             object_signature,
             protocol: "V1".to_string(),
+            proof_chain: sealed_chain,
         };
 
         // Step 8: Final verification
@@ -396,6 +403,8 @@ impl Registry {
             artifact_size_bytes: u64,
             parent_ids: &'a [Uuid],
             protocol: &'a str,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            proof_chain: &'a Option<canon_types::ProofChain>,
         }
         let sign_payload = ObjSignPayload {
             object_id: &object_id,
@@ -404,6 +413,7 @@ impl Registry {
             artifact_size_bytes: artifact_size,
             parent_ids: &proposal.parent_ids,
             protocol: "V1",
+            proof_chain: &None,
         };
         let object_signature = creator_key.sign_json(&sign_payload);
 
@@ -420,6 +430,7 @@ impl Registry {
             import_declaration: None,
             object_signature,
             protocol: "V1".to_string(),
+            proof_chain: None,
         };
 
         // Step 8: Verification
@@ -584,6 +595,8 @@ impl Registry {
             artifact_size_bytes: u64,
             parent_ids: &'a [Uuid],
             protocol: &'a str,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            proof_chain: &'a Option<canon_types::ProofChain>,
         }
         let sign_payload = ObjSignPayload {
             object_id: &object_id,
@@ -592,6 +605,7 @@ impl Registry {
             artifact_size_bytes: artifact_size,
             parent_ids: &proposal.parent_ids,
             protocol: "V1",
+            proof_chain: &None,
         };
         let object_signature = creator_key.sign_json(&sign_payload);
 
@@ -608,6 +622,7 @@ impl Registry {
             import_declaration: Some(import_decl),
             object_signature,
             protocol: "V1".to_string(),
+            proof_chain: None,
         };
 
         // Step 8: Verify

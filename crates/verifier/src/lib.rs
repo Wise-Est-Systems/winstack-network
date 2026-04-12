@@ -53,6 +53,8 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
             artifact_size_bytes: u64,
             parent_ids: &'a [uuid::Uuid],
             protocol: &'a str,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            proof_chain: &'a Option<ProofChain>,
         }
         let payload = ObjSignPayload {
             object_id: &obj.object_id,
@@ -61,6 +63,7 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
             artifact_size_bytes: obj.artifact_size_bytes,
             parent_ids: &obj.parent_ids,
             protocol: &obj.protocol,
+            proof_chain: &obj.proof_chain,
         };
         if crypto::verify_json_signature(
             &input.creator_identity.public_key_hex,
@@ -325,6 +328,30 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
         }
     }
 
+    // 12. Proof chain validation
+    if let Some(ref chain) = obj.proof_chain {
+        if let Some(ref pred_id) = chain.predecessor_proof_id {
+            // Successor proof — predecessor fields must be present and consistent
+            match &chain.predecessor_payload_hash {
+                None => {
+                    failures.push(Failure {
+                        code: FailureCode::ChainPredecessorMissing,
+                        reason: format!(
+                            "proof declares predecessor {} but has no predecessor hash",
+                            pred_id
+                        ),
+                    });
+                }
+                Some(_) => {
+                    // Hash is present and signed — the chain link is structurally valid.
+                    // Full chain walk (loading the predecessor bundle) is the caller's
+                    // responsibility; the verifier validates what's inside this proof.
+                }
+            }
+        }
+        // Origin proof (predecessor_proof_id is None) — no chain checks needed
+    }
+
     let status = if failures.is_empty() {
         VerificationStatus::Verified
     } else {
@@ -414,6 +441,7 @@ mod tests {
             import_declaration: None,
             object_signature: "bad".into(),
             protocol: "V1".into(),
+            proof_chain: None,
         };
 
         let ident = IdentityRecord {
