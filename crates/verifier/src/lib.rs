@@ -369,6 +369,255 @@ pub fn verify_from_proof_bundle(bundle: &ProofBundle, artifact_bytes: &[u8]) -> 
     verify_from_proof_bundle_with_trust(bundle, artifact_bytes, None)
 }
 
+/// Predecessor bundle paired with its artifact bytes.
+pub struct ChainLink {
+    pub bundle: ProofBundle,
+    pub artifact_bytes: Vec<u8>,
+}
+
+/// Verify a proof and optionally walk its full chain.
+///
+/// If the proof has chain linkage and `predecessors` are supplied, each predecessor
+/// is verified recursively back to the origin. Linkage fields (object_id, payload_hash)
+/// are cross-checked at each step.
+pub fn verify_chain(
+    bundle: &ProofBundle,
+    artifact_bytes: &[u8],
+    predecessors: &[ChainLink],
+) -> ChainVerificationResult {
+    // 1. Verify the current proof itself
+    let current = verify_from_proof_bundle(bundle, artifact_bytes);
+    if current.status != VerificationStatus::Verified {
+        return ChainVerificationResult {
+            chain_status: ChainStatus::HistoryBroken,
+            depth: 1,
+            failures: current.failures,
+        };
+    }
+
+    // 2. Determine chain status
+    let chain = match &bundle.object.proof_chain {
+        None => {
+            return ChainVerificationResult {
+                chain_status: ChainStatus::Standalone,
+                depth: 1,
+                failures: vec![],
+            };
+        }
+        Some(c) => c,
+    };
+
+    if chain.predecessor_proof_id.is_none() {
+        return ChainVerificationResult {
+            chain_status: ChainStatus::Origin,
+            depth: 1,
+            failures: vec![],
+        };
+    }
+
+    // 3. This is a successor — walk the chain
+    if predecessors.is_empty() {
+        return ChainVerificationResult {
+            chain_status: ChainStatus::HistoryIncomplete,
+            depth: 1,
+            failures: vec![],
+        };
+    }
+
+    let mut failures: Vec<Failure> = Vec::new();
+    let mut visited = std::collections::HashSet::new();
+    visited.insert(bundle.object.object_id);
+
+    let mut current_chain = Some(chain);
+    let mut depth: usize = 1;
+    let mut current_creator_key = bundle.creator_identity.public_key_hex.clone();
+
+    while let Some(chain_ref) = current_chain {
+        let pred_id = match &chain_ref.predecessor_proof_id {
+            Some(id) => *id,
+            None => break, // reached origin
+        };
+
+        let pred_hash = match &chain_ref.predecessor_payload_hash {
+            Some(h) => h.clone(),
+            None => {
+                failures.push(Failure {
+                    code: FailureCode::ChainPredecessorMissing,
+                    reason: format!("predecessor {} declared without hash", pred_id),
+                });
+                break;
+            }
+        };
+
+        // Cycle detection
+        if !visited.insert(pred_id) {
+            failures.push(Failure {
+                code: FailureCode::ChainCycleDetected,
+                reason: format!("cycle at {}", pred_id),
+            });
+            break;
+        }
+
+        // Find the predecessor bundle
+        let pred_link = predecessors
+            .iter()
+            .find(|l| l.bundle.object.object_id == pred_id);
+        let pred_link = match pred_link {
+            Some(l) => l,
+            None => {
+                failures.push(Failure {
+                    code: FailureCode::ChainPredecessorBundleMissing,
+                    reason: format!("predecessor bundle {} not supplied", pred_id),
+                });
+                break;
+            }
+        };
+
+        // Check predecessor payload hash matches
+        if pred_link.bundle.object.payload_hash != pred_hash {
+            failures.push(Failure {
+                code: FailureCode::ChainPredecessorHashMismatch,
+                reason: format!(
+                    "predecessor {} hash mismatch: expected {}, got {}",
+                    pred_id, pred_hash, pred_link.bundle.object.payload_hash
+                ),
+            });
+            break;
+        }
+
+        // Key continuity check
+        let pred_creator_key = pred_link.bundle.creator_identity.public_key_hex.clone();
+        if pred_creator_key != current_creator_key {
+            // Different key — need valid delegation
+            match &chain_ref.key_delegation {
+                None => {
+                    failures.push(Failure {
+                        code: FailureCode::ChainDelegationMissing,
+                        reason: "key changed without delegation".into(),
+                    });
+                    break;
+                }
+                Some(deleg) => {
+                    if !verify_delegation(
+                        deleg,
+                        &pred_creator_key,
+                        &current_creator_key,
+                        chain_ref.lineage_id,
+                    ) {
+                        failures.push(Failure {
+                            code: FailureCode::ChainDelegationInvalid,
+                            reason: "delegation signature invalid or fields mismatch".into(),
+                        });
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Verify predecessor proof
+        let pred_result = verify_from_proof_bundle(&pred_link.bundle, &pred_link.artifact_bytes);
+        if pred_result.status != VerificationStatus::Verified {
+            failures.push(Failure {
+                code: FailureCode::ChainPredecessorInvalid,
+                reason: format!("predecessor {} failed verification", pred_id),
+            });
+            failures.extend(pred_result.failures);
+            break;
+        }
+
+        depth += 1;
+        current_creator_key = pred_creator_key;
+        current_chain = pred_link.bundle.object.proof_chain.as_ref();
+    }
+
+    let status = if failures.is_empty() {
+        ChainStatus::FullHistoryVerified
+    } else {
+        ChainStatus::HistoryBroken
+    };
+
+    ChainVerificationResult {
+        chain_status: status,
+        depth,
+        failures,
+    }
+}
+
+/// Verify a key delegation signature.
+pub fn verify_delegation(
+    deleg: &KeyDelegation,
+    expected_from_key: &str,
+    expected_to_key: &str,
+    expected_lineage: uuid::Uuid,
+) -> bool {
+    if deleg.from_key_hex != expected_from_key {
+        return false;
+    }
+    if deleg.to_key_hex != expected_to_key {
+        return false;
+    }
+    if deleg.lineage_id != expected_lineage {
+        return false;
+    }
+
+    #[derive(serde::Serialize)]
+    struct DelegPayload<'a> {
+        delegation_id: &'a uuid::Uuid,
+        lineage_id: &'a uuid::Uuid,
+        from_key_hex: &'a str,
+        to_key_hex: &'a str,
+        delegated_at: &'a str,
+    }
+
+    let payload = DelegPayload {
+        delegation_id: &deleg.delegation_id,
+        lineage_id: &deleg.lineage_id,
+        from_key_hex: &deleg.from_key_hex,
+        to_key_hex: &deleg.to_key_hex,
+        delegated_at: &deleg.delegated_at,
+    };
+
+    crypto::verify_json_signature(&deleg.from_key_hex, &payload, &deleg.signature).is_ok()
+}
+
+/// Create a signed key delegation from old key to new key.
+pub fn create_delegation(
+    lineage_id: uuid::Uuid,
+    old_key: &crypto::KeyPair,
+    new_key_hex: &str,
+) -> KeyDelegation {
+    let deleg_id = uuid::Uuid::new_v4();
+    let now = chrono::Utc::now().to_rfc3339();
+
+    #[derive(serde::Serialize)]
+    struct DelegPayload<'a> {
+        delegation_id: &'a uuid::Uuid,
+        lineage_id: &'a uuid::Uuid,
+        from_key_hex: &'a str,
+        to_key_hex: &'a str,
+        delegated_at: &'a str,
+    }
+
+    let from_hex = old_key.public_key_hex();
+    let payload = DelegPayload {
+        delegation_id: &deleg_id,
+        lineage_id: &lineage_id,
+        from_key_hex: &from_hex,
+        to_key_hex: new_key_hex,
+        delegated_at: &now,
+    };
+    let sig = old_key.sign_json(&payload);
+
+    KeyDelegation {
+        delegation_id: deleg_id,
+        lineage_id,
+        from_key_hex: from_hex,
+        to_key_hex: new_key_hex.to_string(),
+        delegated_at: now,
+        signature: sig,
+    }
+}
+
 pub fn verify_from_proof_bundle_with_trust(
     bundle: &ProofBundle,
     artifact_bytes: &[u8],

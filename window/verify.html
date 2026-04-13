@@ -401,6 +401,12 @@ function renderVerify(d){
     const m=$('r-meta');m.classList.remove('hidden');
     m.className='verdict-meta'+(d.time_source==='External'?' ext':'');
     m.textContent=d.time_source==='External'?'Externally timestamped':'Checked using local time';
+    // Chain status
+    if(d.chain_status&&d.chain_status!=='standalone'){
+      const cs=d.chain_status;
+      const label=cs==='origin'?'First proof for this file':cs==='successor'?'Updated from an earlier proof':'';
+      if(label)$('r-explain').textContent+=' '+label+'.';
+    }
   }else if(r==='TAMPERED'){
     v.className='verdict enter bad';
     $('r-status').textContent='Tampered';
@@ -424,6 +430,7 @@ function renderVerify(d){
     dt('Sealed',d.created_at),dt('Object',d.object_id),
     dt('File hash',d.file_hash),dt('Proof hash',d.payload_hash),
     dt('Time',d.time_source==='External'?'External (RFC 3161)':'Local'),
+    dt('History',d.chain_status==='standalone'?'Standalone':d.chain_status==='origin'?'Origin':d.chain_status==='successor'?'Has predecessor':'Unknown'),
   ].join('');
 }
 

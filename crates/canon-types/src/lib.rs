@@ -187,12 +187,48 @@ pub struct ImportDeclaration {
     pub signature: String,
 }
 
+/// Signed key delegation for chain continuity across key rotation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct KeyDelegation {
+    pub delegation_id: Uuid,
+    pub lineage_id: Uuid,
+    pub from_key_hex: String,
+    pub to_key_hex: String,
+    pub delegated_at: String,
+    /// Signed by the OLD key over the delegation payload
+    pub signature: String,
+}
+
 /// Chain linkage for proof continuity.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProofChain {
     pub lineage_id: Uuid,
     pub predecessor_proof_id: Option<Uuid>,
     pub predecessor_payload_hash: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub key_delegation: Option<KeyDelegation>,
+}
+
+/// Result of a full chain walk verification.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChainVerificationResult {
+    pub chain_status: ChainStatus,
+    pub depth: usize,
+    pub failures: Vec<Failure>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ChainStatus {
+    /// No chain — standalone proof
+    Standalone,
+    /// Origin of a lineage
+    Origin,
+    /// Successor, full history verified
+    FullHistoryVerified,
+    /// Successor, only current proof verified (predecessors not supplied)
+    HistoryIncomplete,
+    /// Chain broken
+    HistoryBroken,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -261,6 +297,12 @@ pub enum FailureCode {
     TsaNotTrusted,
     ChainPredecessorHashMismatch,
     ChainPredecessorMissing,
+    ChainPredecessorBundleMissing,
+    ChainPredecessorIdMismatch,
+    ChainPredecessorInvalid,
+    ChainCycleDetected,
+    ChainDelegationMissing,
+    ChainDelegationInvalid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

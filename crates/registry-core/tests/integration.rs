@@ -1189,6 +1189,7 @@ fn chain_origin_proof() {
                 lineage_id,
                 predecessor_proof_id: None,
                 predecessor_payload_hash: None,
+                key_delegation: None,
             }),
         })
         .unwrap();
@@ -1222,6 +1223,7 @@ fn chain_successor_proof() {
                 lineage_id,
                 predecessor_proof_id: None,
                 predecessor_payload_hash: None,
+                key_delegation: None,
             }),
         })
         .unwrap();
@@ -1240,6 +1242,7 @@ fn chain_successor_proof() {
                 lineage_id,
                 predecessor_proof_id: Some(origin_obj.object_id),
                 predecessor_payload_hash: Some(origin_obj.payload_hash.clone()),
+                key_delegation: None,
             }),
         })
         .unwrap();
@@ -1275,6 +1278,7 @@ fn chain_tamper_invalidates_signature() {
                 lineage_id,
                 predecessor_proof_id: None,
                 predecessor_payload_hash: None,
+                key_delegation: None,
             }),
         })
         .unwrap();
@@ -1339,6 +1343,7 @@ fn chain_missing_predecessor_hash_rejected_at_seal() {
             lineage_id: uuid::Uuid::new_v4(),
             predecessor_proof_id: Some(uuid::Uuid::new_v4()),
             predecessor_payload_hash: None,
+            key_delegation: None,
         }),
     });
 
@@ -1384,4 +1389,307 @@ fn chain_old_proof_format_compat() {
 
     let result = verifier::verify_from_proof_bundle(&old_bundle, &artifact);
     assert_eq!(result.status, VerificationStatus::Verified);
+}
+
+// ===========================================================================
+// CHAIN WALK + KEY DELEGATION TESTS
+// ===========================================================================
+
+#[test]
+fn chain_walk_full_history() {
+    let (mut reg, creator_id, module_id, _) = test_registry();
+    let lineage = uuid::Uuid::new_v4();
+    let v1 = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"v1".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id: lineage,
+                predecessor_proof_id: None,
+                predecessor_payload_hash: None,
+                key_delegation: None,
+            }),
+        })
+        .unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(10));
+    let v2 = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"v2".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id: lineage,
+                predecessor_proof_id: Some(v1.object_id),
+                predecessor_payload_hash: Some(v1.payload_hash.clone()),
+                key_delegation: None,
+            }),
+        })
+        .unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(10));
+    let v3 = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"v3".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id: lineage,
+                predecessor_proof_id: Some(v2.object_id),
+                predecessor_payload_hash: Some(v2.payload_hash.clone()),
+                key_delegation: None,
+            }),
+        })
+        .unwrap();
+    let b3 = reg.build_proof_bundle(&v3.object_id).unwrap();
+    let b2 = reg.build_proof_bundle(&v2.object_id).unwrap();
+    let b1 = reg.build_proof_bundle(&v1.object_id).unwrap();
+    let preds = vec![
+        verifier::ChainLink {
+            bundle: b2,
+            artifact_bytes: b"v2".to_vec(),
+        },
+        verifier::ChainLink {
+            bundle: b1,
+            artifact_bytes: b"v1".to_vec(),
+        },
+    ];
+    let cr = verifier::verify_chain(&b3, b"v3", &preds);
+    assert_eq!(cr.chain_status, ChainStatus::FullHistoryVerified);
+    assert_eq!(cr.depth, 3);
+    assert!(cr.failures.is_empty());
+}
+
+#[test]
+fn chain_walk_missing_predecessor() {
+    let (mut reg, creator_id, module_id, _) = test_registry();
+    let lineage = uuid::Uuid::new_v4();
+    let v1 = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"v1".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id: lineage,
+                predecessor_proof_id: None,
+                predecessor_payload_hash: None,
+                key_delegation: None,
+            }),
+        })
+        .unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(10));
+    let v2 = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"v2".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id: lineage,
+                predecessor_proof_id: Some(v1.object_id),
+                predecessor_payload_hash: Some(v1.payload_hash.clone()),
+                key_delegation: None,
+            }),
+        })
+        .unwrap();
+    let b2 = reg.build_proof_bundle(&v2.object_id).unwrap();
+    let cr = verifier::verify_chain(&b2, b"v2", &[]);
+    assert_eq!(cr.chain_status, ChainStatus::HistoryIncomplete);
+}
+
+#[test]
+fn chain_walk_wrong_predecessor_content() {
+    let (mut reg, creator_id, module_id, _) = test_registry();
+    let lineage = uuid::Uuid::new_v4();
+    let v1 = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"v1".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id: lineage,
+                predecessor_proof_id: None,
+                predecessor_payload_hash: None,
+                key_delegation: None,
+            }),
+        })
+        .unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(10));
+    let v2 = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"v2".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id: lineage,
+                predecessor_proof_id: Some(v1.object_id),
+                predecessor_payload_hash: Some(v1.payload_hash.clone()),
+                key_delegation: None,
+            }),
+        })
+        .unwrap();
+    let b2 = reg.build_proof_bundle(&v2.object_id).unwrap();
+    let b1 = reg.build_proof_bundle(&v1.object_id).unwrap();
+    let preds = vec![verifier::ChainLink {
+        bundle: b1,
+        artifact_bytes: b"WRONG".to_vec(),
+    }];
+    let cr = verifier::verify_chain(&b2, b"v2", &preds);
+    assert_eq!(cr.chain_status, ChainStatus::HistoryBroken);
+    assert!(cr
+        .failures
+        .iter()
+        .any(|f| f.code == FailureCode::ChainPredecessorInvalid));
+}
+
+#[test]
+fn key_delegation_valid() {
+    let old_key = winstack_crypto::KeyPair::generate();
+    let new_key = winstack_crypto::KeyPair::generate();
+    let lineage = uuid::Uuid::new_v4();
+    let deleg = verifier::create_delegation(lineage, &old_key, &new_key.public_key_hex());
+    assert!(verifier::verify_delegation(
+        &deleg,
+        &old_key.public_key_hex(),
+        &new_key.public_key_hex(),
+        lineage
+    ));
+}
+
+#[test]
+fn key_delegation_tampered_fails() {
+    let old_key = winstack_crypto::KeyPair::generate();
+    let new_key = winstack_crypto::KeyPair::generate();
+    let lineage = uuid::Uuid::new_v4();
+    let mut deleg = verifier::create_delegation(lineage, &old_key, &new_key.public_key_hex());
+    deleg.to_key_hex = "aa".repeat(32);
+    assert!(!verifier::verify_delegation(
+        &deleg,
+        &old_key.public_key_hex(),
+        &"aa".repeat(32),
+        lineage
+    ));
+}
+
+#[test]
+fn chain_walk_missing_delegation_fails() {
+    let (mut reg, creator_id, module_id, _) = test_registry();
+    let lineage = uuid::Uuid::new_v4();
+    let v1 = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"v1".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id: lineage,
+                predecessor_proof_id: None,
+                predecessor_payload_hash: None,
+                key_delegation: None,
+            }),
+        })
+        .unwrap();
+    let (creator2_id, _) = reg.identity_store.create_identity(IdentityKind::Personal);
+    std::thread::sleep(std::time::Duration::from_millis(10));
+    let v2 = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"v2".to_vec(),
+            creator_identity_id: creator2_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id: lineage,
+                predecessor_proof_id: Some(v1.object_id),
+                predecessor_payload_hash: Some(v1.payload_hash.clone()),
+                key_delegation: None,
+            }),
+        })
+        .unwrap();
+    let b2 = reg.build_proof_bundle(&v2.object_id).unwrap();
+    let b1 = reg.build_proof_bundle(&v1.object_id).unwrap();
+    let preds = vec![verifier::ChainLink {
+        bundle: b1,
+        artifact_bytes: b"v1".to_vec(),
+    }];
+    let cr = verifier::verify_chain(&b2, b"v2", &preds);
+    assert_eq!(cr.chain_status, ChainStatus::HistoryBroken);
+    assert!(cr
+        .failures
+        .iter()
+        .any(|f| f.code == FailureCode::ChainDelegationMissing));
+}
+
+#[test]
+fn chain_walk_with_valid_delegation() {
+    let (mut reg, creator_id, module_id, _) = test_registry();
+    let lineage = uuid::Uuid::new_v4();
+    let v1 = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"v1".to_vec(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id: lineage,
+                predecessor_proof_id: None,
+                predecessor_payload_hash: None,
+                key_delegation: None,
+            }),
+        })
+        .unwrap();
+    let (creator2_id, _) = reg.identity_store.create_identity(IdentityKind::Personal);
+    let old_key_bytes = reg
+        .identity_store
+        .get_key(&creator_id)
+        .unwrap()
+        .secret_key_bytes();
+    let old_key = winstack_crypto::KeyPair::from_secret_bytes(&old_key_bytes);
+    let new_pub = reg
+        .identity_store
+        .get(&creator2_id)
+        .unwrap()
+        .public_key_hex
+        .clone();
+    let deleg = verifier::create_delegation(lineage, &old_key, &new_pub);
+    std::thread::sleep(std::time::Duration::from_millis(10));
+    let v2 = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"v2".to_vec(),
+            creator_identity_id: creator2_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: Some(ProofChain {
+                lineage_id: lineage,
+                predecessor_proof_id: Some(v1.object_id),
+                predecessor_payload_hash: Some(v1.payload_hash.clone()),
+                key_delegation: Some(deleg),
+            }),
+        })
+        .unwrap();
+    let b2 = reg.build_proof_bundle(&v2.object_id).unwrap();
+    let b1 = reg.build_proof_bundle(&v1.object_id).unwrap();
+    let preds = vec![verifier::ChainLink {
+        bundle: b1,
+        artifact_bytes: b"v1".to_vec(),
+    }];
+    let cr = verifier::verify_chain(&b2, b"v2", &preds);
+    assert_eq!(cr.chain_status, ChainStatus::FullHistoryVerified);
+    assert_eq!(cr.depth, 2);
+    assert!(cr.failures.is_empty());
 }

@@ -447,6 +447,8 @@ pub struct VerifyResponse {
     pub time_source: String,
     pub time_trust: String,
     pub anchored_time: Option<String>,
+    pub chain_status: String,
+    pub chain_depth: usize,
 }
 
 async fn verify_upload(
@@ -526,6 +528,16 @@ async fn verify_upload(
     let time_source = format!("{:?}", bundle.object.time_event.time_source);
     let anchored_time = bundle.object.time_event.anchored_time.clone();
 
+    // Determine chain status
+    let (chain_status_str, chain_depth) = {
+        let chain = &bundle.object.proof_chain;
+        match chain {
+            None => ("standalone".to_string(), 1),
+            Some(c) if c.predecessor_proof_id.is_none() => ("origin".to_string(), 1),
+            Some(_) => ("successor".to_string(), 1),
+        }
+    };
+
     // Check tamper first
     if file_hash != expected_hash {
         return Ok(Json(VerifyResponse {
@@ -542,6 +554,8 @@ async fn verify_upload(
             time_source,
             time_trust: "open".to_string(),
             anchored_time,
+            chain_status: chain_status_str.clone(),
+            chain_depth,
         }));
     }
 
@@ -562,6 +576,8 @@ async fn verify_upload(
             time_source,
             time_trust: "open".to_string(),
             anchored_time,
+            chain_status: chain_status_str.clone(),
+            chain_depth,
         })),
         VerificationStatus::Invalid => {
             let failures: Vec<FailureInfo> = vr
@@ -587,6 +603,8 @@ async fn verify_upload(
                 time_source,
                 time_trust: "open".to_string(),
                 anchored_time,
+                chain_status: chain_status_str,
+                chain_depth,
             }))
         }
     }
@@ -707,6 +725,7 @@ async fn prove_upload(
                         lineage_id,
                         predecessor_proof_id: Some(pred.object.object_id),
                         predecessor_payload_hash: Some(pred.object.payload_hash.clone()),
+                        key_delegation: None,
                     }
                 })
             }),

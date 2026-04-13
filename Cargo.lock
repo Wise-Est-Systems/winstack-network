@@ -4987,6 +4987,7 @@ name = "verifier"
 version = "0.1.0"
 dependencies = [
  "canon-types",
+ "chrono",
  "identity-core",
  "policy-core",
  "serde",

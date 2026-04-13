@@ -216,6 +216,7 @@ fn main() {
                     lineage_id,
                     predecessor_proof_id: Some(pred_bundle.object.object_id),
                     predecessor_payload_hash: Some(pred_bundle.object.payload_hash.clone()),
+                    key_delegation: None,
                 })
             } else {
                 None
