@@ -449,7 +449,7 @@ function renderSeal(orig,proof,info){
   requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));
 
   $('r-status').textContent='Proof created';
-  $('r-explain').textContent=`Your proof for ${orig} has been saved. Keep it with the original file \u2014 you'll need both to verify later.`;
+  $('r-explain').textContent=`Proof saved for ${orig}. When you share the file, send the proof with it. Anyone can verify the file if they have both.`;
   const m=$('r-meta');m.classList.remove('hidden');
   m.className='verdict-meta'+(info.ts==='External'?' ext':'');
   m.textContent=info.ts==='External'?'Externally timestamped':'Local time';

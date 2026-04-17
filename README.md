@@ -137,6 +137,52 @@ Sealed imports never become native. Their `trust_class` is always `FOREIGN`.
 
 ---
 
+## How Winstack spreads
+
+The unit of distribution is not the app. It's the proof attached to the file.
+
+1. You create a proof for a file → `document.pdf.proof.json`
+2. You send both the file and its proof to someone
+3. They verify using any Winstack verifier:
+   - **Desktop app** (full offline verification)
+   - **Browser verifier** (`check.html` — runs entirely in-browser, no install, no server)
+   - **CLI** (`winstack verify`)
+
+No accounts. No platform. No cloud. The proof travels with the file.
+
+---
+
+## Verify without installing anything
+
+Open `check.html` in any modern browser. Drop a file and its proof. Click Verify.
+
+Everything runs locally in the browser using SubtleCrypto. Nothing is uploaded anywhere. SHA-256 hash check + Ed25519 signature verification (where supported).
+
+Host `check.html` on any static server, or open it directly from disk.
+
+---
+
+## What the proof contains
+
+- Payload hash (SHA-256 of the file)
+- Ed25519 signatures (object, time, policy)
+- Timestamps (local or RFC 3161 external)
+- Creator public key
+- Chain/history metadata (if chained)
+- Protocol version
+
+## What the proof does NOT contain
+
+- File contents (only the hash)
+- File paths
+- Usernames
+- Machine identifiers
+- Any data that identifies your computer or location
+
+The proof is safe to share publicly. It reveals only that a specific hash was signed at a specific time by a specific key.
+
+---
+
 ## Protocol
 
 All records carry `"protocol": "V1"`. Signing payloads use canonical JSON (serde_json). Ed25519 signatures. SHA-256 content hashes. See `spec/PROOF-SPEC.md` for the full specification.
@@ -153,8 +199,10 @@ README.md
 spec/
   PROOF-SPEC.md           proof format specification
 window/
-  verify.html             browser verification UI
+  verify.html             app verification UI
+  check.html              standalone browser verifier (no install required)
   index.html              object inspector UI
+desktop/                  Tauri desktop app
 crates/
   canon-types/            domain types
   crypto/                 Ed25519, SHA-256
