@@ -1,220 +1,164 @@
 # Winstack
 
-**Deterministic artifact verification for sovereign local-first systems.**
+**Files that prove themselves.**
 
-Winstack seals files with cryptographic proofs and re-verifies them deterministically — offline, without a server, without probabilistic trust.
-
-A sealed object is one of exactly three states:
-
-- `VERIFIED` — file matches proof and proof verifies
-- `TAMPERED` — file does not match proof
-- `INVALID` — proof is broken or unusable
+Create a cryptographic proof for any file. Share the file and its proof together. Anyone can verify the file has not changed — offline, without accounts, without trusting a server.
 
 ---
 
-## What it does
+## How it works
 
-You give Winstack a file. It produces a self-contained proof bundle that records:
+1. **Create a proof** — drop a file into Winstack. A `.proof.json` file is saved next to it.
+2. **Share both** — send the file and its proof together.
+3. **Verify anywhere** — drop the file and proof into any Winstack verifier. Get one of three answers:
 
-- **Who** sealed it (Ed25519 creator identity)
-- **What** it is (SHA-256 content hash, byte-exact)
-- **When** it was sealed (signed time chain + optional RFC 3161 external timestamp)
-- **Why** it was permitted (signed policy proof)
-- **Whether** any of those claims are still true right now
+| Result | Meaning |
+|---|---|
+| **Verified** | This file has not changed since it was sealed. |
+| **Tampered** | This file does not match the proof. It was modified or the wrong file was selected. |
+| **Invalid proof** | The proof is broken or cannot be used to verify this file. |
 
-Any party with the file and its proof bundle can independently verify every claim without contacting any server.
+No fourth state. No ambiguity.
 
 ---
 
-## Quick start
+## Try it now
 
+**Verify without installing anything:**
+Open [`check.html`](window/check.html) in your browser. Drop a file and its proof. Everything runs locally — nothing is uploaded.
+
+**Desktop app (macOS):**
+[Download the latest release](https://github.com/Wise-Est-Systems/winstack-network/releases/latest) — open the app, drop files, click verify.
+
+**CLI:**
 ```bash
-# Build
 cargo build --release
-
-# Seal a file
 ./target/release/winstack prove document.pdf
-
-# Verify it
 ./target/release/winstack verify document.pdf document.pdf.proof.json
-
-# Seal with external timestamp (optional)
-./target/release/winstack prove document.pdf --tsa-url https://freetsa.org/tsr
-
-# Verify with pinned TSA trust (optional)
-./target/release/winstack verify document.pdf document.pdf.proof.json \
-  --tsa-root <sha256-fingerprint-of-trusted-root-cert>
 ```
-
-**Proof bundles are self-contained.** Verification requires no network access and no node state.
-
-Exit codes: `0` verified, `1` invalid/tampered, `2` error
-
----
-
-## Browser verification UI
-
-```bash
-# Start the API
-./target/release/win serve
-
-# Serve the UI
-python3 -m http.server 8080 --directory window/
-
-# Open
-open http://localhost:8080/verify.html
-```
-
-Pick a file, pick its `.proof.json`, click VERIFY. No account, no login, no setup.
-
----
-
-## Architecture
-
-13 crates, strict dependency order, no circular imports:
-
-```
-canon-types          domain primitives, zero logic
-crypto               Ed25519 + SHA-256, deterministic
-identity-core        signed identity chains, module registry
-time-core            chained time events, RFC 3161 TSA client
-policy-core          policy evaluation, signed proofs
-object-store         content-addressed, immutable, fsync-safe
-graph-index          SQLite lineage DAG, rebuildable
-verifier             deterministic re-verification, fail-closed
-registry-core        sole write authority, 10-step sealing pipeline
-module-import        sealed import assembly
-module-ai            AI generation assembly
-window-api           read-only inspection + verification API (Axum)
-cli                  two binaries: win + winstack
-```
-
----
-
-## Verification pipeline
-
-Re-verification is deterministic and stateless. Given a file and its proof bundle:
-
-0. Protocol version gate (reject unknown versions)
-1. Content hash matches artifact bytes
-2. Object signature valid against creator key
-3. Creator identity active, not session for native objects
-4. Module kind matches object class
-5. Time event signature valid; chain linkage present
-6. If external time: RFC 3161 CMS signature verified, cert chain validated, trust store checked
-7. Policy proof signature valid; decision is Permit; version matches current
-8. Origin record consistent with object
-9. AI generation / import declaration present where required
-10. Lineage: parents exist, are older, no cycles
-
-Result is `VERIFIED` or `INVALID` with every failing rule listed by exact `FailureCode`.
-
----
-
-## Test
-
-```bash
-cargo test     # 64 tests
-```
-
----
-
-## Object classes
-
-| Class | Trust | Description |
-|---|---|---|
-| `NATIVE` | Native | Born on this node through the sealing pipeline |
-| `AI_GENERATED` | Native | AI output sealed through the generation pipeline |
-| `SEALED_IMPORT` | **Foreign** | External artifact brought in under a signed declaration |
-
-Sealed imports never become native. Their `trust_class` is always `FOREIGN`.
-
----
-
-## Node state
-
-`winstack prove` creates `.winstack/` containing identity keys and the object store. **Do not commit this directory.** It is gitignored by default.
-
----
-
-## How Winstack spreads
-
-The unit of distribution is not the app. It's the proof attached to the file.
-
-1. You create a proof for a file → `document.pdf.proof.json`
-2. You send both the file and its proof to someone
-3. They verify using any Winstack verifier:
-   - **Desktop app** (full offline verification)
-   - **Browser verifier** (`check.html` — runs entirely in-browser, no install, no server)
-   - **CLI** (`winstack verify`)
-
-No accounts. No platform. No cloud. The proof travels with the file.
-
----
-
-## Verify without installing anything
-
-Open `check.html` in any modern browser. Drop a file and its proof. Click Verify.
-
-Everything runs locally in the browser using SubtleCrypto. Nothing is uploaded anywhere. SHA-256 hash check + Ed25519 signature verification (where supported).
-
-Host `check.html` on any static server, or open it directly from disk.
 
 ---
 
 ## What the proof contains
 
-- Payload hash (SHA-256 of the file)
-- Ed25519 signatures (object, time, policy)
-- Timestamps (local or RFC 3161 external)
+- SHA-256 hash of the file (not the file itself)
+- Ed25519 digital signatures
+- Timestamps (local or externally anchored via RFC 3161)
 - Creator public key
-- Chain/history metadata (if chained)
-- Protocol version
+- Chain/history metadata (if part of a version chain)
+- Protocol version (`V1`)
 
 ## What the proof does NOT contain
 
-- File contents (only the hash)
+- File contents
 - File paths
-- Usernames
+- Usernames or account information
 - Machine identifiers
 - Any data that identifies your computer or location
 
-The proof is safe to share publicly. It reveals only that a specific hash was signed at a specific time by a specific key.
+The proof is safe to share publicly.
 
 ---
 
-## Protocol
+## How Winstack spreads
 
-All records carry `"protocol": "V1"`. Signing payloads use canonical JSON (serde_json). Ed25519 signatures. SHA-256 content hashes. See `spec/PROOF-SPEC.md` for the full specification.
+The product is not the app. The product is the proof attached to the file.
+
+- You create a proof for a file
+- The file and proof travel together
+- Anyone verifies using any Winstack verifier
+- The app is a creator tool and a verifier — not a platform
+
+Three verification paths, same result:
+1. **Browser** — `check.html`, zero install, runs in-browser
+2. **Desktop app** — full offline verification with proof creation
+3. **CLI** — `winstack verify file proof.json`
 
 ---
 
-## Structure
+## Comparison
+
+| | Winstack | Traditional hash | Blockchain notary | Cloud signing |
+|---|---|---|---|---|
+| Works offline | Yes | Yes | No | No |
+| Requires server trust | No | No | Yes | Yes |
+| Any file type | Yes | Yes | Varies | Varies |
+| Proof travels with file | Yes | Manual | No | No |
+| Version history | Yes (chains) | No | Varies | Varies |
+| Key rotation | Yes (delegation) | No | Varies | Varies |
+| Accounts required | No | No | Yes | Yes |
+| External timestamps | Optional | No | Built-in | Built-in |
+
+Winstack is not a blockchain, a certificate authority, or a cloud service. It is a local proof system. Proofs are self-contained. Verification contacts nothing.
+
+---
+
+## What Winstack proves
+
+- A specific file existed at a specific time
+- It has not been modified since
+- It was signed by a specific key
+- It may be part of a verifiable version chain
+
+## What Winstack does NOT prove
+
+- That the file content is true or accurate
+- The real-world identity of the signer (only key continuity)
+- That this is the first copy in the world (only first in this lineage)
+- That the timestamp is absolute (local time is from the device clock; external time is from a specific TSA)
+
+---
+
+## Architecture
+
+13 crates. 77 tests. Fail-closed everywhere.
 
 ```
-Cargo.toml
-rust-toolchain.toml
-README.md
-.gitignore
-spec/
-  PROOF-SPEC.md           proof format specification
-window/
-  verify.html             app verification UI
-  check.html              standalone browser verifier (no install required)
-  index.html              object inspector UI
-desktop/                  Tauri desktop app
-crates/
-  canon-types/            domain types
-  crypto/                 Ed25519, SHA-256
-  identity-core/          identity + module registry
-  time-core/              time chain + RFC 3161 TSA
-  policy-core/            policy evaluation
-  object-store/           immutable object store
-  graph-index/            SQLite lineage DAG
-  verifier/               deterministic verifier
-  registry-core/          sealing pipeline + tests
-  module-import/          import assembly
-  module-ai/              AI generation assembly
-  window-api/             Axum API + verify endpoint
-  cli/                    win + winstack binaries
+canon-types       domain primitives
+crypto            Ed25519 + SHA-256
+identity-core     identity + module registry
+time-core         time chain + RFC 3161 TSA
+policy-core       policy evaluation
+object-store      immutable store
+graph-index       SQLite lineage DAG
+verifier          deterministic verifier + chain walker
+registry-core     10-step sealing pipeline
+module-import     import assembly
+module-ai         AI generation assembly
+window-api        Axum API
+cli               win + winstack binaries
 ```
+
+Desktop app built with Tauri 2. Browser verifier uses SubtleCrypto (SHA-256 + Ed25519).
+
+---
+
+## Downloads
+
+[Latest release](https://github.com/Wise-Est-Systems/winstack-network/releases/latest)
+
+- **Winstack.dmg** — macOS Apple Silicon
+- **Winstack.zip** — macOS Apple Silicon (alternative)
+
+> macOS may show a developer warning on first launch (the app is not yet code-signed). Right-click → Open → Open to bypass.
+
+---
+
+## Build from source
+
+```bash
+# CLI tools
+cargo build --release
+./target/release/winstack prove file.pdf
+./target/release/winstack verify file.pdf file.pdf.proof.json
+
+# Desktop app
+cargo install tauri-cli --version "^2"
+cd desktop && cargo tauri build
+```
+
+---
+
+## License
+
+[MIT](LICENSE) — Wise.Est Systems

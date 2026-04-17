@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Winstack — Verify a file</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090b;--surface:#0f0f12;--card:#141418;--elevated:#1a1a20;--border:#1f1f28;--border-h:#2a2a36;--muted:#4a4a5a;--subtle:#6a6a7e;--text:#d0d0dc;--bright:#f0f0f6;--white:#fafafa;--green:#34d399;--green-soft:#34d39918;--green-border:#166534;--red:#f87171;--red-soft:#f8717118;--red-border:#7f1d1d;--amber:#fbbf24;--amber-soft:#fbbf2418;--amber-border:#78350f;--sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono','Fira Code','Consolas',monospace;--radius:12px;--radius-sm:8px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:flex;flex-direction:column}
+::selection{background:var(--green);color:var(--bg)}
+nav{padding:0 24px;height:48px;display:flex;align-items:center;border-bottom:1px solid var(--border);background:var(--surface)}
+.logo{font-size:13px;font-weight:600;letter-spacing:0.08em;color:var(--bright)}
+.badge{font-size:10px;color:var(--muted);margin-left:8px;border:1px solid var(--border);padding:1px 6px;border-radius:3px}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 24px}
+.app{width:100%;max-width:440px;text-align:center}
+h1{font-size:20px;font-weight:600;color:var(--bright);margin-bottom:6px}
+.sub{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:32px}
+.drops{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.drop{position:relative;border:1.5px dashed var(--border);background:var(--card);border-radius:var(--radius);padding:28px 16px;cursor:pointer;transition:border-color 0.2s,background 0.2s,box-shadow 0.2s}
+.drop:hover{border-color:var(--border-h);background:var(--elevated)}
+.drop.over{border-color:var(--green);background:var(--green-soft);box-shadow:0 0 0 1px var(--green)}
+.drop.picked{border-style:solid;border-color:var(--border-h);background:var(--elevated)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-name{font-size:13px;font-weight:500;color:var(--muted);pointer-events:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px;margin:0 auto;transition:color 0.15s}
+.drop.picked .drop-name{color:var(--bright)}
+.drop-sub{font-size:11px;color:var(--muted);opacity:0.4;margin-top:4px;pointer-events:none}
+.drop.picked .drop-sub{display:none}
+.btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--white);color:var(--bg);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;transition:opacity 0.15s,transform 0.1s}
+.btn:hover:not(:disabled){opacity:0.92;transform:translateY(-1px)}
+.btn:disabled{opacity:0.12;cursor:default}
+.note{font-size:11px;color:var(--muted);opacity:0.5;margin-top:16px}
+.note a{color:var(--subtle);text-decoration:underline;text-underline-offset:2px}
+.processing{display:none;text-align:center}
+.dot{width:6px;height:6px;background:var(--subtle);border-radius:50%;display:inline-block;margin:0 3px;animation:pulse 1.2s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+.proc-label{font-size:13px;color:var(--muted);margin-top:16px}
+.outcome{display:none;width:100%;max-width:480px}
+.verdict{text-align:center;padding:48px 32px 40px;border-radius:var(--radius);margin-bottom:20px;position:relative;overflow:hidden}
+.verdict::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s}
+.verdict.show::after{opacity:1}
+.verdict.ok{background:var(--green-soft);border:1px solid var(--green-border)}
+.verdict.ok::after{background:radial-gradient(ellipse at 50% 40%,#34d39920,transparent 70%)}
+.verdict.bad{background:var(--red-soft);border:1px solid var(--red-border)}
+.verdict.bad::after{background:radial-gradient(ellipse at 50% 40%,#f8717120,transparent 70%)}
+.verdict.warn{background:var(--amber-soft);border:1px solid var(--amber-border)}
+.verdict.warn::after{background:radial-gradient(ellipse at 50% 40%,#fbbf2420,transparent 70%)}
+.verdict-status{font-size:36px;font-weight:700;letter-spacing:.04em;line-height:1}
+.verdict.ok .verdict-status{color:var(--green)}
+.verdict.bad .verdict-status{color:var(--red)}
+.verdict.warn .verdict-status{color:var(--amber)}
+.verdict-explain{font-size:14px;color:var(--text);margin-top:14px;line-height:1.55}
+.verdict-meta{display:inline-block;font-size:11px;color:var(--muted);margin-top:14px;padding:3px 10px;border:1px solid var(--border);border-radius:4px}
+.mismatch{border:1px solid var(--red-border);background:var(--red-soft);border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:16px;text-align:left}
+.mm-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.mm-label.a{color:var(--red)}.mm-label.b{color:var(--muted)}
+.mm-val{font-size:11px;font-family:var(--mono);word-break:break-all;line-height:1.5}
+.mm-val.a{color:var(--bright)}.mm-val.b{color:var(--muted)}
+.mm-sep{height:1px;background:var(--red-border);margin:10px 0}
+.details-toggle{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans);transition:color .15s}
+.details-toggle:hover{color:var(--subtle)}
+.details-panel{display:none;margin-top:12px;text-align:left;background:var(--card);border-radius:var(--radius-sm);padding:16px 20px}
+.details-panel.open{display:block}
+.detail{display:flex;gap:8px;margin-bottom:6px;font-size:12px}
+.detail:last-child{margin-bottom:0}
+.detail-k{color:var(--muted);white-space:nowrap;min-width:80px}
+.detail-v{color:var(--subtle);word-break:break-all;font-family:var(--mono);font-size:11px}
+.again{margin-top:20px;font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans);text-decoration:underline;text-underline-offset:3px;transition:color .15s}
+.again:hover{color:var(--text)}
+.err{border:1px solid var(--red-border);background:var(--red-soft);border-radius:var(--radius-sm);padding:14px 20px;margin-bottom:16px;font-size:13px;color:var(--red);line-height:1.5;text-align:left}
+footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--border);background:var(--surface)}
+.foot{font-size:10px;color:var(--muted);opacity:.4}
+.hidden{display:none!important}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.enter{animation:enter .25s ease-out both}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">Winstack</div>
+  <span class="badge">browser verifier</span>
+</nav>
+<main>
+<div class="app">
+  <div id="input-state">
+    <h1>Verify a file</h1>
+    <p class="sub">Drop a file and its proof. Verification happens entirely in your browser.</p>
+    <div class="drops">
+      <div class="drop" id="d-file"><input type="file" id="i-file"><div class="drop-name" id="n-file">Your file</div><div class="drop-sub">drop or click</div></div>
+      <div class="drop" id="d-proof"><input type="file" id="i-proof" accept=".json,.proof.json"><div class="drop-name" id="n-proof">Its proof</div><div class="drop-sub">.proof.json</div></div>
+    </div>
+    <button class="btn" id="btn-go" disabled>Verify</button>
+    <p class="note">Nothing is uploaded. All checks run locally in your browser.<br>Need to create a proof? <a href="https://github.com/Wise-Est-Systems/winstack-network/releases">Download Winstack</a></p>
+  </div>
+  <div class="processing" id="proc-state"><div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div class="proc-label">Checking</div></div>
+  <div class="outcome" id="result-state">
+    <div class="err hidden" id="r-err"></div>
+    <div class="verdict" id="r-verdict">
+      <div class="verdict-status" id="r-status"></div>
+      <div class="verdict-explain" id="r-explain"></div>
+      <div class="verdict-meta hidden" id="r-meta"></div>
+    </div>
+    <div class="mismatch hidden" id="r-mm">
+      <div class="mm-label a">This file's fingerprint</div><div class="mm-val a" id="r-mm-a"></div>
+      <div class="mm-sep"></div>
+      <div class="mm-label b">Expected (from proof)</div><div class="mm-val b" id="r-mm-b"></div>
+    </div>
+    <button class="details-toggle" id="r-dtoggle">View details</button>
+    <div class="details-panel" id="r-dpanel"></div>
+    <button class="again" id="r-again">Verify another file</button>
+  </div>
+</div>
+</main>
+<footer><span class="foot">Verification runs entirely in your browser. No server. No upload.</span></footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const trunc=(s,n=24)=>s.length>n?s.slice(0,n-1)+'\u2026':s;
+function dt(k,v){return`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`}
+
+let theFile=null,theProof=null;
+
+function wire(inputId,zoneId,nameId,cb){
+  const input=$(inputId),zone=$(zoneId),name=$(nameId);
+  input.addEventListener('change',()=>{if(input.files[0])pick(input.files[0])});
+  zone.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();zone.classList.add('over')});
+  zone.addEventListener('dragleave',e=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over')});
+  zone.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over');if(e.dataTransfer.files[0]){input.files=e.dataTransfer.files;pick(e.dataTransfer.files[0])}});
+  function pick(f){zone.classList.add('picked');name.textContent=trunc(f.name);cb(f)}
+}
+
+wire('i-file','d-file','n-file',f=>{theFile=f;$('btn-go').disabled=!(theFile&&theProof)});
+wire('i-proof','d-proof','n-proof',f=>{theProof=f;$('btn-go').disabled=!(theFile&&theProof)});
+
+function show(s){
+  $('input-state').style.display=s==='input'?'':'none';
+  $('proc-state').style.display=s==='proc'?'':'none';
+  $('result-state').style.display=s==='result'?'':'none';
+}
+
+// ── SHA-256 in browser ──
+async function sha256hex(arrayBuffer){
+  const hash=await crypto.subtle.digest('SHA-256',arrayBuffer);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── Ed25519 verify in browser ──
+async function ed25519verify(pubKeyHex,messageBytes,signatureHex){
+  try{
+    const pubBytes=hexToBytes(pubKeyHex);
+    const sigBytes=hexToBytes(signatureHex);
+    const key=await crypto.subtle.importKey('raw',pubBytes,{name:'Ed25519'},false,['verify']);
+    return await crypto.subtle.verify({name:'Ed25519'},key,sigBytes,messageBytes);
+  }catch{
+    return null; // browser doesn't support Ed25519
+  }
+}
+
+function hexToBytes(hex){
+  const bytes=new Uint8Array(hex.length/2);
+  for(let i=0;i<hex.length;i+=2)bytes[i/2]=parseInt(hex.substr(i,2),16);
+  return bytes;
+}
+
+// ── Reconstruct sign payload (must match Rust's serde_json field order) ──
+function buildSignPayload(obj){
+  const p={
+    object_id:obj.object_id,
+    object_class:obj.object_class,
+    payload_hash:obj.payload_hash,
+    artifact_size_bytes:obj.artifact_size_bytes,
+    parent_ids:obj.parent_ids,
+    protocol:obj.protocol
+  };
+  // proof_chain: only include if present (skip_serializing_if = is_none)
+  if(obj.proof_chain!=null)p.proof_chain=obj.proof_chain;
+  return JSON.stringify(p);
+}
+
+// ── VERIFY ──
+$('btn-go').addEventListener('click',async()=>{
+  if(!theFile||!theProof)return;
+  show('proc');
+
+  try{
+    // Read proof
+    const proofText=await theProof.text();
+    let bundle;
+    try{bundle=JSON.parse(proofText)}catch{show('result');showErr('The proof file is not valid JSON.');return}
+    if(!bundle.object||!bundle.object.payload_hash){show('result');showErr('The proof file does not contain a valid proof.');return}
+
+    // Read file and compute hash
+    const fileBuf=await theFile.arrayBuffer();
+    const fileHash=await sha256hex(fileBuf);
+    const expectedHash=bundle.object.payload_hash;
+
+    // Step 1: Hash check (TAMPERED detection)
+    if(fileHash!==expectedHash){
+      show('result');
+      renderResult('TAMPERED',fileHash,expectedHash,bundle);
+      return;
+    }
+
+    // Step 2: Signature check (INVALID detection)
+    const signPayloadJson=buildSignPayload(bundle.object);
+    const signPayloadBytes=new TextEncoder().encode(signPayloadJson);
+    const pubKey=bundle.creator_identity?.public_key_hex;
+    const sig=bundle.object?.object_signature;
+
+    let sigValid=null;
+    if(pubKey&&sig&&pubKey.length===64&&sig.length===128){
+      sigValid=await ed25519verify(pubKey,signPayloadBytes,sig);
+    }
+
+    // Step 3: Basic structure checks
+    let structureOk=true;
+    let structureIssue='';
+    if(bundle.object.protocol!=='V1'){structureOk=false;structureIssue='Unsupported protocol version: '+bundle.object.protocol}
+    if(!bundle.creator_identity){structureOk=false;structureIssue='Missing creator identity'}
+    if(bundle.object.policy_proof?.decision!=='Permit'){structureOk=false;structureIssue='Policy decision is not Permit'}
+
+    if(sigValid===false){
+      show('result');renderResult('INVALID',fileHash,expectedHash,bundle,'Object signature verification failed');return;
+    }
+    if(!structureOk){
+      show('result');renderResult('INVALID',fileHash,expectedHash,bundle,structureIssue);return;
+    }
+
+    // All checks passed
+    show('result');
+    renderResult('VERIFIED',fileHash,expectedHash,bundle,null,sigValid);
+
+  }catch(e){show('result');showErr('Verification failed: '+e.message)}
+});
+
+function showErr(m){$('r-verdict').style.display='none';$('r-err').classList.remove('hidden');$('r-err').textContent=m}
+
+function renderResult(result,fileHash,expectedHash,bundle,issue,sigChecked){
+  $('r-err').classList.add('hidden');
+  $('r-mm').classList.add('hidden');
+  $('r-meta').classList.add('hidden');
+  $('r-dpanel').classList.remove('open');
+  $('r-dtoggle').textContent='View details';
+
+  const v=$('r-verdict');v.style.display='';
+
+  if(result==='VERIFIED'){
+    v.className='verdict enter ok';
+    $('r-status').textContent='Verified';
+    $('r-explain').textContent='This file has not changed.';
+    const m=$('r-meta');m.classList.remove('hidden');
+    if(sigChecked===true){
+      m.textContent='Hash + signature verified';m.style.borderColor='var(--green-border)';m.style.color='var(--green)';
+    }else if(sigChecked===null){
+      m.textContent='Hash verified \u2022 Signature check unavailable in this browser';m.style.borderColor='';m.style.color='';
+    }
+    // Chain info
+    const chain=bundle.object.proof_chain;
+    if(chain){
+      const label=chain.predecessor_proof_id?'Updated from an earlier proof.':'First proof for this file.';
+      $('r-explain').textContent+=' '+label;
+    }
+  }else if(result==='TAMPERED'){
+    v.className='verdict enter bad';
+    $('r-status').textContent='Tampered';
+    $('r-explain').textContent='This file does not match the proof. It was modified, or you selected the wrong file.';
+    $('r-mm').classList.remove('hidden');
+    $('r-mm-a').textContent=fileHash;
+    $('r-mm-b').textContent=expectedHash;
+  }else{
+    v.className='verdict enter warn';
+    $('r-status').textContent='Invalid proof';
+    $('r-explain').textContent='This proof is broken or cannot be used to verify this file.'+(issue?' '+issue+'.':'');
+  }
+  requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));
+
+  $('r-dpanel').innerHTML=[
+    dt('Sealed',bundle.object.origin?.created_at||'unknown'),
+    dt('Object',bundle.object.object_id||'unknown'),
+    dt('File hash',fileHash),
+    dt('Proof hash',expectedHash),
+    dt('Protocol',bundle.object.protocol||'unknown'),
+    dt('Time',bundle.object.time_event?.time_source==='External'?'External (RFC 3161)':'Local'),
+    dt('Verified by','Browser (no server)'),
+  ].join('');
+}
+
+$('r-dtoggle').addEventListener('click',()=>{
+  const o=$('r-dpanel').classList.toggle('open');
+  $('r-dtoggle').textContent=o?'Hide details':'View details';
+});
+$('r-again').addEventListener('click',()=>{
+  theFile=null;theProof=null;
+  $('i-file').value='';$('i-proof').value='';
+  $('d-file').classList.remove('picked');$('d-proof').classList.remove('picked');
+  $('n-file').textContent='Your file';$('n-proof').textContent='Its proof';
+  $('btn-go').disabled=true;show('input');
+});
+</script>
+</body>
+</html>

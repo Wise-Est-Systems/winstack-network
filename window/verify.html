@@ -265,6 +265,7 @@ footer{
       </div>
       <div class="actions hidden" id="r-actions">
         <button class="btn-secondary" id="r-dl">Download proof</button>
+        <button class="btn-secondary" id="r-share">Copy share message</button>
       </div>
       <button class="details-toggle" id="r-dtoggle">View details</button>
       <div class="details-panel" id="r-dpanel"></div>
@@ -450,6 +451,7 @@ function renderSeal(orig,proof,info){
 
   $('r-status').textContent='Proof created';
   $('r-explain').textContent=`Proof saved for ${orig}. When you share the file, send the proof with it. Anyone can verify the file if they have both.`;
+  $('r-actions').classList.remove('hidden');
   const m=$('r-meta');m.classList.remove('hidden');
   m.className='verdict-meta'+(info.ts==='External'?' ext':'');
   m.textContent=info.ts==='External'?'Externally timestamped':'Local time';
@@ -473,6 +475,16 @@ $('r-dl').addEventListener('click',()=>{
   a.href=URL.createObjectURL(new Blob([proofBytes],{type:'application/json'}));
   a.download=(objId||'proof')+'.proof.json';
   document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+});
+
+// ── SHARE MESSAGE ──
+$('r-share').addEventListener('click',()=>{
+  const name=theFile?theFile.name:'this file';
+  const msg=`I've attached a proof for ${name}. To verify it hasn't been changed, open both files at https://wise-est-systems.github.io/winstack-network/`;
+  navigator.clipboard.writeText(msg).then(()=>{
+    $('r-share').textContent='Copied!';
+    setTimeout(()=>{$('r-share').textContent='Copy share message'},2000);
+  });
 });
 
 // ── RESET ──
