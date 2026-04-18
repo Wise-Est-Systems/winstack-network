@@ -278,12 +278,33 @@ footer{
 
 <script>
 function getAPI(){return(window.WINSTACK_API_BASE||'http://127.0.0.1:13845').replace(/\/$/,'')}
+
+// Save file — works in both Tauri webview and regular browser
+async function saveFile(name,content){
+  // Try Tauri dialog + fs first
+  if(window.__TAURI__){
+    try{
+      const {save}=window.__TAURI__.dialog||{};
+      const {writeTextFile}=window.__TAURI__.fs||{};
+      if(save&&writeTextFile){
+        const path=await save({defaultPath:name,filters:[{name:'Proof',extensions:['proof.json','json']}]});
+        if(path){await writeTextFile(path,content);return}
+      }
+    }catch(e){console.warn('Tauri save failed, falling back',e)}
+  }
+  // Browser fallback
+  const blob=new Blob([content],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const trunc=(s,n=24)=>s.length>n?s.slice(0,n-1)+'\u2026':s;
 function dt(k,v){return`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`}
 
-let theFile=null,theProof=null,proofBytes=null,objId=null;
+let theFile=null,theProof=null,proofBytes=null,objId=null,lastProofName=null;
 
 // ── DROP WIRING ──
 function wire(inputId,zoneId,nameId,cb){
@@ -365,19 +386,17 @@ $('btn-create').addEventListener('click',async()=>{
     if(!res.ok){let m=`Something went wrong (${res.status})`;try{const j=await res.json();m=j?.error?.message||m}catch{};show('result');showErr(m);return}
     const cd=res.headers.get('content-disposition')||'';
     const fname=cd.match(/filename="(.+)"/)?.[1]||theFile.name+'.proof.json';
-    // Read text first (blob can only be consumed once)
     const proofText=await res.text();
-    // Trigger download from text
-    const dlBlob=new Blob([proofText],{type:'application/json'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(dlBlob);a.download=fname;
-    document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-    // Parse for display
+    // Parse for display FIRST — never block on download
     let info={};
     try{const b=JSON.parse(proofText);info={id:b.object?.object_id||'',hash:b.object?.payload_hash||'',at:b.object?.origin?.created_at||'',ts:b.object?.time_event?.time_source||'Local'}}catch(e){console.error('parse error',e)}
+    proofBytes=new TextEncoder().encode(proofText);
+    objId=info.id;
+    lastProofName=fname;
     show('result');
     renderSeal(theFile.name,fname,info);
+    // Try download after result is shown
+    try{saveFile(fname,proofText)}catch(e){}
   }catch(e){show('result');showErr('Cannot connect to Winstack. '+(e.message||'Make sure the app is running.'))}
 });
 
@@ -453,7 +472,7 @@ function renderSeal(orig,proof,info){
   requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));
 
   $('r-status').textContent='Proof created';
-  $('r-explain').textContent=`Proof saved for ${orig}. When you share the file, send the proof with it. Anyone can verify the file if they have both.`;
+  $('r-explain').textContent=`Proof saved to your Downloads folder as ${proof}. When you share the file, send the proof with it. Anyone can verify the file if they have both.`;
   $('r-actions').classList.remove('hidden');
   const m=$('r-meta');m.classList.remove('hidden');
   m.className='verdict-meta'+(info.ts==='External'?' ext':'');
@@ -474,10 +493,8 @@ $('r-dtoggle').addEventListener('click',()=>{
 // ── DOWNLOAD ──
 $('r-dl').addEventListener('click',()=>{
   if(!proofBytes)return;
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([proofBytes],{type:'application/json'}));
-  a.download=(objId||'proof')+'.proof.json';
-  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+  const name=lastProofName||(objId||'proof')+'.proof.json';
+  saveFile(name,new TextDecoder().decode(proofBytes));
 });
 
 // ── SHARE MESSAGE ──
@@ -492,7 +509,7 @@ $('r-share').addEventListener('click',()=>{
 
 // ── RESET ──
 $('r-again').addEventListener('click',()=>{
-  theFile=null;theProof=null;proofBytes=null;objId=null;
+  theFile=null;theProof=null;proofBytes=null;objId=null;lastProofName=null;
   $('i-file').value='';$('i-proof').value='';
   $('d-file').classList.remove('picked');$('d-proof').classList.remove('picked');
   $('n-file').textContent='Your file';$('n-proof').textContent='Its proof';

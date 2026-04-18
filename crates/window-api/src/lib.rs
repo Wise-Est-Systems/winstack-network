@@ -757,6 +757,15 @@ async fn prove_upload(
         .map(|n| format!("{}.proof.json", n))
         .unwrap_or_else(|| format!("{}.proof.json", obj.object_id));
 
+    // Auto-save to user's Downloads folder
+    if let Ok(home) = std::env::var("HOME") {
+        let downloads = std::path::Path::new(&home).join("Downloads");
+        if downloads.exists() {
+            let save_path = downloads.join(&download_name);
+            let _ = std::fs::write(&save_path, &proof_json);
+        }
+    }
+
     Ok((
         StatusCode::OK,
         [
