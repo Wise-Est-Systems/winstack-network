@@ -277,7 +277,7 @@ footer{
 <footer><span class="foot">Runs entirely on your device</span></footer>
 
 <script>
-function getAPI(){return(window.WINSTACK_API_BASE||'http://127.0.0.1:3001').replace(/\/$/,'')}
+function getAPI(){return(window.WINSTACK_API_BASE||'http://127.0.0.1:13845').replace(/\/$/,'')}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const trunc=(s,n=24)=>s.length>n?s.slice(0,n-1)+'\u2026':s;
@@ -350,7 +350,7 @@ $('btn-go').addEventListener('click',async()=>{
     objId=d.object_id;
     show('result');
     renderVerify(d);
-  }catch{show('result');showErr('Cannot connect. Make sure Winstack is running.')}
+  }catch(e){show('result');showErr('Cannot connect to Winstack. '+(e.message||'Make sure the app is running.'))}
 });
 
 // ── CREATE PROOF ──
@@ -363,19 +363,22 @@ $('btn-create').addEventListener('click',async()=>{
   try{
     const res=await fetch(`${getAPI()}/prove`,{method:'POST',body:form});
     if(!res.ok){let m=`Something went wrong (${res.status})`;try{const j=await res.json();m=j?.error?.message||m}catch{};show('result');showErr(m);return}
-    const blob=await res.blob();
     const cd=res.headers.get('content-disposition')||'';
     const fname=cd.match(/filename="(.+)"/)?.[1]||theFile.name+'.proof.json';
-    // trigger download
+    // Read text first (blob can only be consumed once)
+    const proofText=await res.text();
+    // Trigger download from text
+    const dlBlob=new Blob([proofText],{type:'application/json'});
     const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);a.download=fname;
-    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
-    // parse for display
+    a.href=URL.createObjectURL(dlBlob);a.download=fname;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    // Parse for display
     let info={};
-    try{const b=JSON.parse(await blob.text());info={id:b.object?.object_id||'',hash:b.object?.payload_hash||'',at:b.object?.origin?.created_at||'',ts:b.object?.time_event?.time_source||'Local'}}catch{}
+    try{const b=JSON.parse(proofText);info={id:b.object?.object_id||'',hash:b.object?.payload_hash||'',at:b.object?.origin?.created_at||'',ts:b.object?.time_event?.time_source||'Local'}}catch(e){console.error('parse error',e)}
     show('result');
     renderSeal(theFile.name,fname,info);
-  }catch{show('result');showErr('Cannot connect. Make sure Winstack is running.')}
+  }catch(e){show('result');showErr('Cannot connect to Winstack. '+(e.message||'Make sure the app is running.'))}
 });
 
 // ── ERROR ──

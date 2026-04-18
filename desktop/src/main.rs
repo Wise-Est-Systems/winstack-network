@@ -223,6 +223,12 @@ mod hex_bytes {
 }
 
 fn find_available_port() -> u16 {
+    // Try fixed port first for reliable UI connection
+    const PREFERRED: u16 = 13845;
+    if std::net::TcpListener::bind(format!("127.0.0.1:{}", PREFERRED)).is_ok() {
+        return PREFERRED;
+    }
+    // Fallback to random
     let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
     listener.local_addr().unwrap().port()
 }
@@ -258,8 +264,18 @@ fn main() {
         .setup(move |app| {
             use tauri::Manager;
             if let Some(window) = app.get_webview_window("main") {
+                // Inject API base URL — retry to handle page load timing
                 let js = format!("window.WINSTACK_API_BASE = 'http://{}';", addr);
+                let js_clone = js.clone();
                 window.eval(&js).ok();
+                // Retry after page has likely finished loading
+                let window_clone = window.clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_millis(500));
+                    window_clone.eval(&js_clone).ok();
+                    std::thread::sleep(std::time::Duration::from_millis(1000));
+                    window_clone.eval(&js_clone).ok();
+                });
             }
             Ok(())
         })
