@@ -1,3 +1,5 @@
 /target
 .winstack/
 *.proof.json
+.vercel
+.vercel
