@@ -120,6 +120,12 @@ fn ensure_node() -> (registry_core::Registry, PathBuf) {
 
         let json = serde_json::to_string_pretty(&node_config).unwrap();
         std::fs::write(&node_json, json).unwrap();
+        // Restrict permissions — private keys should not be world-readable
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let _ = std::fs::set_permissions(&node_json, std::fs::Permissions::from_mode(0o600));
+        }
 
         let reg = registry_core::Registry {
             identity_store,
