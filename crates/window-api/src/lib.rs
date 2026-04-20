@@ -779,6 +779,341 @@ async fn prove_upload(
     ))
 }
 
+/// Create a .win bundle (ZIP containing original file + proof JSON)
+fn create_win_bundle(file_name: &str, file_bytes: &[u8], proof_json: &str) -> Vec<u8> {
+    use std::io::Write;
+    let buf = std::io::Cursor::new(Vec::new());
+    let mut zip = zip::ZipWriter::new(buf);
+    let opts =
+        zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+    zip.start_file(file_name, opts).unwrap();
+    zip.write_all(file_bytes).unwrap();
+    zip.start_file(format!("{}.proof.json", file_name), opts)
+        .unwrap();
+    zip.write_all(proof_json.as_bytes()).unwrap();
+    zip.finish().unwrap().into_inner()
+}
+
+/// Extract a .win bundle → (file_name, file_bytes, proof_json)
+fn extract_win_bundle(data: &[u8]) -> Result<(String, Vec<u8>, String), String> {
+    use std::io::Read;
+    let reader = std::io::Cursor::new(data);
+    let mut archive =
+        zip::ZipArchive::new(reader).map_err(|e| format!("not a valid .win file: {}", e))?;
+
+    let mut file_name = String::new();
+    let mut file_bytes = Vec::new();
+    let mut proof_json = String::new();
+
+    for i in 0..archive.len() {
+        let mut entry = archive
+            .by_index(i)
+            .map_err(|e| format!("corrupt .win file: {}", e))?;
+        let name = entry.name().to_string();
+        if name.ends_with(".proof.json") {
+            entry
+                .read_to_string(&mut proof_json)
+                .map_err(|e| format!("cannot read proof: {}", e))?;
+        } else {
+            file_name = name;
+            entry
+                .read_to_end(&mut file_bytes)
+                .map_err(|e| format!("cannot read file: {}", e))?;
+        }
+    }
+
+    if file_name.is_empty() || file_bytes.is_empty() {
+        return Err("no file found in .win bundle".into());
+    }
+    if proof_json.is_empty() {
+        return Err("no proof found in .win bundle".into());
+    }
+
+    Ok((file_name, file_bytes, proof_json))
+}
+
+/// POST /seal — drop a file, get a .win bundle back (file + proof in one ZIP)
+async fn seal_upload(
+    State(registry): State<SharedRegistry>,
+    mut multipart: Multipart,
+) -> Result<(StatusCode, [(&'static str, String); 2], Vec<u8>), (StatusCode, Json<ErrorResponse>)> {
+    let mut file_bytes: Option<Vec<u8>> = None;
+    let mut file_name: Option<String> = None;
+
+    while let Some(field) = multipart.next_field().await.map_err(|e| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: format!("upload error: {}", e),
+                },
+            }),
+        )
+    })? {
+        let name = field.name().unwrap_or("").to_string();
+        let fname = field.file_name().unwrap_or("").to_string();
+        let data = field.bytes().await.map_err(|e| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: format!("read error: {}", e),
+                    },
+                }),
+            )
+        })?;
+        if name == "file" {
+            file_name = Some(fname);
+            file_bytes = Some(data.to_vec());
+        }
+    }
+
+    let artifact_bytes = file_bytes.ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: "no file provided".into(),
+                },
+            }),
+        )
+    })?;
+    let original_name = file_name.unwrap_or_else(|| "file".into());
+
+    let mut reg = registry.lock().unwrap();
+
+    let all_ids = reg.identity_store.all_identity_ids();
+    let creator_id = all_ids
+        .iter()
+        .find(|id| {
+            reg.identity_store
+                .get(id)
+                .map(|r| r.kind == IdentityKind::Personal)
+                .unwrap_or(false)
+        })
+        .copied()
+        .ok_or_else(|| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: "node not initialized".into(),
+                    },
+                }),
+            )
+        })?;
+
+    let module_id = reg.module_registry.first_module_id().ok_or_else(|| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: "node not initialized".into(),
+                },
+            }),
+        )
+    })?;
+
+    let obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: artifact_bytes.clone(),
+            creator_identity_id: creator_id,
+            module_id,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: None,
+        })
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: format!("sealing failed: {}", e),
+                    },
+                }),
+            )
+        })?;
+
+    let bundle = reg.build_proof_bundle(&obj.object_id).ok_or_else(|| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: "could not build proof".into(),
+                },
+            }),
+        )
+    })?;
+
+    let proof_json = serde_json::to_string_pretty(&bundle).unwrap();
+    let win_bytes = create_win_bundle(&original_name, &artifact_bytes, &proof_json);
+    let win_name = format!("{}.win", original_name);
+
+    // Auto-save
+    if let Ok(home) = std::env::var("HOME") {
+        let downloads = std::path::Path::new(&home).join("Downloads");
+        if downloads.exists() {
+            let _ = std::fs::write(downloads.join(&win_name), &win_bytes);
+        }
+    }
+
+    Ok((
+        StatusCode::OK,
+        [
+            ("content-type", "application/octet-stream".to_string()),
+            (
+                "content-disposition",
+                format!("attachment; filename=\"{}\"", win_name),
+            ),
+        ],
+        win_bytes,
+    ))
+}
+
+/// POST /check — drop a .win bundle, get verification result
+async fn check_bundle(
+    mut multipart: Multipart,
+) -> Result<Json<VerifyResponse>, (StatusCode, Json<ErrorResponse>)> {
+    let mut bundle_bytes: Option<Vec<u8>> = None;
+
+    while let Some(field) = multipart.next_field().await.map_err(|e| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: format!("upload error: {}", e),
+                },
+            }),
+        )
+    })? {
+        let data = field.bytes().await.map_err(|e| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: format!("read error: {}", e),
+                    },
+                }),
+            )
+        })?;
+        bundle_bytes = Some(data.to_vec());
+    }
+
+    let data = bundle_bytes.ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: "no file provided".into(),
+                },
+            }),
+        )
+    })?;
+
+    let (_file_name, file_bytes, proof_text) = extract_win_bundle(&data).map_err(|e| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: ErrorDetail { message: e },
+            }),
+        )
+    })?;
+
+    let bundle: ProofBundle = serde_json::from_str(&proof_text).map_err(|e| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: format!("invalid proof in bundle: {}", e),
+                },
+            }),
+        )
+    })?;
+
+    let file_hash = winstack_crypto::sha256_hex(&file_bytes);
+    let expected_hash = bundle.object.payload_hash.clone();
+    let object_id = bundle.object.object_id.to_string();
+    let trust_class = format!("{:?}", bundle.object.object_class.trust_class());
+    let object_class = format!("{:?}", bundle.object.object_class);
+    let created_at = bundle.object.origin.created_at.clone();
+    let payload_hash = bundle.object.payload_hash.clone();
+    let time_source = format!("{:?}", bundle.object.time_event.time_source);
+    let anchored_time = bundle.object.time_event.anchored_time.clone();
+    let (chain_status_str, chain_depth) = match &bundle.object.proof_chain {
+        None => ("standalone".to_string(), 1),
+        Some(c) if c.predecessor_proof_id.is_none() => ("origin".to_string(), 1),
+        Some(_) => ("successor".to_string(), 1),
+    };
+
+    if file_hash != expected_hash {
+        return Ok(Json(VerifyResponse {
+            result: "TAMPERED".into(),
+            object_id,
+            message: "This file was modified.".into(),
+            file_hash,
+            expected_hash,
+            failures: vec![],
+            trust_class,
+            object_class,
+            created_at,
+            payload_hash,
+            time_source,
+            time_trust: "open".into(),
+            anchored_time,
+            chain_status: chain_status_str,
+            chain_depth,
+        }));
+    }
+
+    let vr = verifier::verify_from_proof_bundle(&bundle, &file_bytes);
+    match vr.status {
+        VerificationStatus::Verified => Ok(Json(VerifyResponse {
+            result: "VERIFIED".into(),
+            object_id,
+            message: "This file has not changed.".into(),
+            file_hash,
+            expected_hash,
+            failures: vec![],
+            trust_class,
+            object_class,
+            created_at,
+            payload_hash,
+            time_source,
+            time_trust: "open".into(),
+            anchored_time,
+            chain_status: chain_status_str,
+            chain_depth,
+        })),
+        VerificationStatus::Invalid => {
+            let failures = vr
+                .failures
+                .iter()
+                .map(|f| FailureInfo {
+                    code: format!("{:?}", f.code),
+                    reason: f.reason.clone(),
+                })
+                .collect();
+            Ok(Json(VerifyResponse {
+                result: "INVALID".into(),
+                object_id,
+                message: "This proof is broken.".into(),
+                file_hash,
+                expected_hash,
+                failures,
+                trust_class,
+                object_class,
+                created_at,
+                payload_hash,
+                time_source,
+                time_trust: "open".into(),
+                anchored_time,
+                chain_status: chain_status_str,
+                chain_depth,
+            }))
+        }
+    }
+}
+
 pub fn build_router(registry: SharedRegistry) -> Router {
     Router::new()
         .route("/objects/:id", get(inspect_object))
@@ -790,6 +1125,14 @@ pub fn build_router(registry: SharedRegistry) -> Router {
         .route(
             "/prove",
             post(prove_upload).layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
+        )
+        .route(
+            "/seal",
+            post(seal_upload).layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
+        )
+        .route(
+            "/check",
+            post(check_bundle).layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
         )
         .layer(CorsLayer::permissive())
         .with_state(registry)
