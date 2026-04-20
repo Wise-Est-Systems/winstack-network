@@ -62,6 +62,9 @@ pub fn pack(filename: &str, file_bytes: &[u8], proof_json: &str) -> Vec<u8> {
 }
 
 /// Unpack a .win container → (filename, file_bytes, proof_json)
+///
+/// Security: filename is sanitized (path separators stripped, length capped).
+/// File length is bounds-checked against actual data. No panics on malformed input.
 pub fn unpack(data: &[u8]) -> Result<(String, Vec<u8>, String), WinError> {
     if data.len() < 16 {
         return Err(WinError::TooShort);
@@ -72,17 +75,27 @@ pub fn unpack(data: &[u8]) -> Result<(String, Vec<u8>, String), WinError> {
         return Err(WinError::BadMagic);
     }
 
-    // Filename length
+    // Filename length (cap at 4096 to prevent DoS)
     let name_len = u32::from_le_bytes([data[4], data[5], data[6], data[7]]) as usize;
-    let name_end = 8 + name_len;
+    if name_len > 4096 {
+        return Err(WinError::BadFilename);
+    }
+    let name_end = 8usize.checked_add(name_len).ok_or(WinError::Truncated)?;
     if data.len() < name_end + 8 {
         return Err(WinError::Truncated);
     }
 
-    // Filename
-    let filename = std::str::from_utf8(&data[8..name_end]).map_err(|_| WinError::BadFilename)?;
+    // Filename — sanitize: strip paths, reject null bytes
+    let raw_name = std::str::from_utf8(&data[8..name_end]).map_err(|_| WinError::BadFilename)?;
+    if raw_name.contains('\0') {
+        return Err(WinError::BadFilename);
+    }
+    let filename = sanitize_filename(raw_name);
+    if filename.is_empty() {
+        return Err(WinError::BadFilename);
+    }
 
-    // File length
+    // File length — checked arithmetic, no overflow
     let file_len_start = name_end;
     let file_len = u64::from_le_bytes([
         data[file_len_start],
@@ -93,10 +106,14 @@ pub fn unpack(data: &[u8]) -> Result<(String, Vec<u8>, String), WinError> {
         data[file_len_start + 5],
         data[file_len_start + 6],
         data[file_len_start + 7],
-    ]) as usize;
+    ]);
 
+    // Bounds check: file_len must fit in available data
     let file_start = file_len_start + 8;
-    let file_end = file_start + file_len;
+    let file_len_usize = usize::try_from(file_len).map_err(|_| WinError::Truncated)?;
+    let file_end = file_start
+        .checked_add(file_len_usize)
+        .ok_or(WinError::Truncated)?;
     if data.len() < file_end {
         return Err(WinError::Truncated);
     }
@@ -111,7 +128,7 @@ pub fn unpack(data: &[u8]) -> Result<(String, Vec<u8>, String), WinError> {
     }
     let proof_json = std::str::from_utf8(proof_bytes).map_err(|_| WinError::BadFilename)?;
 
-    Ok((filename.to_string(), file_bytes, proof_json.to_string()))
+    Ok((filename, file_bytes, proof_json.to_string()))
 }
 
 /// Check if data starts with .win magic bytes.
@@ -196,5 +213,67 @@ mod tests {
         let packed = pack("bin.dat", &data, "{}");
         let (_, file, _) = unpack(&packed).unwrap();
         assert_eq!(file, data);
+    }
+
+    // ── SECURITY TESTS ──
+
+    #[test]
+    fn path_traversal_stripped() {
+        let packed = pack("../../../etc/passwd", b"x", "{}");
+        let (name, _, _) = unpack(&packed).unwrap();
+        assert_eq!(name, "passwd");
+        assert!(!name.contains(".."));
+        assert!(!name.contains('/'));
+    }
+
+    #[test]
+    fn windows_path_traversal_stripped() {
+        let packed = pack("..\\..\\Windows\\system32\\evil.exe", b"x", "{}");
+        let (name, _, _) = unpack(&packed).unwrap();
+        assert_eq!(name, "evil.exe");
+    }
+
+    #[test]
+    fn null_bytes_in_filename_rejected() {
+        // Craft raw bytes with null in filename
+        let mut payload = Vec::new();
+        payload.extend_from_slice(b"WIN\x01");
+        payload.extend_from_slice(&8u32.to_le_bytes());
+        payload.extend_from_slice(b"test\x00exe");
+        payload.extend_from_slice(&1u64.to_le_bytes());
+        payload.push(b'x');
+        payload.extend_from_slice(b"{}");
+        assert!(unpack(&payload).is_err());
+    }
+
+    #[test]
+    fn integer_overflow_file_len() {
+        let mut payload = Vec::new();
+        payload.extend_from_slice(b"WIN\x01");
+        payload.extend_from_slice(&4u32.to_le_bytes());
+        payload.extend_from_slice(b"test");
+        payload.extend_from_slice(&u64::MAX.to_le_bytes());
+        payload.extend_from_slice(b"x{}");
+        assert!(unpack(&payload).is_err());
+    }
+
+    #[test]
+    fn filename_length_capped() {
+        let mut payload = Vec::new();
+        payload.extend_from_slice(b"WIN\x01");
+        payload.extend_from_slice(&(1_000_000u32).to_le_bytes()); // 1MB filename
+        payload.extend_from_slice(&vec![b'a'; 1_000_000]);
+        payload.extend_from_slice(&1u64.to_le_bytes());
+        payload.push(b'x');
+        payload.extend_from_slice(b"{}");
+        assert!(unpack(&payload).is_err());
+    }
+
+    #[test]
+    fn unpack_then_repack_identical() {
+        let original = pack("doc.pdf", b"PDF content here", r#"{"hash":"abc"}"#);
+        let (name, file, proof) = unpack(&original).unwrap();
+        let repacked = pack(&name, &file, &proof);
+        assert_eq!(original, repacked);
     }
 }
