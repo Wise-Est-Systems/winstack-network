@@ -113,6 +113,11 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
 <script>
 var API_PORT = 13845;
 function getAPI() { return window.WINSTACK_API_BASE || ('http://127.0.0.1:' + API_PORT); }
+function authHeaders() {
+  var h = {};
+  if (window.WINSTACK_TOKEN) h['Authorization'] = 'Bearer ' + window.WINSTACK_TOKEN;
+  return h;
+}
 var $ = function(id) { return document.getElementById(id); };
 var esc = function(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
 var trunc = function(s, n) { n = n || 28; return s.length > n ? s.slice(0, n-1) + '\u2026' : s; };
@@ -164,7 +169,7 @@ function handleFile(f) {
     show('proc');
     var form = new FormData();
     form.append('file', f);
-    fetch(getAPI() + '/seal', { method: 'POST', body: form })
+    fetch(getAPI() + '/seal', { method: 'POST', body: form, headers: authHeaders() })
       .then(function(res) {
         if (!res.ok) return res.json().then(function(j) { throw new Error(j.error ? j.error.message : 'Error ' + res.status); });
         return res.blob();

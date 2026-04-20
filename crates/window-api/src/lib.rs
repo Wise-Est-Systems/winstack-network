@@ -14,6 +14,14 @@ use uuid::Uuid;
 
 pub type SharedRegistry = Arc<Mutex<Registry>>;
 
+/// Generate a cryptographically random session token (hex string).
+pub fn generate_session_token() -> String {
+    use rand::Rng;
+    let mut rng = rand::rngs::OsRng;
+    let bytes: [u8; 32] = rng.gen();
+    hex::encode(bytes)
+}
+
 #[derive(Serialize)]
 pub struct InspectionResponse {
     pub status: String,
@@ -621,9 +629,29 @@ pub struct ProveResponse {
 }
 
 async fn prove_upload(
+    axum::Extension(token): axum::Extension<Arc<Option<String>>>,
+    headers: axum::http::HeaderMap,
     State(registry): State<SharedRegistry>,
     mut multipart: Multipart,
 ) -> Result<(StatusCode, [(&'static str, String); 2], Vec<u8>), (StatusCode, Json<ErrorResponse>)> {
+    // Auth check — write endpoint requires session token
+    if let Some(ref expected) = *token {
+        let provided = headers
+            .get("authorization")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.strip_prefix("Bearer "));
+        if provided != Some(expected.as_str()) {
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: "unauthorized".into(),
+                    },
+                }),
+            ));
+        }
+    }
+
     let mut file_bytes: Option<Vec<u8>> = None;
     let mut file_name: Option<String> = None;
     let mut predecessor_bytes: Option<Vec<u8>> = None;
@@ -779,64 +807,31 @@ async fn prove_upload(
     ))
 }
 
-/// Create a .win bundle (ZIP containing original file + proof JSON)
-fn create_win_bundle(file_name: &str, file_bytes: &[u8], proof_json: &str) -> Vec<u8> {
-    use std::io::Write;
-    let buf = std::io::Cursor::new(Vec::new());
-    let mut zip = zip::ZipWriter::new(buf);
-    let opts =
-        zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
-    zip.start_file(file_name, opts).unwrap();
-    zip.write_all(file_bytes).unwrap();
-    zip.start_file(format!("{}.proof.json", file_name), opts)
-        .unwrap();
-    zip.write_all(proof_json.as_bytes()).unwrap();
-    zip.finish().unwrap().into_inner()
-}
-
-/// Extract a .win bundle → (file_name, file_bytes, proof_json)
-fn extract_win_bundle(data: &[u8]) -> Result<(String, Vec<u8>, String), String> {
-    use std::io::Read;
-    let reader = std::io::Cursor::new(data);
-    let mut archive =
-        zip::ZipArchive::new(reader).map_err(|e| format!("not a valid .win file: {}", e))?;
-
-    let mut file_name = String::new();
-    let mut file_bytes = Vec::new();
-    let mut proof_json = String::new();
-
-    for i in 0..archive.len() {
-        let mut entry = archive
-            .by_index(i)
-            .map_err(|e| format!("corrupt .win file: {}", e))?;
-        let name = entry.name().to_string();
-        if name.ends_with(".proof.json") {
-            entry
-                .read_to_string(&mut proof_json)
-                .map_err(|e| format!("cannot read proof: {}", e))?;
-        } else {
-            file_name = name;
-            entry
-                .read_to_end(&mut file_bytes)
-                .map_err(|e| format!("cannot read file: {}", e))?;
-        }
-    }
-
-    if file_name.is_empty() || file_bytes.is_empty() {
-        return Err("no file found in .win bundle".into());
-    }
-    if proof_json.is_empty() {
-        return Err("no proof found in .win bundle".into());
-    }
-
-    Ok((file_name, file_bytes, proof_json))
-}
-
 /// POST /seal — drop a file, get a .win bundle back (file + proof in one ZIP)
 async fn seal_upload(
+    axum::Extension(token): axum::Extension<Arc<Option<String>>>,
+    headers: axum::http::HeaderMap,
     State(registry): State<SharedRegistry>,
     mut multipart: Multipart,
 ) -> Result<(StatusCode, [(&'static str, String); 2], Vec<u8>), (StatusCode, Json<ErrorResponse>)> {
+    // Auth check
+    if let Some(ref expected) = *token {
+        let provided = headers
+            .get("authorization")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.strip_prefix("Bearer "));
+        if provided != Some(expected.as_str()) {
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: "unauthorized".into(),
+                    },
+                }),
+            ));
+        }
+    }
+
     let mut file_bytes: Option<Vec<u8>> = None;
     let mut file_name: Option<String> = None;
 
@@ -946,7 +941,7 @@ async fn seal_upload(
     })?;
 
     let proof_json = serde_json::to_string_pretty(&bundle).unwrap();
-    let win_bytes = create_win_bundle(&original_name, &artifact_bytes, &proof_json);
+    let win_bytes = win_format::pack(&original_name, &artifact_bytes, &proof_json);
     let win_name = format!("{}.win", original_name);
 
     // Auto-save
@@ -1010,14 +1005,16 @@ async fn check_bundle(
         )
     })?;
 
-    let (_file_name, file_bytes, proof_text) = extract_win_bundle(&data).map_err(|e| {
-        (
-            StatusCode::BAD_REQUEST,
-            Json(ErrorResponse {
-                error: ErrorDetail { message: e },
-            }),
-        )
-    })?;
+    let (_file_name, file_bytes, proof_text) = win_format::unpack(&data)
+        .map_err(|e| e.to_string())
+        .map_err(|e| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail { message: e },
+                }),
+            )
+        })?;
 
     let bundle: ProofBundle = serde_json::from_str(&proof_text).map_err(|e| {
         (
@@ -1114,32 +1111,35 @@ async fn check_bundle(
     }
 }
 
-pub fn build_router(registry: SharedRegistry) -> Router {
+/// Build router with session token auth on write endpoints.
+/// Read-only endpoints (verify, check, inspect) require no token.
+/// Write endpoints (prove, seal) require Bearer token.
+pub fn build_router(registry: SharedRegistry, session_token: Option<String>) -> Router {
+    let body_limit = axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024);
+    let token: Arc<Option<String>> = Arc::new(session_token);
+
     Router::new()
         .route("/objects/:id", get(inspect_object))
         .route("/objects/:id/export", get(export_object))
-        .route(
-            "/verify",
-            post(verify_upload).layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
-        )
-        .route(
-            "/prove",
-            post(prove_upload).layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
-        )
-        .route(
-            "/seal",
-            post(seal_upload).layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
-        )
-        .route(
-            "/check",
-            post(check_bundle).layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
-        )
+        .route("/verify", post(verify_upload).layer(body_limit))
+        .route("/check", post(check_bundle).layer(body_limit))
+        .route("/prove", post(prove_upload).layer(body_limit))
+        .route("/seal", post(seal_upload).layer(body_limit))
+        .layer(axum::Extension(token))
         .layer(CorsLayer::permissive())
         .with_state(registry)
 }
 
 pub async fn serve(registry: SharedRegistry, addr: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let app = build_router(registry);
+    serve_with_token(registry, addr, None).await
+}
+
+pub async fn serve_with_token(
+    registry: SharedRegistry,
+    addr: &str,
+    token: Option<String>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let app = build_router(registry, token);
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
     Ok(())

@@ -241,14 +241,18 @@ fn main() {
 
     let port = find_available_port();
     let addr = format!("127.0.0.1:{}", port);
+    let session_token = window_api::generate_session_token();
 
-    // Start the API server in a background thread
+    // Start the API server with auth token in a background thread
     let shared_clone = shared.clone();
     let addr_clone = addr.clone();
+    let token_clone = session_token.clone();
     std::thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
-            window_api::serve(shared_clone, &addr_clone).await.unwrap();
+            window_api::serve_with_token(shared_clone, &addr_clone, Some(token_clone))
+                .await
+                .unwrap();
         });
     });
 
@@ -265,7 +269,10 @@ fn main() {
             use tauri::Manager;
             if let Some(window) = app.get_webview_window("main") {
                 // Inject API base URL — retry to handle page load timing
-                let js = format!("window.WINSTACK_API_BASE = 'http://{}';", addr);
+                let js = format!(
+                    "window.WINSTACK_API_BASE = 'http://{}'; window.WINSTACK_TOKEN = '{}';",
+                    addr, session_token
+                );
                 let js_clone = js.clone();
                 window.eval(&js).ok();
                 // Retry after page has likely finished loading
