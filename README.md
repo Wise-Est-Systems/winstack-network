@@ -25,16 +25,17 @@ No fourth state. No ambiguity.
 ## Try it now
 
 **Verify without installing anything:**
-Open [`check.html`](window/check.html) in your browser. Drop a file and its proof. Everything runs locally — nothing is uploaded.
+Open [winstack.dev](https://wise-est-systems.github.io/winstack-network/) in your browser. Drop a `.win` file. Everything runs locally — nothing is uploaded.
 
 **Desktop app (macOS):**
-[Download the latest release](https://github.com/Wise-Est-Systems/winstack-network/releases/latest) — open the app, drop files, click verify.
+[Download the latest release](https://github.com/Wise-Est-Systems/winstack-network/releases/latest) — open the app, drop a file to seal it, drop a `.win` to verify it.
 
 **CLI:**
 ```bash
 cargo build --release
-./target/release/winstack prove document.pdf
-./target/release/winstack verify document.pdf document.pdf.proof.json
+./target/release/winstack seal document.pdf        # creates document.pdf.win
+./target/release/winstack verify document.pdf.win  # VERIFIED / TAMPERED / INVALID
+./target/release/winstack open document.pdf.win    # extracts original file
 ```
 
 ---

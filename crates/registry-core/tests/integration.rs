@@ -3177,3 +3177,30 @@ fn proof_bundle_for_nonexistent_object_is_none() {
     let (reg, _, _, _) = test_registry();
     assert!(reg.build_proof_bundle(&Uuid::new_v4()).is_none());
 }
+
+// ── PHASE 1: artifact_size_bytes verified ──
+
+#[test]
+fn artifact_size_mismatch_detected() {
+    let (mut reg, cid, mid, _) = test_registry();
+    let obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"real content".to_vec(),
+            creator_identity_id: cid,
+            module_id: mid,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: None,
+        })
+        .unwrap();
+    let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
+    // Tamper: change claimed size without changing hash
+    b.object.artifact_size_bytes = 999;
+    let r = verifier::verify_from_proof_bundle(&b, b"real content");
+    assert_eq!(r.status, VerificationStatus::Invalid);
+    // Should catch both size mismatch AND signature invalid (size is signed)
+    assert!(r
+        .failures
+        .iter()
+        .any(|f| f.reason.contains("artifact_size_bytes")));
+}

@@ -43,6 +43,18 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
         });
     }
 
+    // 1b. Artifact size
+    let actual_size = input.artifact_bytes.len() as u64;
+    if actual_size != obj.artifact_size_bytes {
+        failures.push(Failure {
+            code: FailureCode::PayloadHashMismatch,
+            reason: format!(
+                "artifact_size_bytes mismatch: proof claims {}, actual {}",
+                obj.artifact_size_bytes, actual_size
+            ),
+        });
+    }
+
     // 2. Object signature
     {
         #[derive(serde::Serialize)]

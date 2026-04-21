@@ -131,6 +131,8 @@ Given: artifact bytes + proof bundle JSON
 
 1. **Payload hash** — Compute `SHA-256(artifact_bytes)`. Must match `object.payload_hash`. If not: TAMPERED.
 
+1b. **Artifact size** — `artifact_bytes.len()` must match `object.artifact_size_bytes`. If not: INVALID.
+
 2. **Object signature** — Verify `object.object_signature` against the creator identity public key using the object signature payload. If invalid: INVALID.
 
 3. **Creator identity** — `creator_identity.status` must be `Active`. Creator `identity_id` must match `origin.creator_identity_id`. Session identities cannot create Native or AiGenerated objects.
@@ -266,3 +268,74 @@ The `--from` flag extracts the predecessor's `object_id`, `payload_hash`, and `l
 - It proves continuity from a chosen origin
 - Chain integrity depends on the creator holding the same keys
 - No cross-chain linking or merging
+
+## 12. .win container format
+
+A `.win` file packages the original file and its proof into a single container.
+
+### Binary layout
+
+```
+[4 bytes]   magic: WIN\x01
+[4 bytes]   filename length (u32 little-endian)
+[N bytes]   filename (UTF-8, no path separators, max 4096 bytes)
+[8 bytes]   file length (u64 little-endian)
+[M bytes]   original file bytes (raw, uncompressed)
+[rest]      proof JSON (UTF-8, everything from here to EOF)
+```
+
+### Rules
+
+- Zero external dependencies (no ZIP, no compression library)
+- Filename sanitized: path separators stripped, null bytes rejected, length capped
+- File length bounds-checked with overflow protection
+- Proof is the ProofBundle JSON, identical to standalone `.proof.json`
+- Any tool that can read the binary layout can extract and verify
+
+### CLI
+
+```bash
+winstack seal document.pdf              # creates document.pdf.win
+winstack verify document.pdf.win        # VERIFIED / TAMPERED / INVALID
+winstack open document.pdf.win          # extracts document.pdf
+winstack verify file --proof file.proof.json  # legacy sidecar support
+```
+
+### Security
+
+- Path traversal: sanitized on both pack and unpack
+- Integer overflow on file length: checked arithmetic, returns error
+- Null bytes in filename: rejected
+- Filename length > 4096: rejected
+
+### Limitation
+
+The `.win` file contains the original file bytes. Unlike a standalone `.proof.json` (which only stores the hash), sharing a `.win` shares the file content itself.
+
+## 13. Session authentication
+
+Write endpoints (`/prove`, `/seal`) require a Bearer token in the Authorization header. The token is generated randomly (32 bytes, hex-encoded) per session and injected into the desktop app's webview on launch.
+
+Read endpoints (`/verify`, `/check`, `/objects/:id`, `/objects/:id/export`) require no token.
+
+## 14. Local key storage
+
+Private keys are stored in `.winstack/node.json` as hex-encoded Ed25519 secret bytes. File permissions are set to 0600 (owner read/write only) on creation.
+
+**Limitation:** Keys are not encrypted on disk. OS keychain integration is not yet implemented. Anyone with read access to `node.json` can impersonate the identity.
+
+## 15. What the system proves
+
+- A specific file existed at a specific time
+- It has not been modified since it was sealed
+- It was signed by a specific cryptographic key
+- It may be part of a verifiable version chain
+- The timestamp may be externally anchored (RFC 3161)
+
+## 16. What the system does NOT prove
+
+- That the file content is true or accurate
+- The real-world identity of the key holder
+- That this is the first copy in the world
+- That a local timestamp is globally authoritative
+- That a compromised key's past proofs are invalid

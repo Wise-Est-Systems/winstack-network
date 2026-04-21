@@ -17,7 +17,7 @@ nav{padding:0 24px;height:48px;display:flex;align-items:center;border-bottom:1px
 .logo{font-size:13px;font-weight:600;letter-spacing:0.08em;color:var(--bright)}
 main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 24px}
 .app{width:100%;max-width:420px;text-align:center}
-h1{font-size:22px;font-weight:600;color:var(--bright);margin-bottom:8px;letter-spacing:-0.01em}
+h1{font-size:22px;font-weight:600;color:var(--bright);margin-bottom:8px}
 .sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:36px}
 .drop{position:relative;border:2px dashed var(--border);background:var(--card);border-radius:var(--radius);padding:48px 24px;cursor:pointer;transition:all 0.25s;margin-bottom:20px}
 .drop:hover{border-color:var(--border-h);background:var(--elevated)}
@@ -56,14 +56,14 @@ h1{font-size:22px;font-weight:600;color:var(--bright);margin-bottom:8px;letter-s
 .mm-val.a{color:var(--bright)}.mm-val.b{color:var(--muted)}
 .mm-sep{height:1px;background:var(--red-border);margin:10px 0}
 .err{border:1px solid var(--red-border);background:var(--red-soft);border-radius:var(--radius-sm);padding:14px 20px;margin-bottom:16px;font-size:13px;color:var(--red);line-height:1.5;text-align:left}
-.details-toggle{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans);transition:color .15s}
+.details-toggle{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans)}
 .details-toggle:hover{color:var(--subtle)}
 .details-panel{display:none;margin-top:12px;text-align:left;background:var(--card);border-radius:var(--radius-sm);padding:16px 20px}
 .details-panel.open{display:block}
 .detail{display:flex;gap:8px;margin-bottom:6px;font-size:12px}.detail:last-child{margin-bottom:0}
 .detail-k{color:var(--muted);white-space:nowrap;min-width:80px}
 .detail-v{color:var(--subtle);word-break:break-all;font-family:var(--mono);font-size:11px}
-.again{margin-top:24px;font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans);text-decoration:underline;text-underline-offset:3px;transition:color .15s}
+.again{margin-top:24px;font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans);text-decoration:underline;text-underline-offset:3px}
 .again:hover{color:var(--text)}
 .note{font-size:11px;color:var(--muted);opacity:.4;margin-top:12px}
 footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
@@ -145,13 +145,11 @@ dropZone.addEventListener('drop', function(e) {
   if (files && files.length > 0) handleFile(files[0]);
 });
 
-// ── CORE LOGIC ──
 function handleFile(f) {
   dropZone.classList.add('picked');
   dropLabel.textContent = trunc(f.name);
 
   if (f.name.endsWith('.win')) {
-    // It's a bundle — verify it
     $('proc-label').textContent = 'Checking';
     show('proc');
     var form = new FormData();
@@ -164,7 +162,6 @@ function handleFile(f) {
       .then(function(d) { show('result'); renderVerify(d, f.name); })
       .catch(function(e) { show('result'); showErr(e.message || 'Cannot connect.'); });
   } else {
-    // It's a regular file — seal it
     $('proc-label').textContent = 'Sealing';
     show('proc');
     var form = new FormData();
@@ -194,7 +191,7 @@ function renderVerify(d, fname) {
     $('r-status').textContent = 'Verified';
     $('r-explain').textContent = 'This file has not been changed.';
     var m = $('r-meta'); m.classList.remove('hidden');
-    m.textContent = d.time_source === 'External' ? 'Externally timestamped' : 'Local time';
+    m.textContent = d.time_source === 'External' ? 'Externally timestamped' : 'Local time (device clock)';
   } else if (r === 'TAMPERED') {
     v.className = 'verdict enter bad';
     $('r-status').textContent = 'Tampered';
@@ -208,7 +205,7 @@ function renderVerify(d, fname) {
     $('r-explain').textContent = 'This proof is broken or cannot be used.';
   }
   requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
-  $('r-dpanel').innerHTML = [dt('File', fname), dt('Sealed', d.created_at), dt('Hash', d.payload_hash)].join('');
+  $('r-dpanel').innerHTML = [dt('File', fname), dt('Sealed', d.created_at), dt('Hash', d.payload_hash), dt('Time', d.time_source === 'External' ? 'External (RFC 3161)' : 'Local (device clock)')].join('');
 }
 
 function renderSeal(orig, winName) {
@@ -221,7 +218,7 @@ function renderSeal(orig, winName) {
   v.className = 'verdict enter sealed';
   requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
   $('r-status').textContent = 'Sealed';
-  $('r-explain').textContent = winName + ' saved to your Downloads folder. Send it to anyone \u2014 they can verify it just by opening it.';
+  $('r-explain').textContent = winName + ' saved to your Downloads folder. Send it to anyone \u2014 they can verify it just by dropping it here or at winstack.dev.';
   var m = $('r-meta'); m.classList.remove('hidden'); m.textContent = 'File + proof in one package';
 }
 
@@ -229,7 +226,6 @@ $('r-dtoggle').addEventListener('click', function() {
   var o = $('r-dpanel').classList.toggle('open');
   $('r-dtoggle').textContent = o ? 'Hide details' : 'View details';
 });
-
 $('r-again').addEventListener('click', function() {
   dropZone.classList.remove('picked');
   dropLabel.textContent = 'Drop a file here';
