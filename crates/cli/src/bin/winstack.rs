@@ -37,6 +37,8 @@ enum Commands {
         #[arg(long)]
         tsa_root: Vec<String>,
     },
+    /// Inspect a .win file — show contents and proof details without extracting
+    Inspect { file: PathBuf },
     /// Extract the original file from a .win container
     Open { file: PathBuf },
     /// Legacy: create a .proof.json sidecar (use 'seal' for .win)
@@ -410,6 +412,71 @@ fn main() {
             } else {
                 eprintln!("ERROR: not a .win file. Use --proof to provide a separate proof file.");
                 std::process::exit(2);
+            }
+        }
+
+        // ── INSPECT: show what's inside a .win ──
+        Commands::Inspect { file } => {
+            if !file.exists() {
+                eprintln!("ERROR: file not found: {}", file.display());
+                std::process::exit(2);
+            }
+            let raw = std::fs::read(&file).unwrap_or_else(|e| {
+                eprintln!("ERROR: could not read file: {}", e);
+                std::process::exit(2);
+            });
+            let (name, artifact_bytes, proof_json) = win_format::unpack(&raw).unwrap_or_else(|e| {
+                println!("  DAMAGED   {}", file.display());
+                println!("    {}", e);
+                std::process::exit(3);
+            });
+            let bundle: canon_types::ProofBundle = serde_json::from_str(&proof_json).unwrap_or_else(|e| {
+                println!("  DAMAGED   {}", file.display());
+                println!("    proof section is not valid JSON: {}", e);
+                std::process::exit(3);
+            });
+
+            // Verify
+            let file_hash = crypto::sha256_hex(&artifact_bytes);
+            let status = if file_hash != bundle.object.payload_hash {
+                "TAMPERED"
+            } else {
+                let vr = verifier::verify_from_proof_bundle(&bundle, &artifact_bytes);
+                match vr.status {
+                    VerificationStatus::Verified => "VERIFIED",
+                    VerificationStatus::Invalid => "INVALID",
+                }
+            };
+
+            // Trust
+            let node_dir = resolve_node_dir();
+            let key_trust = trust::TrustStore::load(&node_dir);
+            let creator_key = &bundle.creator_identity.public_key_hex;
+            let trust_label = if key_trust.is_trusted(creator_key) {
+                key_trust.label_for(creator_key).unwrap_or("Trusted key").to_string()
+            } else {
+                "Untrusted key".to_string()
+            };
+
+            let time_label = match bundle.object.time_event.time_source {
+                canon_types::TimeSource::External => "Anchored (RFC 3161)",
+                canon_types::TimeSource::Local => "Local (device clock)",
+            };
+
+            println!("  {}  {}", status, file.display());
+            println!();
+            println!("  File        {}", name);
+            println!("  Size        {} bytes", artifact_bytes.len());
+            println!("  Hash        {}", bundle.object.payload_hash);
+            println!("  Sealed      {}", bundle.object.origin.created_at);
+            println!("  Time        {}", time_label);
+            println!("  Key         {}...{}", &creator_key[..8], &creator_key[56..]);
+            println!("  Trust       {}", trust_label);
+
+            if status == "VERIFIED" {
+                std::process::exit(0);
+            } else {
+                std::process::exit(1);
             }
         }
 

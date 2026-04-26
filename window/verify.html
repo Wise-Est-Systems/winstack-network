@@ -65,6 +65,8 @@ h1{font-size:22px;font-weight:600;color:var(--bright);margin-bottom:8px}
 .detail{display:flex;gap:8px;margin-bottom:6px;font-size:12px}.detail:last-child{margin-bottom:0}
 .detail-k{color:var(--muted);white-space:nowrap;min-width:80px}
 .detail-v{color:var(--subtle);word-break:break-all;font-family:var(--mono);font-size:11px}
+.save-btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--green);color:var(--bg);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:opacity 0.15s}
+.save-btn:hover{opacity:0.9}
 .again{margin-top:24px;font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans);text-decoration:underline;text-underline-offset:3px}
 .again:hover{color:var(--text)}
 .note{font-size:11px;color:var(--muted);opacity:.4;margin-top:12px}
@@ -105,6 +107,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
       <div class="mm-sep"></div>
       <div class="mm-label b">Original</div><div class="mm-val b" id="r-mm-b"></div>
     </div>
+    <button class="save-btn hidden" id="r-save">Save file</button>
     <button class="details-toggle" id="r-dtoggle">View details</button>
     <div class="details-panel" id="r-dpanel"></div>
     <button class="again" id="r-again">Start over</button>
@@ -127,6 +130,34 @@ function authHeaders() {
 var $ = function(id) { return document.getElementById(id); };
 var esc = function(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
 var trunc = function(s, n) { n = n || 28; return s.length > n ? s.slice(0, n-1) + '\u2026' : s; };
+
+// .win parser (matches win-format crate)
+var WIN_MAGIC = [0x57, 0x49, 0x4E, 0x01];
+function parseWin(buf) {
+  var view = new DataView(buf);
+  if (buf.byteLength < 16) return null;
+  for (var i = 0; i < 4; i++) { if (view.getUint8(i) !== WIN_MAGIC[i]) return null; }
+  var nameLen = view.getUint32(4, true);
+  if (nameLen > 4096) return null;
+  var nameEnd = 8 + nameLen;
+  if (buf.byteLength < nameEnd + 8) return null;
+  var nameBytes = new Uint8Array(buf, 8, nameLen);
+  var filename = new TextDecoder().decode(nameBytes);
+  var parts = filename.split(/[\/\\]/); filename = parts[parts.length - 1];
+  if (!filename || filename.indexOf('\0') >= 0) return null;
+  var fileLenLow = view.getUint32(nameEnd, true);
+  var fileLenHigh = view.getUint32(nameEnd + 4, true);
+  if (fileLenHigh > 0) return null;
+  var fileLen = fileLenLow;
+  var fileStart = nameEnd + 8;
+  var fileEnd = fileStart + fileLen;
+  if (buf.byteLength < fileEnd + 1) return null;
+  return { filename: filename, fileBytes: new Uint8Array(buf, fileStart, fileLen) };
+}
+
+// Stash extracted file for save button
+var extractedFile = null;
+var extractedName = null;
 function dt(k, v) { return '<div class="detail"><span class="detail-k">'+esc(k)+'</span><span class="detail-v">'+esc(v)+'</span></div>'; }
 
 function show(s) {
@@ -158,9 +189,15 @@ function handleFile(f) {
   if (f.name.endsWith('.win')) {
     $('proc-label').textContent = 'Checking';
     show('proc');
-    var form = new FormData();
-    form.append('file', f);
-    fetch(getAPI() + '/check', { method: 'POST', body: form })
+    // Parse .win locally to extract file for save button
+    f.arrayBuffer().then(function(buf) {
+      var parsed = parseWin(buf);
+      if (parsed) { extractedFile = parsed.fileBytes; extractedName = parsed.filename; }
+      else { extractedFile = null; extractedName = null; }
+      var form = new FormData();
+      form.append('file', f);
+      return fetch(getAPI() + '/check', { method: 'POST', body: form });
+    })
       .then(function(res) {
         if (!res.ok) return res.json().then(function(j) { throw new Error(j.error ? j.error.message : 'Error ' + res.status); });
         return res.json();
@@ -188,6 +225,7 @@ function renderVerify(d, fname) {
   $('r-err').classList.add('hidden');
   $('r-mm').classList.add('hidden');
   $('r-meta').classList.add('hidden');
+  $('r-save').classList.add('hidden');
   $('r-dpanel').classList.remove('open');
   $('r-dtoggle').textContent = 'View details';
   var v = $('r-verdict'); v.style.display = 'block';
@@ -204,6 +242,12 @@ function renderVerify(d, fname) {
     if (d.time_source === 'External') metaText += ' \u2022 Anchored time';
     else metaText += ' \u2022 Local time only';
     m.textContent = metaText;
+    // Show save button if we extracted the file
+    if (extractedFile && extractedName) {
+      var sb = $('r-save');
+      sb.classList.remove('hidden');
+      sb.textContent = 'Save ' + extractedName;
+    }
   } else if (r === 'TAMPERED') {
     v.className = 'verdict enter bad';
     $('r-status').textContent = 'Tampered';
@@ -254,7 +298,18 @@ $('r-dtoggle').addEventListener('click', function() {
   var o = $('r-dpanel').classList.toggle('open');
   $('r-dtoggle').textContent = o ? 'Hide details' : 'View details';
 });
+$('r-save').addEventListener('click', function() {
+  if (!extractedFile || !extractedName) return;
+  var blob = new Blob([extractedFile]);
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = extractedName;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
 $('r-again').addEventListener('click', function() {
+  extractedFile = null; extractedName = null;
   dropZone.classList.remove('picked');
   dropLabel.textContent = 'Drop a file here';
   $('the-input').value = '';

@@ -80,6 +80,8 @@ h1{font-size:22px;font-weight:600;color:var(--bright);margin-bottom:8px}
 .detail{display:flex;gap:8px;margin-bottom:6px;font-size:12px}.detail:last-child{margin-bottom:0}
 .detail-k{color:var(--muted);white-space:nowrap;min-width:80px}
 .detail-v{color:var(--subtle);word-break:break-all;font-family:var(--mono);font-size:11px}
+.save-btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--green);color:var(--bg);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:opacity 0.15s}
+.save-btn:hover{opacity:0.9}
 .again{margin-top:24px;font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans);text-decoration:underline;text-underline-offset:3px}
 .again:hover{color:var(--text)}
 .note{font-size:11px;color:var(--muted);opacity:.4;margin-top:16px}
@@ -137,6 +139,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
       <div class="mm-sep"></div>
       <div class="mm-label b">Original</div><div class="mm-val b" id="r-mm-b"></div>
     </div>
+    <button class="save-btn hidden" id="r-save">Save file</button>
     <button class="details-toggle" id="r-dtoggle">View details</button>
     <div class="details-panel" id="r-dpanel"></div>
     <button class="again" id="r-again">Start over</button>
@@ -228,6 +231,9 @@ function buildSignPayload(obj) {
   return JSON.stringify(p);
 }
 
+var extractedFile = null;
+var extractedName = null;
+
 // ── STATE ──
 var winFile = null;
 var legacyFile = null;
@@ -292,7 +298,8 @@ $('btn-go').addEventListener('click', function() {
 
 function verifyFromWin(buf, fname) {
   var parsed = parseWin(buf);
-  if (!parsed) { show('result'); renderResult('DAMAGED', '', '', null, fname, 'The .win container is damaged or incomplete.'); return; }
+  if (!parsed) { extractedFile = null; extractedName = null; show('result'); renderResult('DAMAGED', '', '', null, fname, 'The .win container is damaged or incomplete.'); return; }
+  extractedFile = parsed.fileBytes; extractedName = parsed.filename;
   var proofText = parsed.proofJson;
   var bundle;
   try { bundle = JSON.parse(proofText); } catch(e) { show('result'); renderResult('DAMAGED', '', '', null, fname, 'The proof section inside this .win is not valid.'); return; }
@@ -373,6 +380,7 @@ function renderResult(result, fileHash, expected, bundle, fname, issue, sigCheck
   $('r-err').classList.add('hidden');
   $('r-mm').classList.add('hidden');
   $('r-meta').classList.add('hidden');
+  $('r-save').classList.add('hidden');
   $('r-dpanel').classList.remove('open');
   $('r-dtoggle').textContent = 'View details';
 
@@ -394,6 +402,11 @@ function renderResult(result, fileHash, expected, bundle, fname, issue, sigCheck
     if (chain) {
       var label = chain.predecessor_proof_id ? 'Part of a proof chain.' : 'First proof in its chain.';
       $('r-explain').textContent += ' ' + label;
+    }
+    if (extractedFile && extractedName) {
+      var sb = $('r-save');
+      sb.classList.remove('hidden');
+      sb.textContent = 'Save ' + extractedName;
     }
   } else if (result === 'TAMPERED') {
     v.className = 'verdict enter bad';
@@ -433,7 +446,18 @@ $('r-dtoggle').addEventListener('click', function() {
   var o = $('r-dpanel').classList.toggle('open');
   $('r-dtoggle').textContent = o ? 'Hide details' : 'View details';
 });
+$('r-save').addEventListener('click', function() {
+  if (!extractedFile || !extractedName) return;
+  var blob = new Blob([extractedFile]);
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = extractedName;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
 $('r-again').addEventListener('click', function() {
+  extractedFile = null; extractedName = null;
   winFile = null; legacyFile = null; legacyProof = null; mode = 'win';
   $('i-win').value = ''; $('i-file').value = ''; $('i-proof').value = '';
   $('d-win').classList.remove('picked'); $('d-file').classList.remove('picked'); $('d-proof').classList.remove('picked');
