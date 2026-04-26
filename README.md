@@ -10,14 +10,14 @@ Create a cryptographic proof for any file. Share the file and its proof together
 
 1. **Create a proof** — drop a file into Winstack. A `.proof.json` file is saved next to it.
 2. **Share both** — send the file and its proof together.
-3. **Verify anywhere** — drop the file and proof into any Winstack verifier. Get one of four answers:
+3. **Check anywhere** — drop the .win into any Winstack verifier. Get one of four answers:
 
 | Result | Meaning |
 |---|---|
-| **Verified** | This file has not changed since it was sealed. |
-| **Tampered** | The file content does not match the proof. It was modified or the wrong file was selected. |
-| **Invalid** | The proof is broken or cannot be used to verify this file. |
-| **Damaged** | The .win container itself is broken — corrupted download, truncated file, or invalid packaging. |
+| **Alive** | Unchanged since it was named. The witness's signature is intact. |
+| **Wounded** | Was named once, but has been changed since. The original is gone. |
+| **Unrecognized** | The name tag doesn't belong to this file, or the witness's signature can't be read. |
+| **Dying** | The name tag itself is decomposing — container broken, truncated, malformed. |
 
 Four states. No ambiguity.
 
@@ -35,7 +35,7 @@ Open [winstack.dev](https://wise-est-systems.github.io/winstack-network/) in you
 ```bash
 cargo build --release
 ./target/release/winstack seal document.pdf        # creates document.pdf.win
-./target/release/winstack verify document.pdf.win  # VERIFIED / TAMPERED / INVALID
+./target/release/winstack verify document.pdf.win  # Alive / Wounded / Unrecognized
 ./target/release/winstack open document.pdf.win    # extracts original file
 ```
 
@@ -153,7 +153,7 @@ Desktop app built with Tauri 2. Browser verifier uses SubtleCrypto (SHA-256 + Ed
 # CLI tools
 cargo build --release
 ./target/release/winstack seal document.pdf        # creates document.pdf.win
-./target/release/winstack verify document.pdf.win  # VERIFIED / TAMPERED / INVALID
+./target/release/winstack verify document.pdf.win  # Alive / Wounded / Unrecognized
 ./target/release/winstack open document.pdf.win    # extracts original file
 
 # Desktop app

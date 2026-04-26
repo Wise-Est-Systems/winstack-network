@@ -129,19 +129,19 @@ Signed by the policy evaluator key:
 
 Given: artifact bytes + proof bundle JSON
 
-1. **Payload hash** — Compute `SHA-256(artifact_bytes)`. Must match `object.payload_hash`. If not: TAMPERED.
+1. **Payload hash** — Compute `SHA-256(artifact_bytes)`. Must match `object.payload_hash`. If not: Wounded.
 
-1b. **Artifact size** — `artifact_bytes.len()` must match `object.artifact_size_bytes`. If not: INVALID.
+1b. **Artifact size** — `artifact_bytes.len()` must match `object.artifact_size_bytes`. If not: Unrecognized.
 
-2. **Object signature** — Verify `object.object_signature` against the creator identity public key using the object signature payload. If invalid: INVALID.
+2. **Object signature** — Verify `object.object_signature` against the creator identity public key using the object signature payload. If invalid: Unrecognized.
 
 3. **Creator identity** — `creator_identity.status` must be `Active`. Creator `identity_id` must match `origin.creator_identity_id`. Session identities cannot create Native or AiGenerated objects.
 
 4. **Module registration** — `module_registration.module_id` must match `origin.module_identity_id`. Module kind must match object class (Import for SealedImport, AiGeneration for AiGenerated).
 
-5. **Time signature** — Verify `time_event.signature` against the time authority identity public key using the time event signature payload. If invalid: INVALID.
+5. **Time signature** — Verify `time_event.signature` against the time authority identity public key using the time event signature payload. If invalid: Unrecognized.
 
-6. **Time chain** — If non-genesis: `predecessor_time_event` must be present. Its `time_event_id` must match `time_event.predecessor_event_id`. The SHA-256 of its canonical JSON must match `time_event.predecessor_hash`. If missing or mismatched: INVALID.
+6. **Time chain** — If non-genesis: `predecessor_time_event` must be present. Its `time_event_id` must match `time_event.predecessor_event_id`. The SHA-256 of its canonical JSON must match `time_event.predecessor_hash`. If missing or mismatched: Unrecognized.
 
 7. **Policy proof** — `policy_proof.decision` must be `Permit`. Verify `policy_proof.signature` against the policy evaluator identity public key. If not Permit or signature invalid: INVALID.
 
@@ -157,12 +157,12 @@ Given: artifact bytes + proof bundle JSON
 
 | State | Meaning |
 |---|---|
-| `VERIFIED` | All checks pass. The artifact is authentic and untampered. |
-| `TAMPERED` | The payload hash does not match. The file content was changed after sealing. |
-| `INVALID` | The proof structure or signatures are broken. The seal cannot be trusted. |
-| `DAMAGED` | The .win container itself is structurally broken — bad header, truncated data, missing proof section, or corrupt packaging. This is not a content change; the package never unpacked successfully. |
+| `Alive` | Unchanged since it was named. The witness's signature is intact. The name tag matches the file. |
+| `Wounded` | Was named once, but has been changed since. The original is gone. |
+| `Unrecognized` | The name tag doesn't belong to this file, or the witness's signature can't be read. |
+| `Dying` | The name tag itself is decomposing — container broken, truncated, malformed. The file underneath may still be alive; the name tag is just unreadable. |
 
-**TAMPERED vs DAMAGED:** TAMPERED means the .win container opened correctly but the file inside does not match its proof. DAMAGED means the container itself could not be opened — the file may have been corrupted in transit, partially downloaded, or the .win format is invalid. A damaged file cannot be verified at all.
+**Wounded vs Dying:** Wounded means the .win container opened correctly but the file inside does not match its name tag. Dying means the container itself could not be opened — the file may have been corrupted in transit, partially downloaded, or the .win format is invalid. A dying file cannot be recognized at all.
 
 ## 8. Trust classes
 
@@ -277,8 +277,8 @@ The `proof_chain` field is optional on `SealedObject`. If absent, the proof is s
 
 ### Verification rules
 
-- If `predecessor_proof_id` is present but `predecessor_payload_hash` is absent: `ChainPredecessorMissing` → INVALID
-- Tampering with any chain field (lineage_id, predecessor_proof_id, predecessor_payload_hash) invalidates the object signature → INVALID
+- If `predecessor_proof_id` is present but `predecessor_payload_hash` is absent: `ChainPredecessorMissing` → Unrecognized
+- Tampering with any chain field (lineage_id, predecessor_proof_id, predecessor_payload_hash) invalidates the object signature → Unrecognized
 - Standalone proofs with no `proof_chain` field remain valid (backward compatible)
 - The verifier validates chain structure within a single proof. Full chain walk (loading and verifying predecessor bundles) is the caller's responsibility.
 
@@ -328,7 +328,7 @@ A `.win` file packages the original file and its proof into a single container.
 
 ```bash
 winstack seal document.pdf              # creates document.pdf.win
-winstack verify document.pdf.win        # VERIFIED / TAMPERED / INVALID
+winstack verify document.pdf.win        # Alive / Wounded / Unrecognized
 winstack open document.pdf.win          # extracts document.pdf
 winstack verify file --proof file.proof.json  # legacy sidecar support
 ```
@@ -431,4 +431,4 @@ winstack trust list
 
 - CLI: `trust     Trusted key (label)` or `trust     Untrusted key`
 - Desktop/browser details panel: Key shown as truncated hex
-- Trust status shown only when a proof is VERIFIED — TAMPERED/INVALID/DAMAGED results do not show trust because the proof itself is not valid
+- Trust status shown only when a proof is Alive — Wounded/Unrecognized/Dying results do not show trust because the name tag itself is not valid

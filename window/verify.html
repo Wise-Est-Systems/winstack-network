@@ -105,7 +105,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
     <div class="mismatch hidden" id="r-mm">
       <div class="mm-label a">This file</div><div class="mm-val a" id="r-mm-a"></div>
       <div class="mm-sep"></div>
-      <div class="mm-label b">Original</div><div class="mm-val b" id="r-mm-b"></div>
+      <div class="mm-label b">The one that was named</div><div class="mm-val b" id="r-mm-b"></div>
     </div>
     <button class="save-btn hidden" id="r-save">Save file</button>
     <button class="details-toggle" id="r-dtoggle">View details</button>
@@ -187,7 +187,7 @@ function handleFile(f) {
   dropLabel.textContent = trunc(f.name);
 
   if (f.name.endsWith('.win')) {
-    $('proc-label').textContent = 'Checking';
+    $('proc-label').textContent = 'Recognizing';
     show('proc');
     // Read the file once, use for both local parsing and API upload
     f.arrayBuffer().then(function(buf) {
@@ -206,7 +206,7 @@ function handleFile(f) {
       .then(function(d) { show('result'); renderVerify(d, f.name); })
       .catch(function(e) { show('result'); showErr(e.message || 'Cannot connect.'); });
   } else {
-    $('proc-label').textContent = 'Sealing';
+    $('proc-label').textContent = 'Naming';
     show('proc');
     var form = new FormData();
     form.append('file', f);
@@ -231,17 +231,17 @@ function renderVerify(d, fname) {
   $('r-dtoggle').textContent = 'View details';
   var v = $('r-verdict'); v.style.display = 'block';
   var r = d.result;
-  if (r === 'VERIFIED') {
+  if (r === 'Alive') {
     v.className = 'verdict enter ok';
-    $('r-status').textContent = 'Verified';
-    var explain = 'This file has not been changed.';
-    if (d.chain_status === 'successor') explain += ' Part of a proof chain.';
-    else if (d.chain_status === 'origin') explain += ' First proof in its chain.';
+    $('r-status').textContent = 'Alive';
+    var explain = 'This file is alive. Unchanged since it was named.';
+    if (d.chain_status === 'successor') explain += ' Part of a lineage.';
+    else if (d.chain_status === 'origin') explain += ' First in its lineage.';
     $('r-explain').textContent = explain;
     var m = $('r-meta'); m.classList.remove('hidden');
-    var metaText = 'Hash + signature verified';
-    if (d.time_source === 'External') metaText += ' \u2022 Anchored time';
-    else metaText += ' \u2022 Local time only';
+    var metaText = 'Witness recognized';
+    if (d.time_source === 'External') metaText += ' \u2022 Anchored birthday';
+    else metaText += ' \u2022 Local birthday only';
     m.textContent = metaText;
     // Show save button if we extracted the file
     if (extractedFile && extractedName) {
@@ -249,35 +249,36 @@ function renderVerify(d, fname) {
       sb.classList.remove('hidden');
       sb.textContent = 'Save ' + extractedName;
     }
-  } else if (r === 'TAMPERED') {
+  } else if (r === 'Wounded') {
     v.className = 'verdict enter bad';
-    $('r-status').textContent = 'Tampered';
-    $('r-explain').textContent = 'This file does not match the proof. It was modified, or you selected the wrong file.';
+    $('r-status').textContent = 'Wounded';
+    $('r-explain').textContent = 'This file was alive once. It has been changed since it was named. The original is gone.';
     $('r-mm').classList.remove('hidden');
     $('r-mm-a').textContent = d.file_hash;
     $('r-mm-b').textContent = d.expected_hash;
-  } else if (r === 'DAMAGED') {
+  } else if (r === 'Dying') {
     v.className = 'verdict enter damaged';
-    $('r-status').textContent = 'Damaged';
-    $('r-explain').textContent = d.message || 'The .win container is damaged or incomplete. This is not a tampered file \u2014 the package itself is broken.';
+    $('r-status').textContent = 'Dying';
+    $('r-explain').textContent = d.message || 'This name tag is decomposing. The file underneath may still be alive \u2014 its name tag is just unreadable.';
   } else {
+    // Unrecognized \u2014 and any unhandled result
     v.className = 'verdict enter warn';
-    $('r-status').textContent = 'Invalid proof';
-    var reason = 'This proof is broken or cannot be used.';
+    $('r-status').textContent = 'Unrecognized';
+    var reason = "I can't read this name tag. The file may still be fine, but I can't tell you who named it.";
     if (d.failures && d.failures.length > 0) reason += ' ' + d.failures[0].reason + '.';
     $('r-explain').textContent = reason;
   }
   requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
   var ts = d.time_source === 'External'
     ? 'Anchored \u2014 externally timestamped (RFC 3161)'
-    : 'Local \u2014 from the creator\u2019s device clock';
+    : 'Local \u2014 from the witness\u2019s device clock';
   $('r-dpanel').innerHTML = [
     dt('File', fname),
-    dt('Sealed', d.created_at),
+    dt('Born', d.created_at),
     dt('Hash', d.payload_hash),
     dt('Time', ts),
-    dt('Key', d.creator_key ? d.creator_key.slice(0,8) + '\u2026' + d.creator_key.slice(56) : 'unknown'),
-    dt('Verified by', 'Desktop app'),
+    dt('Witness', d.creator_key ? d.creator_key.slice(0,8) + '\u2026' + d.creator_key.slice(56) : 'unknown'),
+    dt('Recognized by', 'Desktop app'),
   ].join('');
 }
 
@@ -290,9 +291,9 @@ function renderSeal(orig, winName) {
   var v = $('r-verdict'); v.style.display = 'block';
   v.className = 'verdict enter sealed';
   requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
-  $('r-status').textContent = 'Sealed';
-  $('r-explain').textContent = winName + ' saved to your Downloads folder. Send it to anyone \u2014 they can verify it just by dropping it here or at winstack.dev.';
-  var m = $('r-meta'); m.classList.remove('hidden'); m.textContent = 'File + proof in one package';
+  $('r-status').textContent = 'Named';
+  $('r-explain').textContent = winName + ' saved to your Downloads folder. Send it to anyone \u2014 they can recognize it by dropping it here or at winstack.dev.';
+  var m = $('r-meta'); m.classList.remove('hidden'); m.textContent = 'File + name tag in one package';
 }
 
 $('r-dtoggle').addEventListener('click', function() {

@@ -58,20 +58,31 @@ async fn main() {
             });
             match reg.verify_object(&id) {
                 Some(result) => match result.status {
-                    VerificationStatus::Verified => {
-                        println!("VERIFIED  {}", id);
+                    VerificationStatus::Alive => {
+                        println!("Alive         {}", id);
                         std::process::exit(0);
                     }
-                    VerificationStatus::Invalid => {
-                        println!("INVALID   {}", id);
+                    VerificationStatus::Wounded => {
+                        println!("Wounded       {}", id);
                         for (i, f) in result.failures.iter().enumerate() {
                             println!("  [{}] {:?} — {}", i, f.code, f.reason);
                         }
                         std::process::exit(1);
                     }
+                    VerificationStatus::Unrecognized => {
+                        println!("Unrecognized  {}", id);
+                        for (i, f) in result.failures.iter().enumerate() {
+                            println!("  [{}] {:?} — {}", i, f.code, f.reason);
+                        }
+                        std::process::exit(1);
+                    }
+                    VerificationStatus::Dying => {
+                        println!("Dying         {}", id);
+                        std::process::exit(1);
+                    }
                 },
                 None => {
-                    eprintln!("ERROR: object not found: {}", id);
+                    eprintln!("Not found: {}", id);
                     std::process::exit(2);
                 }
             }

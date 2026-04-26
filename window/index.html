@@ -384,11 +384,11 @@
   }
 
   function render(d) {
-    const isVerified = d.status === 'VERIFIED';
-    const isNative   = d.trust_class === 'NATIVE';
+    const isAlive  = d.status === 'Alive';
+    const isNative = d.trust_class === 'NATIVE';
 
     const banner = $('verdict-banner');
-    banner.className = `verdict-banner ${isVerified ? 'is-verified' : 'is-invalid'}`;
+    banner.className = `verdict-banner ${isAlive ? 'is-verified' : 'is-invalid'}`;
     $('verdict-word').textContent = d.status || '\u2014';
     $('verdict-oid').textContent  = d.object_id || '';
 

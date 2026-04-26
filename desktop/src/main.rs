@@ -342,7 +342,7 @@ fn main() {
                             Err(_) => continue,
                         };
                         let vr = verifier::verify_from_proof_bundle(&bundle, &artifact);
-                        if vr.status == canon_types::VerificationStatus::Verified {
+                        if vr.status.is_alive() {
                             if let Ok(home) = std::env::var("HOME") {
                                 let save_path = std::path::Path::new(&home)
                                     .join("Downloads")

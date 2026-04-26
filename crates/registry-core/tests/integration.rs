@@ -26,7 +26,7 @@ fn valid_native_object() {
 
     // Re-verify from store
     let result = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 }
 
 // ---------------------------------------------------------------------------
@@ -55,7 +55,7 @@ fn valid_ai_object() {
     assert_eq!(obj.origin.object_class, ObjectClass::AiGenerated);
 
     let result = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 }
 
 // ---------------------------------------------------------------------------
@@ -98,7 +98,7 @@ fn valid_sealed_import() {
     assert_eq!(obj.object_class.trust_class(), TrustClass::Foreign);
 
     let result = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 }
 
 // ---------------------------------------------------------------------------
@@ -136,7 +136,7 @@ fn valid_lineage_chain() {
     assert_eq!(child.parent_ids, vec![parent.object_id]);
 
     let result = reg.verify_object(&child.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 }
 
 // ---------------------------------------------------------------------------
@@ -174,7 +174,7 @@ fn valid_non_genesis_time_chain() {
     assert!(second.time_event.predecessor_event_id.is_some());
 
     let result = reg.verify_object(&second.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 }
 
 // ---------------------------------------------------------------------------
@@ -234,7 +234,7 @@ fn missing_policy_proof_fails() {
     };
 
     let result = verifier::verify_object(&input);
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -302,7 +302,7 @@ fn missing_ai_generation_record_fails() {
     };
 
     let result = verifier::verify_object(&input);
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -410,7 +410,7 @@ fn invalid_parent_fails_verification() {
     };
 
     let result = verifier::verify_object(&input);
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -475,7 +475,7 @@ fn self_cycle_fails() {
     };
 
     let result = verifier::verify_object(&input);
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -563,7 +563,7 @@ fn wrong_predecessor_fails() {
     };
 
     let result = verifier::verify_object(&input);
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -636,7 +636,7 @@ fn missing_predecessor_fails() {
     };
 
     let result = verifier::verify_object(&input);
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -716,7 +716,7 @@ fn proof_bundle_self_contained() {
 
     // Verify from bundle alone (offline)
     let result = verifier::verify_from_proof_bundle(&bundle, artifact);
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 }
 
 // ---------------------------------------------------------------------------
@@ -773,7 +773,7 @@ fn proof_bundle_verifies_without_node_state() {
 
     // Verify using ONLY the proof bundle and the file bytes — no registry, no store
     let result = verifier::verify_from_proof_bundle(&received, &artifact);
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
     assert!(result.failures.is_empty());
 }
 
@@ -800,7 +800,7 @@ fn proof_bundle_detects_tamper_without_node_state() {
 
     // Verify with tampered bytes — should fail with PayloadHashMismatch
     let result = verifier::verify_from_proof_bundle(&received, b"tampered");
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -955,7 +955,7 @@ fn external_time_without_token_fails() {
     tampered_bundle.object.time_event.rfc3161_token = None;
 
     let result = verifier::verify_from_proof_bundle(&tampered_bundle, &artifact);
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -1040,7 +1040,7 @@ fn local_time_backward_compat() {
     assert!(old_bundle.object.time_event.rfc3161_token.is_none());
 
     let result = verifier::verify_from_proof_bundle(&old_bundle, &artifact);
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 }
 
 // ---------------------------------------------------------------------------
@@ -1068,7 +1068,7 @@ fn time_source_downgrade_invalidates_signature() {
 
     // Signature should now fail because time_source is signed
     let result = verifier::verify_from_proof_bundle(&bundle, &artifact);
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -1100,7 +1100,7 @@ fn rfc3161_token_tampering_invalidates_signature() {
 
     // Signature should fail because rfc3161_token is signed
     let result = verifier::verify_from_proof_bundle(&bundle, &artifact);
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -1132,7 +1132,7 @@ fn policy_version_forgery_blocked() {
 
     // Should fail: version 999 != CURRENT_POLICY_VERSION (1)
     let result = verifier::verify_from_proof_bundle(&bundle, &artifact);
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -1162,7 +1162,7 @@ fn unknown_protocol_version_rejected() {
     bundle.object.protocol = "V2".to_string();
 
     let result = verifier::verify_from_proof_bundle(&bundle, &artifact);
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
 }
 
 // ===========================================================================
@@ -1200,7 +1200,7 @@ fn chain_origin_proof() {
     assert!(chain.predecessor_proof_id.is_none());
 
     let result = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 }
 
 // ---------------------------------------------------------------------------
@@ -1256,7 +1256,7 @@ fn chain_successor_proof() {
     );
 
     let result = reg.verify_object(&succ_obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 }
 
 // ---------------------------------------------------------------------------
@@ -1288,7 +1288,7 @@ fn chain_tamper_invalidates_signature() {
     bundle.object.proof_chain.as_mut().unwrap().lineage_id = uuid::Uuid::new_v4();
 
     let result = verifier::verify_from_proof_bundle(&bundle, b"chain tamper test");
-    assert_eq!(result.status, VerificationStatus::Invalid);
+    assert!(result.status.is_failed());
     assert!(result
         .failures
         .iter()
@@ -1317,12 +1317,12 @@ fn chain_standalone_backward_compat() {
     assert!(obj.proof_chain.is_none());
 
     let result = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 
     // Also verify from bundle
     let bundle = reg.build_proof_bundle(&obj.object_id).unwrap();
     let result = verifier::verify_from_proof_bundle(&bundle, &artifact);
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 }
 
 // ---------------------------------------------------------------------------
@@ -1388,7 +1388,7 @@ fn chain_old_proof_format_compat() {
     assert!(old_bundle.object.proof_chain.is_none());
 
     let result = verifier::verify_from_proof_bundle(&old_bundle, &artifact);
-    assert_eq!(result.status, VerificationStatus::Verified);
+    assert_eq!(result.status, VerificationStatus::Alive);
 }
 
 // ===========================================================================
@@ -1714,7 +1714,7 @@ fn empty_file_seals_and_verifies() {
         })
         .unwrap();
     let r = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(r.status, VerificationStatus::Verified);
+    assert_eq!(r.status, VerificationStatus::Alive);
 }
 
 #[test]
@@ -1732,7 +1732,7 @@ fn single_byte_file() {
         .unwrap();
     let b = reg.build_proof_bundle(&obj.object_id).unwrap();
     let r = verifier::verify_from_proof_bundle(&b, &[0x42]);
-    assert_eq!(r.status, VerificationStatus::Verified);
+    assert_eq!(r.status, VerificationStatus::Alive);
 }
 
 #[test]
@@ -1855,11 +1855,11 @@ fn multiple_identities_independent() {
     assert_ne!(o1.origin.creator_identity_id, o2.origin.creator_identity_id);
     assert_eq!(
         reg.verify_object(&o1.object_id).unwrap().status,
-        VerificationStatus::Verified
+        VerificationStatus::Alive
     );
     assert_eq!(
         reg.verify_object(&o2.object_id).unwrap().status,
-        VerificationStatus::Verified
+        VerificationStatus::Alive
     );
 }
 
@@ -1924,7 +1924,7 @@ fn proof_bundle_roundtrip_json() {
     assert_eq!(decoded.object.object_id, obj.object_id);
     assert_eq!(decoded.object.payload_hash, obj.payload_hash);
     let r = verifier::verify_from_proof_bundle(&decoded, b"roundtrip");
-    assert_eq!(r.status, VerificationStatus::Verified);
+    assert_eq!(r.status, VerificationStatus::Alive);
 }
 
 #[test]
@@ -1999,7 +1999,7 @@ fn one_bit_change_detected() {
     let b = reg.build_proof_bundle(&obj.object_id).unwrap();
     data[50] ^= 1; // flip one bit
     let r = verifier::verify_from_proof_bundle(&b, &data);
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r
         .failures
         .iter()
@@ -2024,7 +2024,7 @@ fn appended_byte_detected() {
     let mut tampered = data.clone();
     tampered.push(0);
     let r = verifier::verify_from_proof_bundle(&b, &tampered);
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
 }
 
 #[test]
@@ -2043,7 +2043,7 @@ fn truncated_file_detected() {
         .unwrap();
     let b = reg.build_proof_bundle(&obj.object_id).unwrap();
     let r = verifier::verify_from_proof_bundle(&b, &data[..5]);
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
 }
 
 #[test]
@@ -2061,7 +2061,7 @@ fn empty_vs_nonempty_detected() {
         .unwrap();
     let b = reg.build_proof_bundle(&obj.object_id).unwrap();
     let r = verifier::verify_from_proof_bundle(&b, b"");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
 }
 
 // ── SIGNATURE FORGERY ──
@@ -2082,7 +2082,7 @@ fn forged_object_signature_fails() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.object_signature = "ff".repeat(64);
     let r = verifier::verify_from_proof_bundle(&b, b"sig test");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r
         .failures
         .iter()
@@ -2105,7 +2105,7 @@ fn forged_time_signature_fails() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.time_event.signature = "ff".repeat(64);
     let r = verifier::verify_from_proof_bundle(&b, b"time sig");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r
         .failures
         .iter()
@@ -2128,7 +2128,7 @@ fn forged_policy_signature_fails() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.policy_proof.signature = "ff".repeat(64);
     let r = verifier::verify_from_proof_bundle(&b, b"pol sig");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r
         .failures
         .iter()
@@ -2152,7 +2152,7 @@ fn swapped_creator_key_fails() {
     let fake = winstack_crypto::KeyPair::generate();
     b.creator_identity.public_key_hex = fake.public_key_hex();
     let r = verifier::verify_from_proof_bundle(&b, b"key swap");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
 }
 
 // ── POLICY ──
@@ -2173,7 +2173,7 @@ fn policy_deny_changes_detected() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.policy_proof.decision = PolicyDecision::Deny;
     let r = verifier::verify_from_proof_bundle(&b, b"deny");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r
         .failures
         .iter()
@@ -2198,7 +2198,7 @@ fn origin_object_id_mismatch_detected() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.origin.object_id = Uuid::new_v4();
     let r = verifier::verify_from_proof_bundle(&b, b"origin");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r
         .failures
         .iter()
@@ -2221,7 +2221,7 @@ fn origin_creator_mismatch_detected() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.origin.creator_identity_id = Uuid::new_v4();
     let r = verifier::verify_from_proof_bundle(&b, b"cre mis");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r
         .failures
         .iter()
@@ -2244,7 +2244,7 @@ fn origin_module_mismatch_detected() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.origin.module_identity_id = Uuid::new_v4();
     let r = verifier::verify_from_proof_bundle(&b, b"mod mis");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r
         .failures
         .iter()
@@ -2269,7 +2269,7 @@ fn time_authority_mismatch_detected() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.origin.time_authority_identity_id = Uuid::new_v4();
     let r = verifier::verify_from_proof_bundle(&b, b"ta mis");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r
         .failures
         .iter()
@@ -2333,7 +2333,7 @@ fn parent_child_lineage_valid() {
     assert_eq!(child.parent_ids, vec![parent.object_id]);
     assert_eq!(
         reg.verify_object(&child.object_id).unwrap().status,
-        VerificationStatus::Verified
+        VerificationStatus::Alive
     );
 }
 
@@ -2374,7 +2374,7 @@ fn multi_parent_lineage() {
     assert_eq!(child.parent_ids.len(), 2);
     assert_eq!(
         reg.verify_object(&child.object_id).unwrap().status,
-        VerificationStatus::Verified
+        VerificationStatus::Alive
     );
 }
 
@@ -2441,7 +2441,7 @@ fn protocol_v99_rejected() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.protocol = "V99".to_string();
     let r = verifier::verify_from_proof_bundle(&b, b"v99");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
 }
 
 #[test]
@@ -2460,7 +2460,7 @@ fn protocol_empty_rejected() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.protocol = "".to_string();
     let r = verifier::verify_from_proof_bundle(&b, b"empty proto");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
 }
 
 // ── CHAIN ADVANCED ──
@@ -2569,7 +2569,7 @@ fn chain_wrong_lineage_invalidates_sig() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.proof_chain.as_mut().unwrap().lineage_id = Uuid::new_v4();
     let r = verifier::verify_from_proof_bundle(&b, b"lin");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r
         .failures
         .iter()
@@ -2645,7 +2645,7 @@ fn seal_ten_objects_all_verify() {
     for id in &ids {
         assert_eq!(
             reg.verify_object(id).unwrap().status,
-            VerificationStatus::Verified
+            VerificationStatus::Alive
         );
     }
 }
@@ -2678,11 +2678,11 @@ fn same_content_different_proofs() {
     assert_eq!(o1.payload_hash, o2.payload_hash);
     assert_eq!(
         reg.verify_object(&o1.object_id).unwrap().status,
-        VerificationStatus::Verified
+        VerificationStatus::Alive
     );
     assert_eq!(
         reg.verify_object(&o2.object_id).unwrap().status,
-        VerificationStatus::Verified
+        VerificationStatus::Alive
     );
 }
 
@@ -2720,7 +2720,7 @@ fn old_proof_without_chain_or_tsa_verifies() {
     assert!(old.object.proof_chain.is_none());
     assert_eq!(old.object.time_event.time_source, TimeSource::Local);
     let r = verifier::verify_from_proof_bundle(&old, b"old style");
-    assert_eq!(r.status, VerificationStatus::Verified);
+    assert_eq!(r.status, VerificationStatus::Alive);
 }
 
 // ── AI + IMPORT ──
@@ -2745,7 +2745,7 @@ fn ai_object_without_generation_record_fails() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.ai_generation = None;
     let r = verifier::verify_from_proof_bundle(&b, b"ai");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r
         .failures
         .iter()
@@ -2796,7 +2796,7 @@ fn verified_has_zero_failures() {
         })
         .unwrap();
     let r = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(r.status, VerificationStatus::Verified);
+    assert_eq!(r.status, VerificationStatus::Alive);
     assert!(r.failures.is_empty());
 }
 
@@ -2816,7 +2816,7 @@ fn invalid_has_at_least_one_failure() {
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
     b.object.object_signature = "00".repeat(64);
     let r = verifier::verify_from_proof_bundle(&b, b"fail");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(!r.failures.is_empty());
 }
 
@@ -2838,7 +2838,7 @@ fn multiple_failures_all_reported() {
     b.object.policy_proof.decision = PolicyDecision::Deny;
     b.object.origin.object_id = Uuid::new_v4();
     let r = verifier::verify_from_proof_bundle(&b, b"wrong bytes");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     assert!(r.failures.len() >= 3);
 }
 
@@ -3048,7 +3048,7 @@ fn binary_data_seals_correctly() {
         .unwrap();
     let b = reg.build_proof_bundle(&obj.object_id).unwrap();
     let r = verifier::verify_from_proof_bundle(&b, &data);
-    assert_eq!(r.status, VerificationStatus::Verified);
+    assert_eq!(r.status, VerificationStatus::Alive);
 }
 
 #[test]
@@ -3067,7 +3067,7 @@ fn null_bytes_in_file() {
         .unwrap();
     let b = reg.build_proof_bundle(&obj.object_id).unwrap();
     let r = verifier::verify_from_proof_bundle(&b, &data);
-    assert_eq!(r.status, VerificationStatus::Verified);
+    assert_eq!(r.status, VerificationStatus::Alive);
 }
 
 #[test]
@@ -3197,7 +3197,7 @@ fn artifact_size_mismatch_detected() {
     // Tamper: change claimed size without changing hash
     b.object.artifact_size_bytes = 999;
     let r = verifier::verify_from_proof_bundle(&b, b"real content");
-    assert_eq!(r.status, VerificationStatus::Invalid);
+    assert!(r.status.is_failed());
     // Should catch both size mismatch AND signature invalid (size is signed)
     assert!(r
         .failures

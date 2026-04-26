@@ -271,7 +271,7 @@ impl Registry {
         };
 
         let result = verifier::verify_object(&verification_input);
-        if result.status != VerificationStatus::Verified {
+        if !result.status.is_alive() {
             return Err(RegistryError::Rejected(Rejection {
                 code: RejectCode::VerificationFailed,
                 reason: format!("pre-write verification failed: {:?}", result.failures),
@@ -462,7 +462,7 @@ impl Registry {
         };
 
         let result = verifier::verify_object(&verification_input);
-        if result.status != VerificationStatus::Verified {
+        if !result.status.is_alive() {
             return Err(RegistryError::Rejected(Rejection {
                 code: RejectCode::VerificationFailed,
                 reason: format!("pre-write verification failed: {:?}", result.failures),
@@ -654,7 +654,7 @@ impl Registry {
         };
 
         let result = verifier::verify_object(&verification_input);
-        if result.status != VerificationStatus::Verified {
+        if !result.status.is_alive() {
             return Err(RegistryError::Rejected(Rejection {
                 code: RejectCode::VerificationFailed,
                 reason: format!("pre-write verification failed: {:?}", result.failures),

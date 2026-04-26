@@ -165,8 +165,10 @@ async fn inspect_object(
     let (status, failures) = match verification {
         Some(result) => {
             let s = match result.status {
-                VerificationStatus::Verified => "VERIFIED",
-                VerificationStatus::Invalid => "INVALID",
+                VerificationStatus::Alive => "Alive",
+                VerificationStatus::Wounded => "Wounded",
+                VerificationStatus::Unrecognized => "Unrecognized",
+                VerificationStatus::Dying => "Dying",
             };
             let fs: Vec<FailureInfo> = result
                 .failures
@@ -179,7 +181,7 @@ async fn inspect_object(
             (s.to_string(), fs)
         }
         None => (
-            "INVALID".to_string(),
+            "Unrecognized".to_string(),
             vec![FailureInfo {
                 code: "MISSING_DATA".into(),
                 reason: "could not load all verification inputs".into(),
@@ -304,14 +306,14 @@ async fn inspect_object(
     let policy = PolicyInfo {
         decision: Some(format!("{:?}", obj.policy_proof.decision)),
         policy_version: Some(obj.policy_proof.policy_version),
-        proof_status: if status == "VERIFIED" {
-            "VERIFIED".to_string()
+        proof_status: if status == "Alive" {
+            "Alive".to_string()
         } else {
             let has_policy_failure = failures.iter().any(|f| f.code.starts_with("Policy"));
             if has_policy_failure {
-                "FAILED".to_string()
+                "Failed".to_string()
             } else {
-                "VERIFIED".to_string()
+                "Alive".to_string()
             }
         },
         evaluated_at: Some(obj.policy_proof.evaluated_at.clone()),
@@ -566,12 +568,12 @@ async fn verify_upload(
         }
     };
 
-    // Check tamper first
+    // Check tamper first — file content vs name tag's recorded hash
     if file_hash != expected_hash {
         return Ok(Json(VerifyResponse {
-            result: "TAMPERED".into(),
+            result: "Wounded".into(),
             object_id,
-            message: "This file does not match the proof. It was either modified or you selected the wrong file.".into(),
+            message: "This file was alive once. It has been changed since it was named. The original is gone.".into(),
             file_hash,
             expected_hash,
             failures: vec![],
@@ -590,55 +592,53 @@ async fn verify_upload(
 
     // Run full verification from proof bundle
     let vr = verifier::verify_from_proof_bundle(&bundle, &file_bytes);
-    match vr.status {
-        VerificationStatus::Verified => Ok(Json(VerifyResponse {
-            result: "VERIFIED".into(),
-            object_id,
-            message: "This file is authentic. It has not been changed since it was sealed.".into(),
-            file_hash,
-            expected_hash,
-            failures: vec![],
-            trust_class,
-            object_class,
-            created_at,
-            payload_hash,
-            time_source,
+    let (result_str, message) = match vr.status {
+        VerificationStatus::Alive => (
+            "Alive",
+            "This file is alive. Unchanged since it was named.",
+        ),
+        VerificationStatus::Wounded => (
+            "Wounded",
+            "This file was alive. It has been changed since it was named. The original is gone.",
+        ),
+        VerificationStatus::Unrecognized => (
+            "Unrecognized",
+            "I can't read this name tag. The file may still be fine, but I can't tell you who named it.",
+        ),
+        VerificationStatus::Dying => (
+            "Dying",
+            "This name tag is decomposing.",
+        ),
+    };
+    let failures: Vec<FailureInfo> = if vr.status.is_alive() {
+        vec![]
+    } else {
+        vr.failures
+            .iter()
+            .map(|f| FailureInfo {
+                code: format!("{:?}", f.code),
+                reason: f.reason.clone(),
+            })
+            .collect()
+    };
+    Ok(Json(VerifyResponse {
+        result: result_str.into(),
+        object_id,
+        message: message.into(),
+        file_hash,
+        expected_hash,
+        failures,
+        trust_class,
+        object_class,
+        created_at,
+        payload_hash,
+        time_source,
 
-            anchored_time,
-            chain_status: chain_status_str.clone(),
-            chain_depth,
-            creator_key: creator_key.clone(),
-        })),
-        VerificationStatus::Invalid => {
-            let failures: Vec<FailureInfo> = vr
-                .failures
-                .iter()
-                .map(|f| FailureInfo {
-                    code: format!("{:?}", f.code),
-                    reason: f.reason.clone(),
-                })
-                .collect();
-            Ok(Json(VerifyResponse {
-                result: "INVALID".into(),
-                object_id,
-                message: "The proof bundle failed verification. The seal is broken or incomplete."
-                    .into(),
-                file_hash,
-                expected_hash,
-                failures,
-                trust_class,
-                object_class,
-                created_at,
-                payload_hash,
-                time_source,
-    
-                anchored_time,
-                chain_status: chain_status_str,
-                chain_depth,
-                creator_key,
-            }))
-        }
-    }
+        anchored_time,
+        chain_status: chain_status_str,
+        chain_depth,
+        creator_key,
+    }))
 }
 
 #[derive(Serialize)]
@@ -1096,9 +1096,9 @@ async fn check_bundle(
         Ok(v) => v,
         Err(e) => {
             return Ok(Json(VerifyResponse {
-                result: "DAMAGED".into(),
+                result: "Dying".into(),
                 object_id: String::new(),
-                message: format!("The .win container is damaged. {}", e),
+                message: format!("This name tag is decomposing. {}", e),
                 file_hash: String::new(),
                 expected_hash: String::new(),
                 failures: vec![],
@@ -1120,9 +1120,9 @@ async fn check_bundle(
         Ok(b) => b,
         Err(e) => {
             return Ok(Json(VerifyResponse {
-                result: "DAMAGED".into(),
+                result: "Dying".into(),
                 object_id: String::new(),
-                message: format!("The .win container is damaged. Proof section is not valid: {}", e),
+                message: format!("This name tag is decomposing. Proof section is not valid: {}", e),
                 file_hash: String::new(),
                 expected_hash: String::new(),
                 failures: vec![],
@@ -1158,9 +1158,9 @@ async fn check_bundle(
 
     if file_hash != expected_hash {
         return Ok(Json(VerifyResponse {
-            result: "TAMPERED".into(),
+            result: "Wounded".into(),
             object_id,
-            message: "This file was modified.".into(),
+            message: "This file was alive. It has been changed since it was named. The original is gone.".into(),
             file_hash,
             expected_hash,
             failures: vec![],
@@ -1178,54 +1178,53 @@ async fn check_bundle(
     }
 
     let vr = verifier::verify_from_proof_bundle(&bundle, &file_bytes);
-    match vr.status {
-        VerificationStatus::Verified => Ok(Json(VerifyResponse {
-            result: "VERIFIED".into(),
-            object_id,
-            message: "This file has not changed.".into(),
-            file_hash,
-            expected_hash,
-            failures: vec![],
-            trust_class,
-            object_class,
-            created_at,
-            payload_hash,
-            time_source,
+    let (result_str, message) = match vr.status {
+        VerificationStatus::Alive => (
+            "Alive",
+            "This file is alive. Unchanged since it was named.",
+        ),
+        VerificationStatus::Wounded => (
+            "Wounded",
+            "This file was alive. It has been changed since it was named. The original is gone.",
+        ),
+        VerificationStatus::Unrecognized => (
+            "Unrecognized",
+            "I can't read this name tag.",
+        ),
+        VerificationStatus::Dying => (
+            "Dying",
+            "This name tag is decomposing.",
+        ),
+    };
+    let failures: Vec<FailureInfo> = if vr.status.is_alive() {
+        vec![]
+    } else {
+        vr.failures
+            .iter()
+            .map(|f| FailureInfo {
+                code: format!("{:?}", f.code),
+                reason: f.reason.clone(),
+            })
+            .collect()
+    };
+    Ok(Json(VerifyResponse {
+        result: result_str.into(),
+        object_id,
+        message: message.into(),
+        file_hash,
+        expected_hash,
+        failures,
+        trust_class,
+        object_class,
+        created_at,
+        payload_hash,
+        time_source,
 
-            anchored_time,
-            chain_status: chain_status_str,
-            chain_depth,
-            creator_key: creator_key.clone(),
-        })),
-        VerificationStatus::Invalid => {
-            let failures = vr
-                .failures
-                .iter()
-                .map(|f| FailureInfo {
-                    code: format!("{:?}", f.code),
-                    reason: f.reason.clone(),
-                })
-                .collect();
-            Ok(Json(VerifyResponse {
-                result: "INVALID".into(),
-                object_id,
-                message: "This proof is broken.".into(),
-                file_hash,
-                expected_hash,
-                failures,
-                trust_class,
-                object_class,
-                created_at,
-                payload_hash,
-                time_source,
-    
-                anchored_time,
-                chain_status: chain_status_str,
-                chain_depth,
-                creator_key,
-            }))
-        }
-    }
+        anchored_time,
+        chain_status: chain_status_str,
+        chain_depth,
+        creator_key,
+    }))
 }
 
 /// POST /save-and-open — save file to Downloads and open with system default app
@@ -1293,7 +1292,17 @@ async fn save_and_open(
             }),
         )
     })?;
-    let name = file_name.unwrap_or_else(|| "file".into());
+    let raw_name = file_name.unwrap_or_else(|| "file".into());
+    // Sanitize: strip path separators, reject null bytes
+    let name: String = raw_name
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or("file")
+        .replace('\0', "")
+        .chars()
+        .take(255)
+        .collect();
+    let name = if name.is_empty() { "file".into() } else { name };
 
     // Save to Downloads
     if let Ok(home) = std::env::var("HOME") {

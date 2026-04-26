@@ -311,10 +311,52 @@ pub struct Failure {
     pub reason: String,
 }
 
+/// The four states of a named file. See `spec/grammar.md` § 3.
+///
+/// - `Alive`        — unchanged since its naming; signature intact; name tag matches.
+/// - `Wounded`      — was named once, but the file has been changed since.
+/// - `Unrecognized` — name tag and file don't fit together; signature won't read.
+/// - `Dying`        — the name tag itself is decomposing (container malformed).
+///
+/// Internal verification (`verifier::verify_object`) only ever returns
+/// `Alive | Wounded | Unrecognized` — by the time it runs, the container has
+/// parsed. `Dying` is set by callers (CLI, API, browser verifier) when the
+/// `.win` container can't be parsed at all.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum VerificationStatus {
-    Verified,
-    Invalid,
+    Alive,
+    Wounded,
+    Unrecognized,
+    Dying,
+}
+
+impl VerificationStatus {
+    /// Derive the user-facing state from a list of failures.
+    ///
+    /// `PayloadHashMismatch` is the only failure that means *the file you hold
+    /// is not the file the name tag named.* Everything else means *we can't
+    /// recognize who named this.* If both kinds of failure are present,
+    /// `Wounded` wins — it's the more actionable signal for the receiver.
+    pub fn from_failures(failures: &[Failure]) -> Self {
+        if failures.is_empty() {
+            VerificationStatus::Alive
+        } else if failures
+            .iter()
+            .any(|f| matches!(f.code, FailureCode::PayloadHashMismatch))
+        {
+            VerificationStatus::Wounded
+        } else {
+            VerificationStatus::Unrecognized
+        }
+    }
+
+    pub fn is_alive(&self) -> bool {
+        matches!(self, VerificationStatus::Alive)
+    }
+
+    pub fn is_failed(&self) -> bool {
+        !self.is_alive()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

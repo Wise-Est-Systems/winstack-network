@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Winstack — Verify</title>
+<title>Winstack — Is it alive?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -100,8 +100,8 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
 <main>
 <div class="app">
   <div id="input-state">
-    <h1>Verify a file</h1>
-    <p class="sub">Drop a .win file to check it. Everything runs in your browser.</p>
+    <h1>Is it alive?</h1>
+    <p class="sub">Drop a .win file. The verifier checks its name tag in your browser.</p>
     <div class="drop" id="d-win">
       <input type="file" id="i-win" accept=".win">
       <div class="drop-label" id="l-win">Drop a .win file</div>
@@ -116,16 +116,16 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
       </div>
       <div class="legacy-drop" id="d-proof">
         <input type="file" id="i-proof" accept=".json,.proof.json">
-        <div class="legacy-drop-label" id="l-proof">Proof</div>
+        <div class="legacy-drop-label" id="l-proof">Name tag</div>
         <div class="legacy-drop-sub">.proof.json</div>
       </div>
     </div>
-    <button class="btn" id="btn-go" disabled>Verify</button>
-    <p class="note">Nothing is uploaded. All checks run locally in your browser.</p>
+    <button class="btn" id="btn-go" disabled>Recognize</button>
+    <p class="note">Nothing is uploaded. Everything runs locally in your browser.</p>
   </div>
   <div class="processing" id="proc-state">
     <div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-    <div class="proc-label">Checking</div>
+    <div class="proc-label">Recognizing</div>
   </div>
   <div class="outcome" id="result-state">
     <div class="err hidden" id="r-err"></div>
@@ -137,7 +137,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
     <div class="mismatch hidden" id="r-mm">
       <div class="mm-label a">This file</div><div class="mm-val a" id="r-mm-a"></div>
       <div class="mm-sep"></div>
-      <div class="mm-label b">Original</div><div class="mm-val b" id="r-mm-b"></div>
+      <div class="mm-label b">The one that was named</div><div class="mm-val b" id="r-mm-b"></div>
     </div>
     <button class="save-btn hidden" id="r-save">Save file</button>
     <button class="details-toggle" id="r-dtoggle">View details</button>
@@ -146,7 +146,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
   </div>
 </div>
 </main>
-<footer><span class="foot">Verification runs entirely in your browser. No server. No upload.</span></footer>
+<footer><span class="foot">Recognition runs entirely in your browser. No server. No upload.</span></footer>
 
 <script>
 // Block native file-drop navigation
@@ -157,9 +157,6 @@ var $ = function(id) { return document.getElementById(id); };
 var esc = function(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
 var trunc = function(s, n) { n = n || 28; return s.length > n ? s.slice(0, n-1) + '\u2026' : s; };
 function dt(k, v) { return '<div class="detail"><span class="detail-k">'+esc(k)+'</span><span class="detail-v">'+esc(v)+'</span></div>'; }
-
-var extractedFile = null;
-var extractedName = null;
 
 // ── .WIN PARSER (matches win-format crate exactly) ──
 var WIN_MAGIC = [0x57, 0x49, 0x4E, 0x01]; // "WIN\x01"
@@ -234,6 +231,9 @@ function buildSignPayload(obj) {
   return JSON.stringify(p);
 }
 
+var extractedFile = null;
+var extractedName = null;
+
 // ── STATE ──
 var winFile = null;
 var legacyFile = null;
@@ -269,6 +269,7 @@ function wireDrop(inputId, zoneId, labelId, cb) {
 
 wireDrop('i-win', 'd-win', 'l-win', function(f) {
   winFile = f; mode = 'win';
+  // Auto-verify .win files immediately — no button click needed
   show('proc');
   f.arrayBuffer().then(function(buf) { verifyFromWin(buf, f.name); });
 });
@@ -297,12 +298,12 @@ $('btn-go').addEventListener('click', function() {
 
 function verifyFromWin(buf, fname) {
   var parsed = parseWin(buf);
-  if (!parsed) { extractedFile = null; extractedName = null; show('result'); renderResult('DAMAGED', '', '', null, fname, 'The .win container is damaged or incomplete.'); return; }
+  if (!parsed) { extractedFile = null; extractedName = null; show('result'); renderResult('DYING', '', '', null, fname, 'This name tag is decomposing — the .win container is incomplete.'); return; }
   extractedFile = parsed.fileBytes; extractedName = parsed.filename;
   var proofText = parsed.proofJson;
   var bundle;
-  try { bundle = JSON.parse(proofText); } catch(e) { show('result'); renderResult('DAMAGED', '', '', null, fname, 'The proof section inside this .win is not valid.'); return; }
-  if (!bundle.object || !bundle.object.payload_hash) { show('result'); renderResult('DAMAGED', '', '', null, fname, 'The proof section inside this .win is incomplete.'); return; }
+  try { bundle = JSON.parse(proofText); } catch(e) { show('result'); renderResult('DYING', '', '', null, fname, 'This name tag is decomposing — the proof section is not valid.'); return; }
+  if (!bundle.object || !bundle.object.payload_hash) { show('result'); renderResult('DYING', '', '', null, fname, 'This name tag is decomposing — the proof section is incomplete.'); return; }
   doVerify(parsed.fileBytes.buffer, bundle, fname);
 }
 
@@ -317,10 +318,10 @@ function doVerify(fileBuf, bundle, fname) {
   sha256hex(fileBuf).then(function(fileHash) {
     var expected = bundle.object.payload_hash;
 
-    // 1. Hash check
+    // 1. Hash check — file content vs name tag's recorded hash
     if (fileHash !== expected) {
       show('result');
-      renderResult('TAMPERED', fileHash, expected, bundle, fname);
+      renderResult('WOUNDED', fileHash, expected, bundle, fname);
       return;
     }
 
@@ -329,28 +330,28 @@ function doVerify(fileBuf, bundle, fname) {
     var claimedSize = bundle.object.artifact_size_bytes;
     if (claimedSize !== undefined && actualSize !== claimedSize) {
       show('result');
-      renderResult('INVALID', fileHash, expected, bundle, fname, 'File size mismatch: proof claims ' + claimedSize + ' bytes, actual ' + actualSize);
+      renderResult('UNRECOGNIZED', fileHash, expected, bundle, fname, 'Size mismatch: name tag records ' + claimedSize + ' bytes, file has ' + actualSize);
       return;
     }
 
     // 3. Structure checks
     if (bundle.object.protocol !== 'V1') {
       show('result');
-      renderResult('INVALID', fileHash, expected, bundle, fname, 'Unsupported protocol: ' + bundle.object.protocol);
+      renderResult('UNRECOGNIZED', fileHash, expected, bundle, fname, 'Unsupported protocol: ' + bundle.object.protocol);
       return;
     }
     if (!bundle.creator_identity) {
       show('result');
-      renderResult('INVALID', fileHash, expected, bundle, fname, 'Missing creator identity');
+      renderResult('UNRECOGNIZED', fileHash, expected, bundle, fname, 'No witness on this name tag');
       return;
     }
     if (bundle.object.policy_proof && bundle.object.policy_proof.decision !== 'Permit') {
       show('result');
-      renderResult('INVALID', fileHash, expected, bundle, fname, 'Policy decision is not Permit');
+      renderResult('UNRECOGNIZED', fileHash, expected, bundle, fname, 'Policy decision is not Permit');
       return;
     }
 
-    // 4. Signature check
+    // 4. Signature check — does the witness's hand verify?
     var signPayload = buildSignPayload(bundle.object);
     var signBytes = new TextEncoder().encode(signPayload);
     var pubKey = bundle.creator_identity.public_key_hex;
@@ -360,15 +361,15 @@ function doVerify(fileBuf, bundle, fname) {
       ed25519verify(pubKey, signBytes, sig).then(function(sigValid) {
         if (sigValid === false) {
           show('result');
-          renderResult('INVALID', fileHash, expected, bundle, fname, 'Object signature verification failed');
+          renderResult('UNRECOGNIZED', fileHash, expected, bundle, fname, "The witness's signature does not verify.");
         } else {
           show('result');
-          renderResult('VERIFIED', fileHash, expected, bundle, fname, null, sigValid);
+          renderResult('ALIVE', fileHash, expected, bundle, fname, null, sigValid);
         }
       });
     } else {
       show('result');
-      renderResult('VERIFIED', fileHash, expected, bundle, fname, null, null);
+      renderResult('ALIVE', fileHash, expected, bundle, fname, null, null);
     }
   });
 }
@@ -385,43 +386,44 @@ function renderResult(result, fileHash, expected, bundle, fname, issue, sigCheck
 
   var v = $('r-verdict'); v.style.display = 'block';
 
-  if (result === 'VERIFIED') {
+  if (result === 'ALIVE') {
     v.className = 'verdict enter ok';
-    $('r-status').textContent = 'Verified';
-    $('r-explain').textContent = 'This file has not been changed.';
+    $('r-status').textContent = 'Alive';
+    $('r-explain').textContent = 'This file is alive. Unchanged since it was named.';
     var m = $('r-meta'); m.classList.remove('hidden');
-    var timeBit = (bundle && bundle.object.time_event && bundle.object.time_event.time_source === 'External')
-      ? ' \u2022 Anchored time' : ' \u2022 Local time only';
+    var timeBit = (bundle.object.time_event && bundle.object.time_event.time_source === 'External')
+      ? ' \u2022 Anchored birthday' : ' \u2022 Local birthday only';
     if (sigChecked === true) {
-      m.textContent = 'Hash + signature verified' + timeBit;
+      m.textContent = 'Witness recognized' + timeBit;
     } else if (sigChecked === null) {
-      m.textContent = 'Hash verified' + timeBit + ' \u2022 Signature check not available in this browser';
+      m.textContent = 'File matches name tag' + timeBit + ' \u2022 Witness signature not checkable in this browser';
+    }
+    var chain = bundle.object.proof_chain;
+    if (chain) {
+      var label = chain.predecessor_proof_id ? 'Part of a lineage.' : 'First in its lineage.';
+      $('r-explain').textContent += ' ' + label;
     }
     if (extractedFile && extractedName) {
       var sb = $('r-save');
       sb.classList.remove('hidden');
       sb.textContent = 'Save ' + extractedName;
     }
-    var chain = bundle.object.proof_chain;
-    if (chain) {
-      var label = chain.predecessor_proof_id ? 'Part of a proof chain.' : 'First proof in its chain.';
-      $('r-explain').textContent += ' ' + label;
-    }
-  } else if (result === 'TAMPERED') {
+  } else if (result === 'WOUNDED') {
     v.className = 'verdict enter bad';
-    $('r-status').textContent = 'Tampered';
-    $('r-explain').textContent = 'This file does not match the proof. It was modified, or you selected the wrong file.';
+    $('r-status').textContent = 'Wounded';
+    $('r-explain').textContent = 'This file was alive once. It has been changed since it was named. The original is gone.';
     $('r-mm').classList.remove('hidden');
     $('r-mm-a').textContent = fileHash;
     $('r-mm-b').textContent = expected;
-  } else if (result === 'DAMAGED') {
+  } else if (result === 'DYING') {
     v.className = 'verdict enter damaged';
-    $('r-status').textContent = 'Damaged';
-    $('r-explain').textContent = (issue || 'The .win container is damaged or incomplete.') + ' This is not a tampered file \u2014 the package itself is broken.';
+    $('r-status').textContent = 'Dying';
+    $('r-explain').textContent = (issue || 'This name tag is decomposing.') + ' The file underneath may still be alive \u2014 its name tag is just unreadable.';
   } else {
+    // UNRECOGNIZED \u2014 and any unhandled result falls here as well
     v.className = 'verdict enter warn';
-    $('r-status').textContent = 'Invalid proof';
-    $('r-explain').textContent = 'This proof is broken or cannot be used.' + (issue ? ' ' + issue + '.' : '');
+    $('r-status').textContent = 'Unrecognized';
+    $('r-explain').textContent = "I can't read this name tag. The file may still be fine, but I can't tell you who named it." + (issue ? ' ' + issue + '.' : '');
   }
   requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
 
@@ -429,15 +431,15 @@ function renderResult(result, fileHash, expected, bundle, fname, issue, sigCheck
   var ts = bundle.object.time_event ? bundle.object.time_event.time_source : 'unknown';
   var timeLabel = ts === 'External'
     ? 'Anchored \u2014 externally timestamped (RFC 3161)'
-    : 'Local \u2014 from the creator\u2019s device clock';
+    : 'Local \u2014 from the witness\u2019s device clock';
   $('r-dpanel').innerHTML = [
     dt('File', fname),
-    dt('Sealed', bundle.object.origin ? bundle.object.origin.created_at : 'unknown'),
+    dt('Born', bundle.object.origin ? bundle.object.origin.created_at : 'unknown'),
     dt('Hash', expected),
     dt('Size', bundle.object.artifact_size_bytes + ' bytes'),
     dt('Time', timeLabel),
-    dt('Key', bundle.creator_identity ? bundle.creator_identity.public_key_hex.slice(0,8) + '\u2026' + bundle.creator_identity.public_key_hex.slice(56) : 'unknown'),
-    dt('Verified by', 'Browser (no server)'),
+    dt('Witness', bundle.creator_identity ? bundle.creator_identity.public_key_hex.slice(0,8) + '\u2026' + bundle.creator_identity.public_key_hex.slice(56) : 'unknown'),
+    dt('Recognized by', 'Browser (no server)'),
   ].join('');
 }
 

@@ -31,10 +31,11 @@ Lower layers must not depend on higher layers.
 2. Include tests proving old proofs still verify
 3. Bump protocol version if semantics change
 
-The three result states are immutable:
-- `VERIFIED` = file matches proof and proof verifies
-- `TAMPERED` = file does not match proof
-- `INVALID` = proof is broken/unusable
+The four result states are immutable:
+- `Alive` = file matches its name tag and the witness's signature is intact
+- `Wounded` = file has been changed since it was named
+- `Unrecognized` = name tag doesn't fit this file, or the witness's signature can't be read
+- `Dying` = the name tag itself is decomposing (container malformed)
 
 ## Testing
 

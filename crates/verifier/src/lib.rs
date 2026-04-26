@@ -22,7 +22,7 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
     // 0. Protocol version gate
     if obj.protocol != SUPPORTED_PROTOCOL {
         return VerificationResult {
-            status: VerificationStatus::Invalid,
+            status: VerificationStatus::Unrecognized,
             object_id: obj.object_id,
             failures: vec![Failure {
                 code: FailureCode::OriginRecordMissing,
@@ -364,14 +364,8 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
         // Origin proof (predecessor_proof_id is None) — no chain checks needed
     }
 
-    let status = if failures.is_empty() {
-        VerificationStatus::Verified
-    } else {
-        VerificationStatus::Invalid
-    };
-
     VerificationResult {
-        status,
+        status: VerificationStatus::from_failures(&failures),
         object_id: obj.object_id,
         failures,
     }
@@ -399,7 +393,7 @@ pub fn verify_chain(
 ) -> ChainVerificationResult {
     // 1. Verify the current proof itself
     let current = verify_from_proof_bundle(bundle, artifact_bytes);
-    if current.status != VerificationStatus::Verified {
+    if !current.status.is_alive() {
         return ChainVerificationResult {
             chain_status: ChainStatus::HistoryBroken,
             depth: 1,
@@ -528,7 +522,7 @@ pub fn verify_chain(
 
         // Verify predecessor proof
         let pred_result = verify_from_proof_bundle(&pred_link.bundle, &pred_link.artifact_bytes);
-        if pred_result.status != VerificationStatus::Verified {
+        if !pred_result.status.is_alive() {
             failures.push(Failure {
                 code: FailureCode::ChainPredecessorInvalid,
                 reason: format!("predecessor {} failed verification", pred_id),
@@ -735,7 +729,9 @@ mod tests {
             tsa_trust_store: None,
         };
         let result = verify_object(&input);
-        assert_eq!(result.status, VerificationStatus::Invalid);
+        // payload_hash "wrong" vs sha256("hello") triggers PayloadHashMismatch
+        // → Wounded wins via from_failures, even with other identity/signature failures present.
+        assert_eq!(result.status, VerificationStatus::Wounded);
         assert!(!result.failures.is_empty());
     }
 }
