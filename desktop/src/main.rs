@@ -43,6 +43,12 @@ fn ensure_node(node_path: &PathBuf) {
     }
 
     std::fs::create_dir_all(node_path).unwrap();
+    // Restrict .winstack directory to owner-only access
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(node_path, std::fs::Permissions::from_mode(0o700));
+    }
     std::fs::create_dir_all(node_path.join("store_data")).unwrap();
 
     let mut identity_store = identity_core::IdentityStore::new();
@@ -102,15 +108,45 @@ fn ensure_node(node_path: &PathBuf) {
 
     let json = serde_json::to_string_pretty(&config).unwrap();
     std::fs::write(&node_json, json).unwrap();
-    // Restrict permissions — private keys should not be world-readable
+    // Restrict permissions — private keys must not be world-readable
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
         let _ = std::fs::set_permissions(&node_json, std::fs::Permissions::from_mode(0o600));
     }
+    // Restrict graph.db to owner-only
+    let graph_path = node_path.join("graph.db");
+    if graph_path.exists() {
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let _ = std::fs::set_permissions(&graph_path, std::fs::Permissions::from_mode(0o600));
+        }
+    }
+}
+
+fn check_and_repair_permissions(node_path: &std::path::Path) {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let check = |path: &std::path::Path, expected: u32, label: &str| {
+            if !path.exists() { return; }
+            if let Ok(meta) = std::fs::metadata(path) {
+                let current = meta.permissions().mode() & 0o777;
+                if current != expected {
+                    eprintln!("  WARNING: {} has permissions {:04o}, expected {:04o} — repairing", label, current, expected);
+                    let _ = std::fs::set_permissions(path, std::fs::Permissions::from_mode(expected));
+                }
+            }
+        };
+        check(node_path, 0o700, "node directory");
+        check(&node_path.join("node.json"), 0o600, "node.json");
+        check(&node_path.join("graph.db"), 0o600, "graph.db");
+    }
 }
 
 fn load_registry(node_path: &std::path::Path) -> registry_core::Registry {
+    check_and_repair_permissions(node_path);
     let node_json = node_path.join("node.json");
     let data = std::fs::read_to_string(&node_json).unwrap();
 
@@ -270,27 +306,18 @@ fn main() {
         std::thread::sleep(std::time::Duration::from_millis(100));
     }
 
+    let inject_js = format!(
+        "window.WINSTACK_API_BASE = 'http://{}'; window.WINSTACK_TOKEN = '{}';",
+        addr, session_token
+    );
+
     tauri::Builder::default()
-        .setup(move |app| {
-            use tauri::Manager;
-            if let Some(window) = app.get_webview_window("main") {
-                // Inject API base URL — retry to handle page load timing
-                let js = format!(
-                    "window.WINSTACK_API_BASE = 'http://{}'; window.WINSTACK_TOKEN = '{}';",
-                    addr, session_token
-                );
-                let js_clone = js.clone();
-                window.eval(&js).ok();
-                // Retry after page has likely finished loading
-                let window_clone = window.clone();
-                std::thread::spawn(move || {
-                    std::thread::sleep(std::time::Duration::from_millis(500));
-                    window_clone.eval(&js_clone).ok();
-                    std::thread::sleep(std::time::Duration::from_millis(1000));
-                    window_clone.eval(&js_clone).ok();
-                });
+        .on_page_load(move |webview, payload| {
+            use tauri::webview::PageLoadEvent;
+            if let PageLoadEvent::Finished { .. } = payload.event() {
+                // Inject config after page is fully loaded — deterministic, no timing race
+                webview.eval(&inject_js).ok();
             }
-            Ok(())
         })
         .run(tauri::generate_context!("./tauri.conf.json"))
         .expect("error while running Winstack");

@@ -60,8 +60,10 @@ h1{font-size:22px;font-weight:600;color:var(--bright);margin-bottom:8px}
 .verdict.bad::after{background:radial-gradient(ellipse at 50% 40%,#f8717120,transparent 70%)}
 .verdict.warn{background:var(--amber-soft);border:1px solid var(--amber-border)}
 .verdict.warn::after{background:radial-gradient(ellipse at 50% 40%,#fbbf2420,transparent 70%)}
+.verdict.damaged{background:#78350f18;border:1px solid #78350f}
+.verdict.damaged::after{background:radial-gradient(ellipse at 50% 40%,#f59e0b20,transparent 70%)}
 .verdict-status{font-size:40px;font-weight:700;letter-spacing:.04em;line-height:1}
-.verdict.ok .verdict-status{color:var(--green)}.verdict.bad .verdict-status{color:var(--red)}.verdict.warn .verdict-status{color:var(--amber)}
+.verdict.ok .verdict-status{color:var(--green)}.verdict.bad .verdict-status{color:var(--red)}.verdict.warn .verdict-status{color:var(--amber)}.verdict.damaged .verdict-status{color:#f59e0b}
 .verdict-explain{font-size:14px;color:var(--text);margin-top:16px;line-height:1.6}
 .verdict-meta{display:inline-block;font-size:11px;color:var(--muted);margin-top:16px;padding:4px 12px;border:1px solid var(--border);border-radius:4px}
 .mismatch{border:1px solid var(--red-border);background:var(--red-soft);border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:16px;text-align:left}
@@ -229,9 +231,9 @@ var legacyProof = null;
 var mode = 'win'; // 'win' or 'legacy'
 
 function show(s) {
-  $('input-state').style.display = s === 'input' ? '' : 'none';
-  $('proc-state').style.display = s === 'proc' ? '' : 'none';
-  $('result-state').style.display = s === 'result' ? '' : 'none';
+  $('input-state').style.display = s === 'input' ? 'block' : 'none';
+  $('proc-state').style.display = s === 'proc' ? 'block' : 'none';
+  $('result-state').style.display = s === 'result' ? 'block' : 'none';
 }
 
 function updateBtn() {
@@ -281,11 +283,11 @@ $('btn-go').addEventListener('click', function() {
 
 function verifyFromWin(buf, fname) {
   var parsed = parseWin(buf);
-  if (!parsed) { show('result'); showErr('This is not a valid .win file.'); return; }
+  if (!parsed) { show('result'); renderResult('DAMAGED', '', '', null, fname, 'The .win container is damaged or incomplete.'); return; }
   var proofText = parsed.proofJson;
   var bundle;
-  try { bundle = JSON.parse(proofText); } catch(e) { show('result'); showErr('The proof inside this .win file is not valid.'); return; }
-  if (!bundle.object || !bundle.object.payload_hash) { show('result'); showErr('The proof inside this .win file is incomplete.'); return; }
+  try { bundle = JSON.parse(proofText); } catch(e) { show('result'); renderResult('DAMAGED', '', '', null, fname, 'The proof section inside this .win is not valid.'); return; }
+  if (!bundle.object || !bundle.object.payload_hash) { show('result'); renderResult('DAMAGED', '', '', null, fname, 'The proof section inside this .win is incomplete.'); return; }
   doVerify(parsed.fileBytes.buffer, bundle, fname);
 }
 
@@ -365,17 +367,19 @@ function renderResult(result, fileHash, expected, bundle, fname, issue, sigCheck
   $('r-dpanel').classList.remove('open');
   $('r-dtoggle').textContent = 'View details';
 
-  var v = $('r-verdict'); v.style.display = '';
+  var v = $('r-verdict'); v.style.display = 'block';
 
   if (result === 'VERIFIED') {
     v.className = 'verdict enter ok';
     $('r-status').textContent = 'Verified';
     $('r-explain').textContent = 'This file has not been changed.';
     var m = $('r-meta'); m.classList.remove('hidden');
+    var timeBit = (bundle && bundle.object.time_event && bundle.object.time_event.time_source === 'External')
+      ? ' \u2022 Anchored time' : ' \u2022 Local time only';
     if (sigChecked === true) {
-      m.textContent = 'Hash + signature verified';
+      m.textContent = 'Hash + signature verified' + timeBit;
     } else if (sigChecked === null) {
-      m.textContent = 'Hash verified \u2022 Signature check not available in this browser';
+      m.textContent = 'Hash verified' + timeBit + ' \u2022 Signature check not available in this browser';
     }
     var chain = bundle.object.proof_chain;
     if (chain) {
@@ -389,6 +393,10 @@ function renderResult(result, fileHash, expected, bundle, fname, issue, sigCheck
     $('r-mm').classList.remove('hidden');
     $('r-mm-a').textContent = fileHash;
     $('r-mm-b').textContent = expected;
+  } else if (result === 'DAMAGED') {
+    v.className = 'verdict enter damaged';
+    $('r-status').textContent = 'Damaged';
+    $('r-explain').textContent = (issue || 'The .win container is damaged or incomplete.') + ' This is not a tampered file \u2014 the package itself is broken.';
   } else {
     v.className = 'verdict enter warn';
     $('r-status').textContent = 'Invalid proof';
@@ -396,13 +404,18 @@ function renderResult(result, fileHash, expected, bundle, fname, issue, sigCheck
   }
   requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
 
+  if (!bundle) { $('r-dpanel').innerHTML = dt('File', fname); return; }
   var ts = bundle.object.time_event ? bundle.object.time_event.time_source : 'unknown';
+  var timeLabel = ts === 'External'
+    ? 'Anchored \u2014 externally timestamped (RFC 3161)'
+    : 'Local \u2014 from the creator\u2019s device clock';
   $('r-dpanel').innerHTML = [
     dt('File', fname),
     dt('Sealed', bundle.object.origin ? bundle.object.origin.created_at : 'unknown'),
     dt('Hash', expected),
     dt('Size', bundle.object.artifact_size_bytes + ' bytes'),
-    dt('Time', ts === 'External' ? 'External (RFC 3161)' : 'Local (device clock)'),
+    dt('Time', timeLabel),
+    dt('Key', bundle.creator_identity ? bundle.creator_identity.public_key_hex.slice(0,8) + '\u2026' + bundle.creator_identity.public_key_hex.slice(56) : 'unknown'),
     dt('Verified by', 'Browser (no server)'),
   ].join('');
 }

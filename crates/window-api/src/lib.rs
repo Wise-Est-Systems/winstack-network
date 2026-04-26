@@ -78,7 +78,6 @@ pub struct TimeSummary {
     pub chain_linkage_status: String,
     pub signature_verified: bool,
     pub time_source: String,
-    pub time_trust: String,
 }
 
 #[derive(Serialize)]
@@ -246,7 +245,6 @@ async fn inspect_object(
         chain_linkage_status: chain_status.to_string(),
         signature_verified: time_sig_ok,
         time_source: format!("{:?}", obj.time_event.time_source),
-        time_trust: "open".to_string(),
     };
 
     // Integrity
@@ -453,10 +451,10 @@ pub struct VerifyResponse {
     pub created_at: String,
     pub payload_hash: String,
     pub time_source: String,
-    pub time_trust: String,
     pub anchored_time: Option<String>,
     pub chain_status: String,
     pub chain_depth: usize,
+    pub creator_key: String,
 }
 
 async fn verify_upload(
@@ -464,6 +462,7 @@ async fn verify_upload(
 ) -> Result<Json<VerifyResponse>, (StatusCode, Json<ErrorResponse>)> {
     let mut file_bytes: Option<Vec<u8>> = None;
     let mut proof_bytes: Option<Vec<u8>> = None;
+    let mut field_count: usize = 0;
 
     while let Some(field) = multipart.next_field().await.map_err(|e| {
         (
@@ -475,6 +474,17 @@ async fn verify_upload(
             }),
         )
     })? {
+        field_count += 1;
+        if field_count > 2 {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: "too many fields: expected 'file' and 'proof'".into(),
+                    },
+                }),
+            ));
+        }
         let name = field.name().unwrap_or("").to_string();
         let data = field.bytes().await.map_err(|e| {
             (
@@ -489,7 +499,16 @@ async fn verify_upload(
         match name.as_str() {
             "file" => file_bytes = Some(data.to_vec()),
             "proof" => proof_bytes = Some(data.to_vec()),
-            _ => {}
+            _ => {
+                return Err((
+                    StatusCode::BAD_REQUEST,
+                    Json(ErrorResponse {
+                        error: ErrorDetail {
+                            message: format!("unexpected field '{}': expected 'file' or 'proof'", name),
+                        },
+                    }),
+                ));
+            }
         }
     }
 
@@ -535,6 +554,7 @@ async fn verify_upload(
     let payload_hash = bundle.object.payload_hash.clone();
     let time_source = format!("{:?}", bundle.object.time_event.time_source);
     let anchored_time = bundle.object.time_event.anchored_time.clone();
+    let creator_key = bundle.creator_identity.public_key_hex.clone();
 
     // Determine chain status
     let (chain_status_str, chain_depth) = {
@@ -560,10 +580,11 @@ async fn verify_upload(
             created_at,
             payload_hash,
             time_source,
-            time_trust: "open".to_string(),
+
             anchored_time,
             chain_status: chain_status_str.clone(),
             chain_depth,
+            creator_key: creator_key.clone(),
         }));
     }
 
@@ -582,10 +603,11 @@ async fn verify_upload(
             created_at,
             payload_hash,
             time_source,
-            time_trust: "open".to_string(),
+
             anchored_time,
             chain_status: chain_status_str.clone(),
             chain_depth,
+            creator_key: creator_key.clone(),
         })),
         VerificationStatus::Invalid => {
             let failures: Vec<FailureInfo> = vr
@@ -609,10 +631,11 @@ async fn verify_upload(
                 created_at,
                 payload_hash,
                 time_source,
-                time_trust: "open".to_string(),
+    
                 anchored_time,
                 chain_status: chain_status_str,
                 chain_depth,
+                creator_key,
             }))
         }
     }
@@ -655,6 +678,7 @@ async fn prove_upload(
     let mut file_bytes: Option<Vec<u8>> = None;
     let mut file_name: Option<String> = None;
     let mut predecessor_bytes: Option<Vec<u8>> = None;
+    let mut field_count: usize = 0;
 
     while let Some(field) = multipart.next_field().await.map_err(|e| {
         (
@@ -666,6 +690,17 @@ async fn prove_upload(
             }),
         )
     })? {
+        field_count += 1;
+        if field_count > 2 {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: "too many fields: expected 'file' and optional 'predecessor'".into(),
+                    },
+                }),
+            ));
+        }
         let name = field.name().unwrap_or("").to_string();
         let fname = field.file_name().unwrap_or("").to_string();
         let data = field.bytes().await.map_err(|e| {
@@ -683,6 +718,15 @@ async fn prove_upload(
             file_bytes = Some(data.to_vec());
         } else if name == "predecessor" {
             predecessor_bytes = Some(data.to_vec());
+        } else {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: format!("unexpected field '{}': expected 'file' or 'predecessor'", name),
+                    },
+                }),
+            ));
         }
     }
 
@@ -834,6 +878,7 @@ async fn seal_upload(
 
     let mut file_bytes: Option<Vec<u8>> = None;
     let mut file_name: Option<String> = None;
+    let mut field_count: usize = 0;
 
     while let Some(field) = multipart.next_field().await.map_err(|e| {
         (
@@ -845,7 +890,28 @@ async fn seal_upload(
             }),
         )
     })? {
+        field_count += 1;
+        if field_count > 1 {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: "too many fields: expected single 'file' field".into(),
+                    },
+                }),
+            ));
+        }
         let name = field.name().unwrap_or("").to_string();
+        if name != "file" {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: format!("unexpected field '{}': expected 'file'", name),
+                    },
+                }),
+            ));
+        }
         let fname = field.file_name().unwrap_or("").to_string();
         let data = field.bytes().await.map_err(|e| {
             (
@@ -857,10 +923,8 @@ async fn seal_upload(
                 }),
             )
         })?;
-        if name == "file" {
-            file_name = Some(fname);
-            file_bytes = Some(data.to_vec());
-        }
+        file_name = Some(fname);
+        file_bytes = Some(data.to_vec());
     }
 
     let artifact_bytes = file_bytes.ok_or_else(|| {
@@ -970,6 +1034,7 @@ async fn check_bundle(
     mut multipart: Multipart,
 ) -> Result<Json<VerifyResponse>, (StatusCode, Json<ErrorResponse>)> {
     let mut bundle_bytes: Option<Vec<u8>> = None;
+    let mut field_count: usize = 0;
 
     while let Some(field) = multipart.next_field().await.map_err(|e| {
         (
@@ -981,6 +1046,28 @@ async fn check_bundle(
             }),
         )
     })? {
+        field_count += 1;
+        if field_count > 1 {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: "too many fields: expected single 'file' field".into(),
+                    },
+                }),
+            ));
+        }
+        let name = field.name().unwrap_or("").to_string();
+        if name != "file" {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: format!("unexpected field '{}': expected 'file'", name),
+                    },
+                }),
+            ));
+        }
         let data = field.bytes().await.map_err(|e| {
             (
                 StatusCode::BAD_REQUEST,
@@ -1005,27 +1092,53 @@ async fn check_bundle(
         )
     })?;
 
-    let (_file_name, file_bytes, proof_text) = win_format::unpack(&data)
-        .map_err(|e| e.to_string())
-        .map_err(|e| {
-            (
-                StatusCode::BAD_REQUEST,
-                Json(ErrorResponse {
-                    error: ErrorDetail { message: e },
-                }),
-            )
-        })?;
+    let (_file_name, file_bytes, proof_text) = match win_format::unpack(&data) {
+        Ok(v) => v,
+        Err(e) => {
+            return Ok(Json(VerifyResponse {
+                result: "DAMAGED".into(),
+                object_id: String::new(),
+                message: format!("The .win container is damaged. {}", e),
+                file_hash: String::new(),
+                expected_hash: String::new(),
+                failures: vec![],
+                trust_class: String::new(),
+                object_class: String::new(),
+                created_at: String::new(),
+                payload_hash: String::new(),
+                time_source: String::new(),
 
-    let bundle: ProofBundle = serde_json::from_str(&proof_text).map_err(|e| {
-        (
-            StatusCode::BAD_REQUEST,
-            Json(ErrorResponse {
-                error: ErrorDetail {
-                    message: format!("invalid proof in bundle: {}", e),
-                },
-            }),
-        )
-    })?;
+                anchored_time: None,
+                chain_status: String::new(),
+                chain_depth: 0,
+                creator_key: String::new(),
+            }));
+        }
+    };
+
+    let bundle: ProofBundle = match serde_json::from_str(&proof_text) {
+        Ok(b) => b,
+        Err(e) => {
+            return Ok(Json(VerifyResponse {
+                result: "DAMAGED".into(),
+                object_id: String::new(),
+                message: format!("The .win container is damaged. Proof section is not valid: {}", e),
+                file_hash: String::new(),
+                expected_hash: String::new(),
+                failures: vec![],
+                trust_class: String::new(),
+                object_class: String::new(),
+                created_at: String::new(),
+                payload_hash: String::new(),
+                time_source: String::new(),
+
+                anchored_time: None,
+                chain_status: String::new(),
+                chain_depth: 0,
+                creator_key: String::new(),
+            }));
+        }
+    };
 
     let file_hash = winstack_crypto::sha256_hex(&file_bytes);
     let expected_hash = bundle.object.payload_hash.clone();
@@ -1036,6 +1149,7 @@ async fn check_bundle(
     let payload_hash = bundle.object.payload_hash.clone();
     let time_source = format!("{:?}", bundle.object.time_event.time_source);
     let anchored_time = bundle.object.time_event.anchored_time.clone();
+    let creator_key = bundle.creator_identity.public_key_hex.clone();
     let (chain_status_str, chain_depth) = match &bundle.object.proof_chain {
         None => ("standalone".to_string(), 1),
         Some(c) if c.predecessor_proof_id.is_none() => ("origin".to_string(), 1),
@@ -1055,10 +1169,11 @@ async fn check_bundle(
             created_at,
             payload_hash,
             time_source,
-            time_trust: "open".into(),
+
             anchored_time,
             chain_status: chain_status_str,
             chain_depth,
+            creator_key: creator_key.clone(),
         }));
     }
 
@@ -1076,10 +1191,11 @@ async fn check_bundle(
             created_at,
             payload_hash,
             time_source,
-            time_trust: "open".into(),
+
             anchored_time,
             chain_status: chain_status_str,
             chain_depth,
+            creator_key: creator_key.clone(),
         })),
         VerificationStatus::Invalid => {
             let failures = vr
@@ -1102,10 +1218,11 @@ async fn check_bundle(
                 created_at,
                 payload_hash,
                 time_source,
-                time_trust: "open".into(),
+    
                 anchored_time,
                 chain_status: chain_status_str,
                 chain_depth,
+                creator_key,
             }))
         }
     }
@@ -1126,7 +1243,21 @@ pub fn build_router(registry: SharedRegistry, session_token: Option<String>) -> 
         .route("/prove", post(prove_upload).layer(body_limit))
         .route("/seal", post(seal_upload).layer(body_limit))
         .layer(axum::Extension(token))
-        .layer(CorsLayer::permissive())
+        .layer({
+            // Only allow requests from the Tauri app origin and localhost
+            use axum::http::{HeaderValue, Method};
+            use tower_http::cors::AllowOrigin;
+            CorsLayer::new()
+                .allow_origin(AllowOrigin::predicate(|origin: &HeaderValue, _| {
+                    let o = origin.to_str().unwrap_or("");
+                    o.starts_with("http://127.0.0.1")
+                        || o.starts_with("http://localhost")
+                        || o.starts_with("tauri://")
+                        || o.starts_with("https://tauri.")
+                }))
+                .allow_methods([Method::GET, Method::POST])
+                .allow_headers(tower_http::cors::Any)
+        })
         .with_state(registry)
 }
 

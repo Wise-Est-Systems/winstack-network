@@ -158,8 +158,11 @@ Given: artifact bytes + proof bundle JSON
 | State | Meaning |
 |---|---|
 | `VERIFIED` | All checks pass. The artifact is authentic and untampered. |
-| `TAMPERED` | The payload hash does not match. The file has been modified. |
+| `TAMPERED` | The payload hash does not match. The file content was changed after sealing. |
 | `INVALID` | The proof structure or signatures are broken. The seal cannot be trusted. |
+| `DAMAGED` | The .win container itself is structurally broken — bad header, truncated data, missing proof section, or corrupt packaging. This is not a content change; the package never unpacked successfully. |
+
+**TAMPERED vs DAMAGED:** TAMPERED means the .win container opened correctly but the file inside does not match its proof. DAMAGED means the container itself could not be opened — the file may have been corrupted in transit, partially downloaded, or the .win format is invalid. A damaged file cannot be verified at all.
 
 ## 8. Trust classes
 
@@ -169,12 +172,40 @@ Given: artifact bytes + proof bundle JSON
 | `AiGenerated` | NATIVE | AI output sealed through the generation pipeline |
 | `SealedImport` | FOREIGN | External artifact imported under a signed declaration. Never becomes native. |
 
-## 9. Time source and RFC 3161 anchoring
+## 9. What time means
+
+Every proof contains a timestamp. That timestamp comes from one of two sources, and the source determines how much you can trust it.
+
+### Local time
+
+The timestamp came from the creator's device clock.
+
+- Useful as a local record of when sealing happened.
+- Not proof of global time. The device clock can be wrong, manually set, or intentionally backdated.
+- If two people disagree about who sealed first, a local timestamp does not settle it.
+- Displayed as: **"Local — from the creator's device clock"**
+
+### Anchored time
+
+The timestamp was obtained from an external RFC 3161 Timestamp Authority (TSA).
+
+- Stronger than local time — an independent server confirmed the hash existed at that moment.
+- The TSA response is stored in the proof and can be verified independently.
+- Still depends on trusting the specific TSA. It is not absolute universal time.
+- Displayed as: **"Anchored — externally timestamped (RFC 3161)"**
+
+### When time matters
+
+- If you need to prove that a file existed before a specific date, use anchored time (`--tsa-url`).
+- If you just need a record for yourself, local time is fine.
+- Do not rely on local timestamps for legal disputes about priority or first creation.
+
+### Time source values
 
 | Value | Meaning |
 |---|---|
-| `Local` | Timestamp from the local system clock. Not externally anchored. |
-| `External` | Timestamp anchored by an RFC 3161 Timestamp Authority. Independently verifiable. |
+| `Local` | From the creator's device clock. Not externally anchored. |
+| `External` | Anchored by an RFC 3161 Timestamp Authority. Independently verifiable. |
 
 ### ChainedTimeEvent extended fields
 
@@ -320,22 +351,83 @@ Read endpoints (`/verify`, `/check`, `/objects/:id`, `/objects/:id/export`) requ
 
 ## 14. Local key storage
 
-Private keys are stored in `.winstack/node.json` as hex-encoded Ed25519 secret bytes. File permissions are set to 0600 (owner read/write only) on creation.
+Private keys are stored in `.winstack/node.json` as hex-encoded Ed25519 secret bytes.
 
-**Limitation:** Keys are not encrypted on disk. OS keychain integration is not yet implemented. Anyone with read access to `node.json` can impersonate the identity.
+### Permissions
+
+| Path | Permissions | Contains |
+|---|---|---|
+| `.winstack/` | 0700 (owner only) | All node state |
+| `.winstack/node.json` | 0600 (owner read/write) | Private keys (creator, time authority, policy evaluator) |
+| `.winstack/graph.db` | 0600 (owner read/write) | SQLite lineage DAG — which files were sealed and when |
+| `.winstack/store_data/` | inherited from parent | Sealed object metadata and artifact copies |
+
+Permissions are set on creation. On every startup, the CLI and desktop app check permissions and repair them if they have drifted (e.g. after a backup restore or manual copy). If repair fails, a warning is printed with the exact chmod command needed.
+
+### What is protected
+
+- Other users on the same machine cannot read your keys or seal history.
+- Default umask-created files (0644) are automatically tightened to 0600/0700.
+
+### What is NOT protected
+
+- **Keys are not encrypted on disk.** Anyone with root access, disk access (e.g. booting from USB, reading a backup), or malware running as your user can read `node.json` and impersonate your identity.
+- **No OS keychain integration.** The keys are not stored in macOS Keychain, Windows Credential Manager, or Linux secret-service. This means they are not protected by biometrics or system-level encryption.
+- **graph.db is not encrypted.** Anyone with read access to `graph.db` can see which files you sealed and when — but not the file contents (only object IDs, hashes, timestamps, and class metadata).
+- **Stolen keys cannot be revoked.** If someone copies your `node.json`, there is currently no way to mark that key as compromised. Proofs signed by the stolen key remain valid.
+
+### Practical guidance
+
+- Do not share your `.winstack/` directory.
+- Do not commit `node.json` to version control (it is gitignored by default).
+- Enable FileVault (macOS), BitLocker (Windows), or LUKS (Linux) for disk encryption — this protects keys at rest when the machine is off.
+- If you suspect key compromise, generate a new node (`rm -rf .winstack && winstack seal <file>`) and re-seal important files.
 
 ## 15. What the system proves
 
-- A specific file existed at a specific time
+- A specific file existed at a specific time (local device clock, or anchored via RFC 3161)
 - It has not been modified since it was sealed
 - It was signed by a specific cryptographic key
 - It may be part of a verifiable version chain
-- The timestamp may be externally anchored (RFC 3161)
 
 ## 16. What the system does NOT prove
 
 - That the file content is true or accurate
 - The real-world identity of the key holder
 - That this is the first copy in the world
-- That a local timestamp is globally authoritative
+- That a local timestamp is globally authoritative — local time comes from the device clock and can be wrong or backdated. Only anchored timestamps (RFC 3161) are independently verifiable, and even those depend on trusting the specific TSA.
 - That a compromised key's past proofs are invalid
+
+## 17. What trust means
+
+The system proves that a specific key signed a specific file. It does not prove who controls that key.
+
+Trust is a local decision. You choose which keys you trust by adding them to your local trust list (`~/.winstack/trusted_keys.json`).
+
+### Trust status
+
+| Status | Meaning |
+|---|---|
+| **Trusted key** | This key is in your local trust list. You chose to trust it. |
+| **Untrusted key** | Valid proof, but you have not marked this key as trusted. |
+
+### What trust does NOT mean
+
+- **Trusted key does not mean the file content is true.** It means you recognize the signer.
+- **Untrusted key does not mean the proof is invalid.** The proof is cryptographically valid regardless of trust.
+- **Trust is local only.** Your trust list is yours. It does not affect anyone else's verification.
+- **Removing a key from your trust list does not invalidate past proofs.** It only changes how they are labeled on your machine.
+
+### CLI commands
+
+```bash
+winstack trust add <pubkey> --label "My main key"
+winstack trust remove <pubkey>
+winstack trust list
+```
+
+### How trust is displayed
+
+- CLI: `trust     Trusted key (label)` or `trust     Untrusted key`
+- Desktop/browser details panel: Key shown as truncated hex
+- Trust status shown only when a proof is VERIFIED — TAMPERED/INVALID/DAMAGED results do not show trust because the proof itself is not valid

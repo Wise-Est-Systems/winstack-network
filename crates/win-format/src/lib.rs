@@ -17,17 +17,30 @@ pub enum WinError {
     BadMagic,
     BadFilename,
     Truncated,
+    MissingProof,
     Io(std::io::Error),
+}
+
+impl WinError {
+    /// True if this error means the .win container is structurally damaged
+    /// (as opposed to a content/proof issue that can only be detected after unpacking).
+    pub fn is_container_damage(&self) -> bool {
+        match self {
+            WinError::Io(_) => false,
+            _ => true,
+        }
+    }
 }
 
 impl std::fmt::Display for WinError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            WinError::NotAWinFile => write!(f, "not a .win file"),
-            WinError::TooShort => write!(f, "file too short"),
-            WinError::BadMagic => write!(f, "invalid .win header"),
-            WinError::BadFilename => write!(f, "invalid filename in .win"),
-            WinError::Truncated => write!(f, "truncated .win file"),
+            WinError::NotAWinFile => write!(f, "not a .win file — missing WIN\\x01 header"),
+            WinError::TooShort => write!(f, "container too short — file is incomplete or truncated"),
+            WinError::BadMagic => write!(f, "invalid header — expected WIN\\x01, got something else"),
+            WinError::BadFilename => write!(f, "invalid or unsafe filename in container"),
+            WinError::Truncated => write!(f, "container truncated — data ends before expected"),
+            WinError::MissingProof => write!(f, "container has no proof section — file data ends at EOF"),
             WinError::Io(e) => write!(f, "io error: {}", e),
         }
     }
@@ -124,9 +137,9 @@ pub fn unpack(data: &[u8]) -> Result<(String, Vec<u8>, String), WinError> {
     // Proof JSON (everything after file bytes)
     let proof_bytes = &data[file_end..];
     if proof_bytes.is_empty() {
-        return Err(WinError::Truncated);
+        return Err(WinError::MissingProof);
     }
-    let proof_json = std::str::from_utf8(proof_bytes).map_err(|_| WinError::BadFilename)?;
+    let proof_json = std::str::from_utf8(proof_bytes).map_err(|_| WinError::Truncated)?;
 
     Ok((filename, file_bytes, proof_json.to_string()))
 }
@@ -275,5 +288,113 @@ mod tests {
         let (name, file, proof) = unpack(&original).unwrap();
         let repacked = pack(&name, &file, &proof);
         assert_eq!(original, repacked);
+    }
+
+    // ── CONTAINER DAMAGE vs TAMPER TESTS ──
+
+    #[test]
+    fn bad_magic_is_container_damage() {
+        let mut data = pack("f.txt", b"hello", r#"{"ok":true}"#);
+        data[0] = 0x00;
+        let err = unpack(&data).unwrap_err();
+        assert!(err.is_container_damage());
+        assert!(matches!(err, WinError::BadMagic));
+    }
+
+    #[test]
+    fn truncated_header_is_container_damage() {
+        let err = unpack(b"WIN\x01\x00").unwrap_err();
+        assert!(err.is_container_damage());
+    }
+
+    #[test]
+    fn truncated_filename_is_container_damage() {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"WIN\x01");
+        data.extend_from_slice(&100u32.to_le_bytes()); // claims 100 byte filename
+        data.extend_from_slice(b"short"); // only 5 bytes
+        let err = unpack(&data).unwrap_err();
+        assert!(err.is_container_damage());
+    }
+
+    #[test]
+    fn truncated_payload_is_container_damage() {
+        let packed = pack("f.txt", b"hello world data", r#"{"proof":true}"#);
+        // Cut in the middle of the file data
+        let err = unpack(&packed[..20]).unwrap_err();
+        assert!(err.is_container_damage());
+    }
+
+    #[test]
+    fn missing_proof_section_is_container_damage() {
+        // Build a .win where file data extends to EOF with no proof
+        let mut data = Vec::new();
+        data.extend_from_slice(b"WIN\x01");
+        data.extend_from_slice(&4u32.to_le_bytes());
+        data.extend_from_slice(b"test");
+        data.extend_from_slice(&3u64.to_le_bytes());
+        data.extend_from_slice(b"abc"); // file bytes end exactly at EOF
+        let err = unpack(&data).unwrap_err();
+        assert!(err.is_container_damage());
+        assert!(matches!(err, WinError::MissingProof));
+    }
+
+    #[test]
+    fn impossible_file_length_is_container_damage() {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"WIN\x01");
+        data.extend_from_slice(&4u32.to_le_bytes());
+        data.extend_from_slice(b"test");
+        data.extend_from_slice(&999999u64.to_le_bytes()); // way more than available
+        data.extend_from_slice(b"x{}");
+        let err = unpack(&data).unwrap_err();
+        assert!(err.is_container_damage());
+    }
+
+    #[test]
+    fn null_filename_is_container_damage() {
+        let mut data = Vec::new();
+        data.extend_from_slice(b"WIN\x01");
+        data.extend_from_slice(&5u32.to_le_bytes());
+        data.extend_from_slice(b"a\x00b.c");
+        data.extend_from_slice(&1u64.to_le_bytes());
+        data.push(b'x');
+        data.extend_from_slice(b"{}");
+        let err = unpack(&data).unwrap_err();
+        assert!(err.is_container_damage());
+        assert!(matches!(err, WinError::BadFilename));
+    }
+
+    #[test]
+    fn path_traversal_filename_sanitized_not_damaged() {
+        // Path traversal is sanitized, not rejected — this is valid but cleaned
+        let packed = pack("../../etc/passwd", b"x", "{}");
+        let (name, _, _) = unpack(&packed).unwrap();
+        assert_eq!(name, "passwd");
+    }
+
+    #[test]
+    fn content_change_is_not_container_damage() {
+        // Changing file content inside a valid container should unpack fine
+        // The tamper is detected by hash comparison, not by unpack
+        let mut packed = pack("f.txt", b"original", r#"{"payload_hash":"abc"}"#);
+        let idx = packed.windows(8).position(|w| w == b"original").unwrap();
+        packed[idx] = b'X'; // change one byte of content
+        // Container is still structurally valid — unpack succeeds
+        let result = unpack(&packed);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn error_messages_are_descriptive() {
+        // Verify that error messages say "container" or "truncated" — not generic
+        let e1 = WinError::BadMagic;
+        assert!(e1.to_string().contains("header"));
+        let e2 = WinError::Truncated;
+        assert!(e2.to_string().contains("truncated"));
+        let e3 = WinError::MissingProof;
+        assert!(e3.to_string().contains("proof"));
+        let e4 = WinError::TooShort;
+        assert!(e4.to_string().contains("short") || e4.to_string().contains("truncated"));
     }
 }

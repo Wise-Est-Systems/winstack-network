@@ -3204,3 +3204,94 @@ fn artifact_size_mismatch_detected() {
         .iter()
         .any(|f| f.reason.contains("artifact_size_bytes")));
 }
+
+// ── PHASE 5: TIME HONESTY ──
+
+#[test]
+fn time_source_local_default_on_seal() {
+    let (mut reg, cid, mid, _) = test_registry();
+    let obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"time test".to_vec(),
+            creator_identity_id: cid,
+            module_id: mid,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: None,
+        })
+        .unwrap();
+    assert_eq!(obj.time_event.time_source, TimeSource::Local);
+    assert!(obj.time_event.rfc3161_token.is_none());
+    assert!(obj.time_event.anchored_time.is_none());
+}
+
+#[test]
+fn time_source_local_survives_proof_bundle_roundtrip() {
+    let (mut reg, cid, mid, _) = test_registry();
+    let obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"roundtrip test".to_vec(),
+            creator_identity_id: cid,
+            module_id: mid,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: None,
+        })
+        .unwrap();
+    let bundle = reg.build_proof_bundle(&obj.object_id).unwrap();
+    // Serialize and deserialize
+    let json = serde_json::to_string(&bundle).unwrap();
+    let restored: ProofBundle = serde_json::from_str(&json).unwrap();
+    assert_eq!(restored.object.time_event.time_source, TimeSource::Local);
+    assert!(restored.object.time_event.rfc3161_token.is_none());
+    assert!(restored.object.time_event.anchored_time.is_none());
+}
+
+#[test]
+fn time_source_external_preserved_in_serialization() {
+    // Cannot inject a fake TSA attachment through seal (fail-closed),
+    // so test serialization roundtrip of External time_source directly.
+    let (mut reg, cid, mid, _) = test_registry();
+    let obj = reg
+        .seal_native(NativeBirthProposal {
+            artifact_bytes: b"external time test".to_vec(),
+            creator_identity_id: cid,
+            module_id: mid,
+            parent_ids: vec![],
+            tsa_attachment: None,
+            proof_chain: None,
+        })
+        .unwrap();
+    let mut bundle = reg.build_proof_bundle(&obj.object_id).unwrap();
+    // Manually set External fields to test serialization roundtrip
+    bundle.object.time_event.time_source = TimeSource::External;
+    bundle.object.time_event.rfc3161_token = Some("dGVzdHRva2Vu".to_string());
+    bundle.object.time_event.anchored_time = Some("20260421T120000Z".to_string());
+    let json = serde_json::to_string(&bundle).unwrap();
+    let restored: ProofBundle = serde_json::from_str(&json).unwrap();
+    assert_eq!(restored.object.time_event.time_source, TimeSource::External);
+    assert_eq!(
+        restored.object.time_event.rfc3161_token.as_deref(),
+        Some("dGVzdHRva2Vu")
+    );
+    assert_eq!(
+        restored.object.time_event.anchored_time.as_deref(),
+        Some("20260421T120000Z")
+    );
+}
+
+#[test]
+fn time_source_deserializes_from_string() {
+    let local: TimeSource = serde_json::from_str("\"Local\"").unwrap();
+    assert_eq!(local, TimeSource::Local);
+    let external: TimeSource = serde_json::from_str("\"External\"").unwrap();
+    assert_eq!(external, TimeSource::External);
+}
+
+#[test]
+fn time_source_display_values_match_spec() {
+    // The serialized values must be exactly "Local" and "External"
+    // as referenced by all UI code and PROOF-SPEC.md
+    assert_eq!(serde_json::to_string(&TimeSource::Local).unwrap(), "\"Local\"");
+    assert_eq!(serde_json::to_string(&TimeSource::External).unwrap(), "\"External\"");
+}

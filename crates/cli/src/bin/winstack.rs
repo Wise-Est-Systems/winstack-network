@@ -7,6 +7,8 @@ use winstack_crypto as crypto;
 // Shared node loading logic
 #[path = "../node.rs"]
 mod node;
+#[path = "../trust.rs"]
+mod trust;
 
 #[derive(Parser)]
 #[command(name = "winstack", about = "Winstack — seal and verify files")]
@@ -45,6 +47,30 @@ enum Commands {
         #[arg(long)]
         from: Option<PathBuf>,
     },
+    /// Manage local trusted keys
+    Trust {
+        #[command(subcommand)]
+        action: TrustAction,
+    },
+}
+
+#[derive(Subcommand)]
+enum TrustAction {
+    /// Add a public key to your local trust list
+    Add {
+        /// Public key (64-char hex)
+        key: String,
+        /// Optional label for this key
+        #[arg(long)]
+        label: Option<String>,
+    },
+    /// Remove a public key from your local trust list
+    Remove {
+        /// Public key to remove
+        key: String,
+    },
+    /// List all locally trusted keys
+    List,
 }
 
 fn resolve_node_dir() -> PathBuf {
@@ -68,6 +94,12 @@ fn ensure_node() -> (registry_core::Registry, PathBuf) {
     } else {
         // Initialize new node
         std::fs::create_dir_all(&node_path).unwrap();
+        // Restrict .winstack directory to owner-only access
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let _ = std::fs::set_permissions(&node_path, std::fs::Permissions::from_mode(0o700));
+        }
         std::fs::create_dir_all(node_path.join("store_data")).unwrap();
 
         let mut identity_store = identity_core::IdentityStore::new();
@@ -120,11 +152,20 @@ fn ensure_node() -> (registry_core::Registry, PathBuf) {
 
         let json = serde_json::to_string_pretty(&node_config).unwrap();
         std::fs::write(&node_json, json).unwrap();
-        // Restrict permissions — private keys should not be world-readable
+        // Restrict permissions — private keys must not be world-readable
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
             let _ = std::fs::set_permissions(&node_json, std::fs::Permissions::from_mode(0o600));
+        }
+        // Restrict graph.db to owner-only
+        let graph_path = node_path.join("graph.db");
+        if graph_path.exists() {
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let _ = std::fs::set_permissions(&graph_path, std::fs::Permissions::from_mode(0o600));
+            }
         }
 
         let reg = registry_core::Registry {
@@ -172,7 +213,6 @@ fn seal_file(
     tsa_url: &Option<String>,
     from: &Option<PathBuf>,
 ) -> (Vec<u8>, canon_types::ProofBundle, String) {
-    eprintln!("node: {}", resolve_node_dir().display());
     let artifact_bytes = std::fs::read(file).unwrap_or_else(|e| {
         eprintln!("ERROR: could not read file: {}", e);
         std::process::exit(2);
@@ -253,13 +293,13 @@ fn verify_bundle(artifact_bytes: &[u8], bundle: &ProofBundle, tsa_root: &[String
         std::process::exit(1);
     }
 
-    let trust_store = if tsa_root.is_empty() {
+    let tsa_trust_store = if tsa_root.is_empty() {
         None
     } else {
         eprintln!("  TSA trust: pinned ({} roots)", tsa_root.len());
         Some(time_core::tsa::TrustStore::with_roots(tsa_root.to_vec()))
     };
-    let result = verifier::verify_from_proof_bundle_with_trust(bundle, artifact_bytes, trust_store);
+    let result = verifier::verify_from_proof_bundle_with_trust(bundle, artifact_bytes, tsa_trust_store);
     match result.status {
         VerificationStatus::Verified => {
             println!(
@@ -330,16 +370,21 @@ fn main() {
                 std::process::exit(2);
             });
 
-            if win_format::is_win_file(&raw) {
-                // .win container
+            let is_win = file.extension().map(|e| e == "win").unwrap_or(false)
+                || win_format::is_win_file(&raw);
+
+            if is_win {
+                // .win container — unpack and distinguish DAMAGED from TAMPERED/INVALID
                 let (_name, artifact_bytes, proof_text) =
                     win_format::unpack(&raw).unwrap_or_else(|e| {
-                        eprintln!("ERROR: invalid .win file: {}", e);
-                        std::process::exit(2);
+                        println!("  DAMAGED   {}", file.display());
+                        println!("    {}", e);
+                        std::process::exit(3);
                     });
                 let bundle: ProofBundle = serde_json::from_str(&proof_text).unwrap_or_else(|e| {
-                    eprintln!("ERROR: invalid proof in .win: {}", e);
-                    std::process::exit(2);
+                    println!("  DAMAGED   {}", file.display());
+                    println!("    proof section is not valid JSON: {}", e);
+                    std::process::exit(3);
                 });
                 verify_bundle(
                     &artifact_bytes,
@@ -378,10 +423,37 @@ fn main() {
                 eprintln!("ERROR: could not read file: {}", e);
                 std::process::exit(2);
             });
-            let (name, artifact_bytes, _proof) = win_format::unpack(&raw).unwrap_or_else(|e| {
-                eprintln!("ERROR: invalid .win file: {}", e);
-                std::process::exit(2);
+            let (name, artifact_bytes, proof_json) = win_format::unpack(&raw).unwrap_or_else(|e| {
+                println!("  DAMAGED   {}", file.display());
+                println!("    {}", e);
+                std::process::exit(3);
             });
+            // Verify before extracting — refuse to extract tampered or damaged files
+            let bundle: canon_types::ProofBundle = serde_json::from_str(&proof_json).unwrap_or_else(|e| {
+                println!("  DAMAGED   {}", file.display());
+                println!("    proof section is not valid JSON: {}", e);
+                std::process::exit(3);
+            });
+            let vr = verifier::verify_from_proof_bundle(&bundle, &artifact_bytes);
+            match vr.status {
+                canon_types::VerificationStatus::Verified => {}
+                _ => {
+                    let file_hash = winstack_crypto::sha256_hex(&artifact_bytes);
+                    let expected = &bundle.object.payload_hash;
+                    if file_hash != *expected {
+                        eprintln!("  TAMPERED  {}", file.display());
+                        eprintln!("    file      sha256:{}", file_hash);
+                        eprintln!("    expected  sha256:{}", expected);
+                    } else {
+                        eprintln!("  INVALID   {}", file.display());
+                        for f in &vr.failures {
+                            eprintln!("    {:?}: {}", f.code, f.reason);
+                        }
+                    }
+                    eprintln!("  Refusing to extract — file integrity check failed.");
+                    std::process::exit(1);
+                }
+            }
             std::fs::write(&name, &artifact_bytes).unwrap_or_else(|e| {
                 eprintln!("ERROR: could not write file: {}", e);
                 std::process::exit(2);
@@ -406,6 +478,61 @@ fn main() {
             println!("  SEALED   {}", file.display());
             println!("  →  {}", proof_path);
             std::process::exit(0);
+        }
+
+        // ── TRUST: manage local trusted keys ──
+        Commands::Trust { action } => {
+            let node_dir = resolve_node_dir();
+            // Ensure node directory exists for trust store
+            if !node_dir.exists() {
+                std::fs::create_dir_all(&node_dir).unwrap_or_else(|e| {
+                    eprintln!("ERROR: could not create node directory: {}", e);
+                    std::process::exit(2);
+                });
+            }
+            let mut store = trust::TrustStore::load(&node_dir);
+
+            match action {
+                TrustAction::Add { key, label } => {
+                    if key.len() != 64 || hex::decode(&key).is_err() {
+                        eprintln!("ERROR: key must be a 64-character hex string (Ed25519 public key)");
+                        std::process::exit(2);
+                    }
+                    if store.add(key.clone(), label.clone()) {
+                        store.save(&node_dir).unwrap_or_else(|e| {
+                            eprintln!("ERROR: could not save trust store: {}", e);
+                            std::process::exit(2);
+                        });
+                        println!("  TRUSTED   {}...{}", &key[..8], &key[56..]);
+                        if let Some(l) = label {
+                            println!("    label   {}", l);
+                        }
+                    } else {
+                        println!("  Already trusted: {}...{}", &key[..8], &key[56..]);
+                    }
+                }
+                TrustAction::Remove { key } => {
+                    if store.remove(&key) {
+                        store.save(&node_dir).unwrap_or_else(|e| {
+                            eprintln!("ERROR: could not save trust store: {}", e);
+                            std::process::exit(2);
+                        });
+                        println!("  REMOVED   {}...{}", &key[..8], &key[56..]);
+                    } else {
+                        println!("  Not found: {}...{}", &key[..8], &key[56..]);
+                    }
+                }
+                TrustAction::List => {
+                    if store.keys.is_empty() {
+                        println!("  No trusted keys.");
+                    } else {
+                        for k in &store.keys {
+                            let label = k.label.as_deref().unwrap_or("(no label)");
+                            println!("  {}  {}", k.key, label);
+                        }
+                    }
+                }
+            }
         }
     }
 }

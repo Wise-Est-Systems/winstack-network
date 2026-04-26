@@ -10,15 +10,16 @@ Create a cryptographic proof for any file. Share the file and its proof together
 
 1. **Create a proof** — drop a file into Winstack. A `.proof.json` file is saved next to it.
 2. **Share both** — send the file and its proof together.
-3. **Verify anywhere** — drop the file and proof into any Winstack verifier. Get one of three answers:
+3. **Verify anywhere** — drop the file and proof into any Winstack verifier. Get one of four answers:
 
 | Result | Meaning |
 |---|---|
 | **Verified** | This file has not changed since it was sealed. |
-| **Tampered** | This file does not match the proof. It was modified or the wrong file was selected. |
-| **Invalid proof** | The proof is broken or cannot be used to verify this file. |
+| **Tampered** | The file content does not match the proof. It was modified or the wrong file was selected. |
+| **Invalid** | The proof is broken or cannot be used to verify this file. |
+| **Damaged** | The .win container itself is broken — corrupted download, truncated file, or invalid packaging. |
 
-No fourth state. No ambiguity.
+No ambiguity.
 
 ---
 
@@ -44,7 +45,7 @@ cargo build --release
 
 - SHA-256 hash of the file (not the file itself)
 - Ed25519 digital signatures
-- Timestamps (local or externally anchored via RFC 3161)
+- Timestamps (local from device clock, or anchored via RFC 3161 — see "What time means" in PROOF-SPEC)
 - Creator public key
 - Chain/history metadata (if part of a version chain)
 - Protocol version (`V1`)
@@ -96,7 +97,7 @@ Winstack is not a blockchain, a certificate authority, or a cloud service. It is
 
 ## What Winstack proves
 
-- A specific file existed at a specific time
+- A specific file existed at a specific time (local device clock or anchored via RFC 3161)
 - It has not been modified since
 - It was signed by a specific key
 - It may be part of a verifiable version chain
@@ -106,13 +107,13 @@ Winstack is not a blockchain, a certificate authority, or a cloud service. It is
 - That the file content is true or accurate
 - The real-world identity of the signer (only key continuity)
 - That this is the first copy in the world (only first in this lineage)
-- That the timestamp is absolute (local time is from the device clock; external time is from a specific TSA)
+- That local timestamps are globally authoritative (local time is from the device clock — it can be wrong or backdated; only anchored timestamps are independently verifiable)
 
 ---
 
 ## Architecture
 
-13 crates. 77 tests. Fail-closed everywhere.
+14 crates. 166 tests. Fail-closed everywhere.
 
 ```
 canon-types       domain primitives
@@ -126,6 +127,7 @@ verifier          deterministic verifier + chain walker
 registry-core     10-step sealing pipeline
 module-import     import assembly
 module-ai         AI generation assembly
+win-format        .win container (zero dependencies)
 window-api        Axum API
 cli               win + winstack binaries
 ```
@@ -150,8 +152,9 @@ Desktop app built with Tauri 2. Browser verifier uses SubtleCrypto (SHA-256 + Ed
 ```bash
 # CLI tools
 cargo build --release
-./target/release/winstack prove file.pdf
-./target/release/winstack verify file.pdf file.pdf.proof.json
+./target/release/winstack seal document.pdf        # creates document.pdf.win
+./target/release/winstack verify document.pdf.win  # VERIFIED / TAMPERED / INVALID
+./target/release/winstack open document.pdf.win    # extracts original file
 
 # Desktop app
 cargo install tauri-cli --version "^2"

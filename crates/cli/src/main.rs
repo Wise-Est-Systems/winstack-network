@@ -48,7 +48,6 @@ enum Commands {
 async fn main() {
     let cli = Cli::parse();
     let node_dir = cli.store.unwrap_or_else(resolve_node_dir);
-    eprintln!("node: {}", node_dir.display());
     let reg = node::load_registry_from_node(&node_dir);
 
     match cli.command {

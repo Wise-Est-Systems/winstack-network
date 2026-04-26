@@ -45,8 +45,10 @@ h1{font-size:22px;font-weight:600;color:var(--bright);margin-bottom:8px}
 .verdict.warn::after{background:radial-gradient(ellipse at 50% 40%,#fbbf2420,transparent 70%)}
 .verdict.sealed{background:var(--blue-soft);border:1px solid var(--blue-border)}
 .verdict.sealed::after{background:radial-gradient(ellipse at 50% 40%,#60a5fa20,transparent 70%)}
+.verdict.damaged{background:#78350f18;border:1px solid #78350f}
+.verdict.damaged::after{background:radial-gradient(ellipse at 50% 40%,#f59e0b20,transparent 70%)}
 .verdict-status{font-size:40px;font-weight:700;letter-spacing:.04em;line-height:1}
-.verdict.ok .verdict-status{color:var(--green)}.verdict.bad .verdict-status{color:var(--red)}.verdict.warn .verdict-status{color:var(--amber)}.verdict.sealed .verdict-status{color:var(--blue)}
+.verdict.ok .verdict-status{color:var(--green)}.verdict.bad .verdict-status{color:var(--red)}.verdict.warn .verdict-status{color:var(--amber)}.verdict.sealed .verdict-status{color:var(--blue)}.verdict.damaged .verdict-status{color:#f59e0b}
 .verdict-explain{font-size:14px;color:var(--text);margin-top:16px;line-height:1.6}
 .verdict-meta{display:inline-block;font-size:11px;color:var(--muted);margin-top:16px;padding:4px 12px;border:1px solid var(--border);border-radius:4px}
 .mismatch{border:1px solid var(--red-border);background:var(--red-soft);border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:16px;text-align:left}
@@ -111,6 +113,10 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
 </main>
 <footer><span class="foot">Winstack</span></footer>
 <script>
+// Block ALL native file-drop navigation — must be first, capture phase
+document.addEventListener('dragover', function(e) { e.preventDefault(); }, true);
+document.addEventListener('drop', function(e) { e.preventDefault(); }, true);
+
 var API_PORT = 13845;
 function getAPI() { return window.WINSTACK_API_BASE || ('http://127.0.0.1:' + API_PORT); }
 function authHeaders() {
@@ -124,9 +130,9 @@ var trunc = function(s, n) { n = n || 28; return s.length > n ? s.slice(0, n-1) 
 function dt(k, v) { return '<div class="detail"><span class="detail-k">'+esc(k)+'</span><span class="detail-v">'+esc(v)+'</span></div>'; }
 
 function show(s) {
-  $('input-state').style.display = s === 'input' ? '' : 'none';
-  $('proc-state').style.display = s === 'proc' ? '' : 'none';
-  $('result-state').style.display = s === 'result' ? '' : 'none';
+  $('input-state').style.display = s === 'input' ? 'block' : 'none';
+  $('proc-state').style.display = s === 'proc' ? 'block' : 'none';
+  $('result-state').style.display = s === 'result' ? 'block' : 'none';
 }
 
 // ── DROP ZONE ──
@@ -184,28 +190,50 @@ function renderVerify(d, fname) {
   $('r-meta').classList.add('hidden');
   $('r-dpanel').classList.remove('open');
   $('r-dtoggle').textContent = 'View details';
-  var v = $('r-verdict'); v.style.display = '';
+  var v = $('r-verdict'); v.style.display = 'block';
   var r = d.result;
   if (r === 'VERIFIED') {
     v.className = 'verdict enter ok';
     $('r-status').textContent = 'Verified';
-    $('r-explain').textContent = 'This file has not been changed.';
+    var explain = 'This file has not been changed.';
+    if (d.chain_status === 'successor') explain += ' Part of a proof chain.';
+    else if (d.chain_status === 'origin') explain += ' First proof in its chain.';
+    $('r-explain').textContent = explain;
     var m = $('r-meta'); m.classList.remove('hidden');
-    m.textContent = d.time_source === 'External' ? 'Externally timestamped' : 'Local time (device clock)';
+    var metaText = 'Hash + signature verified';
+    if (d.time_source === 'External') metaText += ' \u2022 Anchored time';
+    else metaText += ' \u2022 Local time only';
+    m.textContent = metaText;
   } else if (r === 'TAMPERED') {
     v.className = 'verdict enter bad';
     $('r-status').textContent = 'Tampered';
-    $('r-explain').textContent = 'This file has been modified since it was sealed.';
+    $('r-explain').textContent = 'This file does not match the proof. It was modified, or you selected the wrong file.';
     $('r-mm').classList.remove('hidden');
     $('r-mm-a').textContent = d.file_hash;
     $('r-mm-b').textContent = d.expected_hash;
+  } else if (r === 'DAMAGED') {
+    v.className = 'verdict enter damaged';
+    $('r-status').textContent = 'Damaged';
+    $('r-explain').textContent = d.message || 'The .win container is damaged or incomplete. This is not a tampered file \u2014 the package itself is broken.';
   } else {
     v.className = 'verdict enter warn';
-    $('r-status').textContent = 'Invalid';
-    $('r-explain').textContent = 'This proof is broken or cannot be used.';
+    $('r-status').textContent = 'Invalid proof';
+    var reason = 'This proof is broken or cannot be used.';
+    if (d.failures && d.failures.length > 0) reason += ' ' + d.failures[0].reason + '.';
+    $('r-explain').textContent = reason;
   }
   requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
-  $('r-dpanel').innerHTML = [dt('File', fname), dt('Sealed', d.created_at), dt('Hash', d.payload_hash), dt('Time', d.time_source === 'External' ? 'External (RFC 3161)' : 'Local (device clock)')].join('');
+  var ts = d.time_source === 'External'
+    ? 'Anchored \u2014 externally timestamped (RFC 3161)'
+    : 'Local \u2014 from the creator\u2019s device clock';
+  $('r-dpanel').innerHTML = [
+    dt('File', fname),
+    dt('Sealed', d.created_at),
+    dt('Hash', d.payload_hash),
+    dt('Time', ts),
+    dt('Key', d.creator_key ? d.creator_key.slice(0,8) + '\u2026' + d.creator_key.slice(56) : 'unknown'),
+    dt('Verified by', 'Desktop app'),
+  ].join('');
 }
 
 function renderSeal(orig, winName) {
@@ -214,7 +242,7 @@ function renderSeal(orig, winName) {
   $('r-meta').classList.add('hidden');
   $('r-dpanel').classList.remove('open');
   $('r-dtoggle').textContent = 'View details';
-  var v = $('r-verdict'); v.style.display = '';
+  var v = $('r-verdict'); v.style.display = 'block';
   v.className = 'verdict enter sealed';
   requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
   $('r-status').textContent = 'Sealed';
@@ -231,6 +259,20 @@ $('r-again').addEventListener('click', function() {
   dropLabel.textContent = 'Drop a file here';
   $('the-input').value = '';
   show('input');
+});
+
+// Allow dropping a file anywhere on the page — even on the result screen
+document.body.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); });
+document.body.addEventListener('drop', function(e) {
+  e.preventDefault(); e.stopPropagation();
+  var files = e.dataTransfer && e.dataTransfer.files;
+  if (files && files.length > 0) {
+    // Reset UI and process the new file
+    dropZone.classList.remove('picked');
+    dropLabel.textContent = 'Drop a file here';
+    $('the-input').value = '';
+    handleFile(files[0]);
+  }
 });
 </script>
 </body>

@@ -41,6 +41,50 @@ mod hex_bytes {
     }
 }
 
+/// Check and repair file permissions on sensitive node files.
+/// Warns on stderr if permissions were too loose and tightens them.
+pub fn check_and_repair_permissions(node_dir: &Path) {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+
+        let check = |path: &std::path::Path, expected_mode: u32, label: &str| {
+            if !path.exists() {
+                return;
+            }
+            if let Ok(meta) = std::fs::metadata(path) {
+                let current = meta.permissions().mode() & 0o777;
+                if current != expected_mode {
+                    eprintln!(
+                        "  WARNING: {} has permissions {:04o}, expected {:04o} — repairing",
+                        label, current, expected_mode
+                    );
+                    let _ = std::fs::set_permissions(
+                        path,
+                        std::fs::Permissions::from_mode(expected_mode),
+                    );
+                    // Verify repair succeeded
+                    if let Ok(m2) = std::fs::metadata(path) {
+                        let after = m2.permissions().mode() & 0o777;
+                        if after != expected_mode {
+                            eprintln!(
+                                "  WARNING: could not repair {} — permissions are {:04o}, should be {:04o}",
+                                label, after, expected_mode
+                            );
+                            eprintln!("  Run: chmod {:04o} {}", expected_mode, path.display());
+                        }
+                    }
+                }
+            }
+        };
+
+        check(node_dir, 0o700, "node directory");
+        check(&node_dir.join("node.json"), 0o600, "node.json (contains private keys)");
+        check(&node_dir.join("graph.db"), 0o600, "graph.db (contains seal history)");
+        check(&node_dir.join("trusted_keys.json"), 0o600, "trusted_keys.json (local trust list)");
+    }
+}
+
 pub fn load_registry_from_node(node_dir: &Path) -> registry_core::Registry {
     let node_json = node_dir.join("node.json");
 
@@ -48,6 +92,9 @@ pub fn load_registry_from_node(node_dir: &Path) -> registry_core::Registry {
         eprintln!("ERROR: node not initialized — run 'winstack prove <file>' first");
         std::process::exit(2);
     }
+
+    // Check and repair permissions on every load
+    check_and_repair_permissions(node_dir);
 
     let data = std::fs::read_to_string(&node_json).unwrap_or_else(|e| {
         eprintln!("ERROR: could not read node.json: {}", e);
@@ -140,5 +187,79 @@ pub fn load_registry_from_config(node: &NodeConfig, node_dir: &Path) -> registry
         policy_evaluator,
         object_store: obj_store,
         graph,
+    }
+}
+
+#[cfg(test)]
+#[cfg(unix)]
+mod tests {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+
+    fn make_temp_node() -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("winstack-test-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        // Create a dummy node.json
+        std::fs::write(dir.join("node.json"), "{}").unwrap();
+        // Create a dummy graph.db
+        std::fs::write(dir.join("graph.db"), "").unwrap();
+        dir
+    }
+
+    #[test]
+    fn repairs_loose_directory_permissions() {
+        let dir = make_temp_node();
+        // Set directory to world-readable
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o755)).unwrap();
+        check_and_repair_permissions(&dir);
+        let mode = std::fs::metadata(&dir).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode, 0o700, "directory should be 0700 after repair");
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn repairs_loose_node_json_permissions() {
+        let dir = make_temp_node();
+        let node_json = dir.join("node.json");
+        // Set to world-readable
+        std::fs::set_permissions(&node_json, std::fs::Permissions::from_mode(0o644)).unwrap();
+        check_and_repair_permissions(&dir);
+        let mode = std::fs::metadata(&node_json).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode, 0o600, "node.json should be 0600 after repair");
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn repairs_loose_graph_db_permissions() {
+        let dir = make_temp_node();
+        let graph_db = dir.join("graph.db");
+        std::fs::set_permissions(&graph_db, std::fs::Permissions::from_mode(0o644)).unwrap();
+        check_and_repair_permissions(&dir);
+        let mode = std::fs::metadata(&graph_db).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode, 0o600, "graph.db should be 0600 after repair");
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn correct_permissions_unchanged() {
+        let dir = make_temp_node();
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700)).unwrap();
+        std::fs::set_permissions(dir.join("node.json"), std::fs::Permissions::from_mode(0o600)).unwrap();
+        std::fs::set_permissions(dir.join("graph.db"), std::fs::Permissions::from_mode(0o600)).unwrap();
+        // Should not change anything
+        check_and_repair_permissions(&dir);
+        assert_eq!(std::fs::metadata(&dir).unwrap().permissions().mode() & 0o777, 0o700);
+        assert_eq!(std::fs::metadata(dir.join("node.json")).unwrap().permissions().mode() & 0o777, 0o600);
+        assert_eq!(std::fs::metadata(dir.join("graph.db")).unwrap().permissions().mode() & 0o777, 0o600);
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn missing_files_do_not_crash() {
+        let dir = std::env::temp_dir().join(format!("winstack-test-empty-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        // No node.json or graph.db — should not panic
+        check_and_repair_permissions(&dir);
+        std::fs::remove_dir_all(&dir).ok();
     }
 }
