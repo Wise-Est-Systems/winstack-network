@@ -237,7 +237,7 @@ At verify time:
 External time anchoring is opt-in. Use `--tsa-url <URL>` with `winstack prove`:
 
 ```bash
-winstack prove document.pdf --tsa-url https://freetsa.org/tsr
+winstack seal document.pdf --tsa-url https://freetsa.org/tsr
 ```
 
 If the TSA is unreachable or rejects the request, sealing falls back to `Local` time with a warning.
@@ -261,6 +261,7 @@ ProofChain {
   lineage_id:                UUID    — stable identifier for this artifact lineage
   predecessor_proof_id:      UUID?   — object_id of the previous proof (null for origin)
   predecessor_payload_hash:  string? — payload_hash of the previous proof (null for origin)
+  key_delegation:            KeyDelegation? — signed delegation if creator key changed since predecessor
 }
 ```
 

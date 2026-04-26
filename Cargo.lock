@@ -5830,7 +5830,10 @@ dependencies = [
  "tauri-build",
  "time-core 0.1.0",
  "tokio",
+ "ureq",
  "uuid",
+ "verifier",
+ "win-format",
  "window-api",
  "winstack-crypto",
 ]

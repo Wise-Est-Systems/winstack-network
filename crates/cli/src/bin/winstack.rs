@@ -40,7 +40,12 @@ enum Commands {
     /// Inspect a .win file — show contents and proof details without extracting
     Inspect { file: PathBuf },
     /// Extract the original file from a .win container
-    Open { file: PathBuf },
+    Open {
+        file: PathBuf,
+        /// Extract even if tampered or invalid (for inspection)
+        #[arg(long)]
+        force: bool,
+    },
     /// Legacy: create a .proof.json sidecar (use 'seal' for .win)
     Prove {
         file: PathBuf,
@@ -459,15 +464,15 @@ fn main() {
             };
 
             let time_label = match bundle.object.time_event.time_source {
-                canon_types::TimeSource::External => "Anchored (RFC 3161)",
-                canon_types::TimeSource::Local => "Local (device clock)",
+                canon_types::TimeSource::External => "Anchored — externally timestamped (RFC 3161)",
+                canon_types::TimeSource::Local => "Local — from the creator's device clock",
             };
 
             println!("  {}  {}", status, file.display());
             println!();
             println!("  File        {}", name);
             println!("  Size        {} bytes", artifact_bytes.len());
-            println!("  Hash        {}", bundle.object.payload_hash);
+            println!("  Hash        sha256:{}", bundle.object.payload_hash);
             println!("  Sealed      {}", bundle.object.origin.created_at);
             println!("  Time        {}", time_label);
             println!("  Key         {}...{}", &creator_key[..8], &creator_key[56..]);
@@ -481,7 +486,7 @@ fn main() {
         }
 
         // ── OPEN: .win → extract original file ──
-        Commands::Open { file } => {
+        Commands::Open { file, force } => {
             if !file.exists() {
                 eprintln!("ERROR: file not found: {}", file.display());
                 std::process::exit(2);
@@ -495,7 +500,6 @@ fn main() {
                 println!("    {}", e);
                 std::process::exit(3);
             });
-            // Verify before extracting — refuse to extract tampered or damaged files
             let bundle: canon_types::ProofBundle = serde_json::from_str(&proof_json).unwrap_or_else(|e| {
                 println!("  DAMAGED   {}", file.display());
                 println!("    proof section is not valid JSON: {}", e);
@@ -503,29 +507,41 @@ fn main() {
             });
             let vr = verifier::verify_from_proof_bundle(&bundle, &artifact_bytes);
             match vr.status {
-                canon_types::VerificationStatus::Verified => {}
+                canon_types::VerificationStatus::Verified => {
+                    println!("  VERIFIED");
+                }
                 _ => {
                     let file_hash = winstack_crypto::sha256_hex(&artifact_bytes);
                     let expected = &bundle.object.payload_hash;
                     if file_hash != *expected {
-                        eprintln!("  TAMPERED  {}", file.display());
-                        eprintln!("    file      sha256:{}", file_hash);
-                        eprintln!("    expected  sha256:{}", expected);
+                        println!("  TAMPERED  {}", file.display());
+                        println!("    file      sha256:{}", file_hash);
+                        println!("    expected  sha256:{}", expected);
                     } else {
-                        eprintln!("  INVALID   {}", file.display());
+                        println!("  INVALID   {}", file.display());
                         for f in &vr.failures {
-                            eprintln!("    {:?}: {}", f.code, f.reason);
+                            println!("    {:?}: {}", f.code, f.reason);
                         }
                     }
-                    eprintln!("  Refusing to extract — file integrity check failed.");
-                    std::process::exit(1);
+                    if !force {
+                        println!("  Use --force to extract anyway.");
+                        std::process::exit(1);
+                    }
+                    println!("  Extracting anyway (--force).");
                 }
             }
             std::fs::write(&name, &artifact_bytes).unwrap_or_else(|e| {
                 eprintln!("ERROR: could not write file: {}", e);
                 std::process::exit(2);
             });
-            println!("  EXTRACTED  {}", name);
+            println!("  OPENED     {}", name);
+            // Open with system default app
+            #[cfg(target_os = "macos")]
+            { let _ = std::process::Command::new("open").arg(&name).spawn(); }
+            #[cfg(target_os = "windows")]
+            { let _ = std::process::Command::new("cmd").args(["/C", "start", "", &name]).spawn(); }
+            #[cfg(target_os = "linux")]
+            { let _ = std::process::Command::new("xdg-open").arg(&name).spawn(); }
             std::process::exit(0);
         }
 

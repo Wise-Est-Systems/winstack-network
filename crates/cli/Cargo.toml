@@ -11,6 +11,10 @@ path = "src/main.rs"
 name = "winstack"
 path = "src/bin/winstack.rs"
 
+[[bin]]
+name = "winopen"
+path = "src/bin/winopen.rs"
+
 [dependencies]
 canon-types = { workspace = true }
 winstack-crypto = { workspace = true }

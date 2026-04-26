@@ -19,7 +19,7 @@ Create a cryptographic proof for any file. Share the file and its proof together
 | **Invalid** | The proof is broken or cannot be used to verify this file. |
 | **Damaged** | The .win container itself is broken — corrupted download, truncated file, or invalid packaging. |
 
-No ambiguity.
+Four states. No ambiguity.
 
 ---
 
@@ -113,7 +113,7 @@ Winstack is not a blockchain, a certificate authority, or a cloud service. It is
 
 ## Architecture
 
-14 crates. 166 tests. Fail-closed everywhere.
+14 crates. 198 tests. Fail-closed everywhere.
 
 ```
 canon-types       domain primitives
@@ -129,7 +129,7 @@ module-import     import assembly
 module-ai         AI generation assembly
 win-format        .win container (zero dependencies)
 window-api        Axum API
-cli               win + winstack binaries
+cli               win + winstack + winopen binaries
 ```
 
 Desktop app built with Tauri 2. Browser verifier uses SubtleCrypto (SHA-256 + Ed25519).

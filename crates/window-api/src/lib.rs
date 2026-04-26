@@ -1228,9 +1228,91 @@ async fn check_bundle(
     }
 }
 
+/// POST /save-and-open — save file to Downloads and open with system default app
+async fn save_and_open(
+    axum::Extension(token): axum::Extension<Arc<Option<String>>>,
+    headers: axum::http::HeaderMap,
+    mut multipart: Multipart,
+) -> Result<StatusCode, (StatusCode, Json<ErrorResponse>)> {
+    // Auth check — requires session token
+    if let Some(ref expected) = *token {
+        let provided = headers
+            .get("authorization")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.strip_prefix("Bearer "));
+        if provided != Some(expected.as_str()) {
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: "unauthorized".into(),
+                    },
+                }),
+            ));
+        }
+    }
+
+    let mut file_bytes: Option<Vec<u8>> = None;
+    let mut file_name: Option<String> = None;
+
+    while let Some(field) = multipart.next_field().await.map_err(|e| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: format!("upload error: {}", e),
+                },
+            }),
+        )
+    })? {
+        let name = field.name().unwrap_or("").to_string();
+        let fname = field.file_name().unwrap_or("").to_string();
+        let data = field.bytes().await.map_err(|e| {
+            (
+                StatusCode::BAD_REQUEST,
+                Json(ErrorResponse {
+                    error: ErrorDetail {
+                        message: format!("read error: {}", e),
+                    },
+                }),
+            )
+        })?;
+        if name == "file" {
+            file_name = Some(if fname.is_empty() { "file".into() } else { fname });
+            file_bytes = Some(data.to_vec());
+        }
+    }
+
+    let bytes = file_bytes.ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: ErrorDetail {
+                    message: "no file provided".into(),
+                },
+            }),
+        )
+    })?;
+    let name = file_name.unwrap_or_else(|| "file".into());
+
+    // Save to Downloads
+    if let Ok(home) = std::env::var("HOME") {
+        let save_path = std::path::Path::new(&home).join("Downloads").join(&name);
+        if std::fs::write(&save_path, &bytes).is_ok() {
+            // Open with system default app
+            #[cfg(target_os = "macos")]
+            {
+                let _ = std::process::Command::new("open").arg(&save_path).spawn();
+            }
+        }
+    }
+
+    Ok(StatusCode::OK)
+}
+
 /// Build router with session token auth on write endpoints.
 /// Read-only endpoints (verify, check, inspect) require no token.
-/// Write endpoints (prove, seal) require Bearer token.
+/// Write endpoints (prove, seal, save-and-open) require Bearer token.
 pub fn build_router(registry: SharedRegistry, session_token: Option<String>) -> Router {
     let body_limit = axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024);
     let token: Arc<Option<String>> = Arc::new(session_token);
@@ -1242,6 +1324,7 @@ pub fn build_router(registry: SharedRegistry, session_token: Option<String>) -> 
         .route("/check", post(check_bundle).layer(body_limit))
         .route("/prove", post(prove_upload).layer(body_limit))
         .route("/seal", post(seal_upload).layer(body_limit))
+        .route("/save-and-open", post(save_and_open).layer(body_limit))
         .layer(axum::Extension(token))
         .layer({
             // Only allow requests from the Tauri app origin and localhost

@@ -28,6 +28,13 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "fileAssociations": [
+      {
+        "ext": ["win"],
+        "name": "Winstack Proof",
+        "role": "Viewer"
+      }
+    ],
     "icon": [
       "icons/icon.icns",
       "icons/icon.ico",

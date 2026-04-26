@@ -311,14 +311,57 @@ fn main() {
         addr, session_token
     );
 
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .on_page_load(move |webview, payload| {
             use tauri::webview::PageLoadEvent;
             if let PageLoadEvent::Finished { .. } = payload.event() {
-                // Inject config after page is fully loaded — deterministic, no timing race
                 webview.eval(&inject_js).ok();
             }
         })
-        .run(tauri::generate_context!("./tauri.conf.json"))
-        .expect("error while running Winstack");
+        .build(tauri::generate_context!("./tauri.conf.json"))
+        .expect("error while building Winstack");
+
+    app.run(move |_app_handle, event| {
+        if let tauri::RunEvent::Opened { urls } = event {
+            // macOS opened a .win file with this app
+            for url in &urls {
+                if let Ok(path) = url.to_file_path() {
+                    if path.extension().map(|e| e == "win").unwrap_or(false) {
+                        let raw = match std::fs::read(&path) {
+                            Ok(b) => b,
+                            Err(_) => continue,
+                        };
+
+                        // Unpack, verify, and open the file
+                        let (name, artifact, proof_json) = match win_format::unpack(&raw) {
+                            Ok(v) => v,
+                            Err(_) => continue,
+                        };
+                        let bundle: canon_types::ProofBundle = match serde_json::from_str(&proof_json) {
+                            Ok(b) => b,
+                            Err(_) => continue,
+                        };
+                        let vr = verifier::verify_from_proof_bundle(&bundle, &artifact);
+                        if vr.status == canon_types::VerificationStatus::Verified {
+                            if let Ok(home) = std::env::var("HOME") {
+                                let save_path = std::path::Path::new(&home)
+                                    .join("Downloads")
+                                    .join(&name);
+                                if std::fs::write(&save_path, &artifact).is_ok() {
+                                    // Wait a beat, then open — so the file viewer lands on top
+                                    let sp = save_path.clone();
+                                    std::thread::spawn(move || {
+                                        std::thread::sleep(std::time::Duration::from_millis(300));
+                                        let _ = std::process::Command::new("open")
+                                            .arg(&sp)
+                                            .status();
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
 }

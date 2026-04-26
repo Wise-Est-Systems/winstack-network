@@ -80,6 +80,8 @@ h1{font-size:22px;font-weight:600;color:var(--bright);margin-bottom:8px}
 .detail{display:flex;gap:8px;margin-bottom:6px;font-size:12px}.detail:last-child{margin-bottom:0}
 .detail-k{color:var(--muted);white-space:nowrap;min-width:80px}
 .detail-v{color:var(--subtle);word-break:break-all;font-family:var(--mono);font-size:11px}
+.save-btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--green);color:var(--bg);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:opacity 0.15s}
+.save-btn:hover{opacity:0.9}
 .again{margin-top:24px;font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans);text-decoration:underline;text-underline-offset:3px}
 .again:hover{color:var(--text)}
 .note{font-size:11px;color:var(--muted);opacity:.4;margin-top:16px}
@@ -137,6 +139,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
       <div class="mm-sep"></div>
       <div class="mm-label b">Original</div><div class="mm-val b" id="r-mm-b"></div>
     </div>
+    <button class="save-btn hidden" id="r-save">Save file</button>
     <button class="details-toggle" id="r-dtoggle">View details</button>
     <div class="details-panel" id="r-dpanel"></div>
     <button class="again" id="r-again">Start over</button>
@@ -146,10 +149,17 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
 <footer><span class="foot">Verification runs entirely in your browser. No server. No upload.</span></footer>
 
 <script>
+// Block native file-drop navigation
+document.addEventListener('dragover', function(e) { e.preventDefault(); }, true);
+document.addEventListener('drop', function(e) { e.preventDefault(); }, true);
+
 var $ = function(id) { return document.getElementById(id); };
 var esc = function(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
 var trunc = function(s, n) { n = n || 28; return s.length > n ? s.slice(0, n-1) + '\u2026' : s; };
 function dt(k, v) { return '<div class="detail"><span class="detail-k">'+esc(k)+'</span><span class="detail-v">'+esc(v)+'</span></div>'; }
+
+var extractedFile = null;
+var extractedName = null;
 
 // ── .WIN PARSER (matches win-format crate exactly) ──
 var WIN_MAGIC = [0x57, 0x49, 0x4E, 0x01]; // "WIN\x01"
@@ -257,7 +267,11 @@ function wireDrop(inputId, zoneId, labelId, cb) {
   function pick(f) { zone.classList.add('picked'); label.textContent = trunc(f.name); cb(f); }
 }
 
-wireDrop('i-win', 'd-win', 'l-win', function(f) { winFile = f; mode = 'win'; updateBtn(); });
+wireDrop('i-win', 'd-win', 'l-win', function(f) {
+  winFile = f; mode = 'win';
+  show('proc');
+  f.arrayBuffer().then(function(buf) { verifyFromWin(buf, f.name); });
+});
 wireDrop('i-file', 'd-file', 'l-file', function(f) { legacyFile = f; updateBtn(); });
 wireDrop('i-proof', 'd-proof', 'l-proof', function(f) { legacyProof = f; updateBtn(); });
 
@@ -283,7 +297,8 @@ $('btn-go').addEventListener('click', function() {
 
 function verifyFromWin(buf, fname) {
   var parsed = parseWin(buf);
-  if (!parsed) { show('result'); renderResult('DAMAGED', '', '', null, fname, 'The .win container is damaged or incomplete.'); return; }
+  if (!parsed) { extractedFile = null; extractedName = null; show('result'); renderResult('DAMAGED', '', '', null, fname, 'The .win container is damaged or incomplete.'); return; }
+  extractedFile = parsed.fileBytes; extractedName = parsed.filename;
   var proofText = parsed.proofJson;
   var bundle;
   try { bundle = JSON.parse(proofText); } catch(e) { show('result'); renderResult('DAMAGED', '', '', null, fname, 'The proof section inside this .win is not valid.'); return; }
@@ -364,6 +379,7 @@ function renderResult(result, fileHash, expected, bundle, fname, issue, sigCheck
   $('r-err').classList.add('hidden');
   $('r-mm').classList.add('hidden');
   $('r-meta').classList.add('hidden');
+  $('r-save').classList.add('hidden');
   $('r-dpanel').classList.remove('open');
   $('r-dtoggle').textContent = 'View details';
 
@@ -380,6 +396,11 @@ function renderResult(result, fileHash, expected, bundle, fname, issue, sigCheck
       m.textContent = 'Hash + signature verified' + timeBit;
     } else if (sigChecked === null) {
       m.textContent = 'Hash verified' + timeBit + ' \u2022 Signature check not available in this browser';
+    }
+    if (extractedFile && extractedName) {
+      var sb = $('r-save');
+      sb.classList.remove('hidden');
+      sb.textContent = 'Save ' + extractedName;
     }
     var chain = bundle.object.proof_chain;
     if (chain) {
@@ -424,7 +445,18 @@ $('r-dtoggle').addEventListener('click', function() {
   var o = $('r-dpanel').classList.toggle('open');
   $('r-dtoggle').textContent = o ? 'Hide details' : 'View details';
 });
+$('r-save').addEventListener('click', function() {
+  if (!extractedFile || !extractedName) return;
+  var blob = new Blob([extractedFile]);
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = extractedName;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
 $('r-again').addEventListener('click', function() {
+  extractedFile = null; extractedName = null;
   winFile = null; legacyFile = null; legacyProof = null; mode = 'win';
   $('i-win').value = ''; $('i-file').value = ''; $('i-proof').value = '';
   $('d-win').classList.remove('picked'); $('d-file').classList.remove('picked'); $('d-proof').classList.remove('picked');
@@ -432,6 +464,21 @@ $('r-again').addEventListener('click', function() {
   $('legacy-area').classList.remove('open');
   $('btn-go').disabled = true;
   show('input');
+});
+
+// Drop a .win anywhere on the page — auto-verify immediately
+document.body.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); });
+document.body.addEventListener('drop', function(e) {
+  e.preventDefault(); e.stopPropagation();
+  var files = e.dataTransfer && e.dataTransfer.files;
+  if (files && files.length > 0) {
+    var f = files[0];
+    if (f.name.endsWith('.win')) {
+      winFile = f; mode = 'win';
+      show('proc');
+      f.arrayBuffer().then(function(buf) { verifyFromWin(buf, f.name); });
+    }
+  }
 });
 </script>
 </body>

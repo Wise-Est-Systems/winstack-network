@@ -189,13 +189,14 @@ function handleFile(f) {
   if (f.name.endsWith('.win')) {
     $('proc-label').textContent = 'Checking';
     show('proc');
-    // Parse .win locally to extract file for save button
+    // Read the file once, use for both local parsing and API upload
     f.arrayBuffer().then(function(buf) {
       var parsed = parseWin(buf);
       if (parsed) { extractedFile = parsed.fileBytes; extractedName = parsed.filename; }
       else { extractedFile = null; extractedName = null; }
+      // Send the raw bytes as a new Blob (not the consumed File)
       var form = new FormData();
-      form.append('file', f);
+      form.append('file', new Blob([buf]), f.name);
       return fetch(getAPI() + '/check', { method: 'POST', body: form });
     })
       .then(function(res) {
@@ -300,13 +301,21 @@ $('r-dtoggle').addEventListener('click', function() {
 });
 $('r-save').addEventListener('click', function() {
   if (!extractedFile || !extractedName) return;
-  var blob = new Blob([extractedFile]);
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url; a.download = extractedName;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // Send the file to the server to save and open
+  var form = new FormData();
+  form.append('filename', extractedName);
+  form.append('file', new Blob([extractedFile]), extractedName);
+  fetch(getAPI() + '/save-and-open', { method: 'POST', body: form, headers: authHeaders() })
+    .catch(function() {
+      // Fallback: blob download
+      var blob = new Blob([extractedFile]);
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = extractedName;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
 });
 $('r-again').addEventListener('click', function() {
   extractedFile = null; extractedName = null;
@@ -329,6 +338,12 @@ document.body.addEventListener('drop', function(e) {
     handleFile(files[0]);
   }
 });
+
+// Handle .win file opened via macOS file association
+function handleWinResult(d) {
+  show('result');
+  renderVerify(d, d.object_id ? 'file.win' : 'file');
+}
 </script>
 </body>
 </html>
