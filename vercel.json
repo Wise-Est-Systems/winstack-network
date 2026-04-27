@@ -1,8 +1,7 @@
 {
   "outputDirectory": "public",
-  "cleanUrls": true,
   "rewrites": [
-    { "source": "/v/:hash([a-f0-9]{32,128})", "destination": "/v.html" }
+    { "source": "/v/:hash", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -11,6 +10,12 @@
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "Referrer-Policy", "value": "no-referrer" }
+      ]
+    },
+    {
+      "source": "/wasm/(.*).wasm",
+      "headers": [
+        { "key": "Content-Type", "value": "application/wasm" }
       ]
     },
     {
