@@ -3,485 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Winstack — Is it alive?</title>
+<title>Win.stack — Is it alive?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#09090b;--surface:#0f0f12;--card:#141418;--elevated:#1a1a20;--border:#1f1f28;--border-h:#2a2a36;--muted:#4a4a5a;--subtle:#6a6a7e;--text:#d0d0dc;--bright:#f0f0f6;--white:#fafafa;--green:#34d399;--green-soft:#34d39918;--green-border:#166534;--red:#f87171;--red-soft:#f8717118;--red-border:#7f1d1d;--amber:#fbbf24;--amber-soft:#fbbf2418;--amber-border:#78350f;--sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;--mono:'SF Mono','Fira Code','Consolas',monospace;--radius:16px;--radius-sm:10px}
+:root{--bg:#050505;--surface:#0a0a0a;--card:#0f0f0f;--ink:#e8dcc8;--ink-soft:#a09880;--muted:#6a6050;--subtle:#3a3530;--gold:#c9a84c;--gold-dim:#8b7434;--purple:#7c3aed;--purple-glow:#7c3aed30;--green:#c9a84c;--red:#c27a7a;--amber:#a08860;--rule:#1a1a1a;--sans:'Inter',-apple-system,sans-serif;--mono:'SF Mono','Fira Code','Consolas',monospace}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;-webkit-font-smoothing:antialiased}
-body{min-height:100vh;display:flex;flex-direction:column}
-::selection{background:var(--green);color:var(--bg)}
-nav{padding:0 24px;height:48px;display:flex;align-items:center;border-bottom:1px solid var(--border);background:var(--surface)}
-.logo{font-size:13px;font-weight:600;letter-spacing:0.08em;color:var(--bright)}
-.badge{font-size:10px;color:var(--muted);margin-left:8px;border:1px solid var(--border);padding:1px 6px;border-radius:3px}
-main{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 24px}
-.app{width:100%;max-width:420px;text-align:center}
-h1{font-size:22px;font-weight:600;color:var(--bright);margin-bottom:8px}
-.sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:36px}
-.drop{position:relative;border:2px dashed var(--border);background:var(--card);border-radius:var(--radius);padding:48px 24px;cursor:pointer;transition:all 0.25s;margin-bottom:12px}
-.drop:hover{border-color:var(--border-h);background:var(--elevated)}
-.drop.over{border-color:var(--green);background:var(--green-soft);box-shadow:0 0 0 1px var(--green),0 0 24px var(--green-soft)}
-.drop.picked{border-style:solid;border-color:var(--border-h);background:var(--elevated)}
+html{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:flex;flex-direction:column;position:relative}
+::selection{background:var(--purple);color:#fff}
+#particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+nav{position:relative;z-index:2;padding:20px 28px;display:flex;align-items:baseline;justify-content:space-between}
+.logo{font-size:20px;font-weight:200;color:var(--ink);letter-spacing:0.02em}.logo a{color:inherit;text-decoration:none}.logo .dot{color:var(--gold);font-weight:400}
+.parent{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)}.parent a{color:var(--gold-dim);text-decoration:none;border-bottom:1px solid var(--subtle);padding-bottom:1px}.parent a:hover{border-color:var(--gold)}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 32px 64px;position:relative;z-index:2}
+.app{width:100%;max-width:520px;text-align:center}
+h1{font-size:clamp(32px,5vw,48px);font-weight:200;color:var(--ink);line-height:1.1;letter-spacing:0.02em;margin-bottom:12px}h1 em{font-style:italic;color:var(--gold);font-weight:300}
+.sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:28px;max-width:380px;margin-left:auto;margin-right:auto}
+.preview{border:1px solid var(--rule);background:var(--surface);padding:18px 20px;margin-bottom:20px;text-align:left}
+.preview-row{display:flex;gap:12px;font-size:12px;margin-bottom:6px;line-height:1.5}.preview-row:last-child{margin-bottom:0}
+.preview-k{color:var(--muted);min-width:80px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding-top:1px}
+.preview-v{color:var(--ink-soft);word-break:break-all}.preview-v.mono{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.drop{position:relative;border:1px solid var(--rule);background:var(--surface);padding:52px 24px;cursor:pointer;transition:all 0.25s;margin-bottom:12px}
+.drop:hover{border-color:var(--gold-dim);background:var(--card)}.drop.over{border-color:var(--gold);background:var(--card);box-shadow:0 0 40px var(--purple-glow)}
 .drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.drop-label{font-size:15px;font-weight:500;color:var(--muted);pointer-events:none;transition:color 0.15s}
-.drop.picked .drop-label{color:var(--bright)}
-.drop-hint{font-size:12px;color:var(--muted);opacity:0.4;margin-top:6px;pointer-events:none}
-.drop.picked .drop-hint{display:none}
-.legacy-toggle{font-size:11px;color:var(--muted);opacity:0.5;background:none;border:none;cursor:pointer;font-family:var(--sans);margin-bottom:20px;text-decoration:underline;text-underline-offset:2px}
-.legacy-toggle:hover{opacity:0.8}
-.legacy-drops{display:none;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.legacy-drops.open{display:grid}
-.legacy-drop{position:relative;border:1.5px dashed var(--border);background:var(--card);border-radius:var(--radius-sm);padding:20px 12px;cursor:pointer;transition:all 0.2s}
-.legacy-drop:hover{border-color:var(--border-h)}
-.legacy-drop.over{border-color:var(--green);background:var(--green-soft)}
-.legacy-drop.picked{border-style:solid;border-color:var(--border-h);background:var(--elevated)}
-.legacy-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.legacy-drop-label{font-size:12px;color:var(--muted);pointer-events:none}
-.legacy-drop.picked .legacy-drop-label{color:var(--bright)}
-.legacy-drop-sub{font-size:10px;color:var(--muted);opacity:0.4;margin-top:3px;pointer-events:none}
-.legacy-drop.picked .legacy-drop-sub{display:none}
-.btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--white);color:var(--bg);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;transition:opacity 0.15s,transform 0.1s}
-.btn:hover:not(:disabled){opacity:0.92;transform:translateY(-1px)}
-.btn:disabled{opacity:0.12;cursor:default}
+.drop-label{font-size:18px;font-weight:200;color:var(--ink);pointer-events:none}.drop-hint{font-size:10px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-top:8px;pointer-events:none}
 .processing{display:none;text-align:center;padding:48px 0}
-.dot{width:7px;height:7px;background:var(--subtle);border-radius:50%;display:inline-block;margin:0 4px;animation:pulse 1.2s ease-in-out infinite}
-.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
-@keyframes pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.5)}}
-.proc-label{font-size:14px;color:var(--muted);margin-top:20px}
-.outcome{display:none;width:100%;max-width:480px}
-.verdict{text-align:center;padding:52px 32px 44px;border-radius:var(--radius);margin-bottom:24px;position:relative;overflow:hidden}
-.verdict::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .6s}
-.verdict.show::after{opacity:1}
-.verdict.ok{background:var(--green-soft);border:1px solid var(--green-border)}
-.verdict.ok::after{background:radial-gradient(ellipse at 50% 40%,#34d39920,transparent 70%)}
-.verdict.bad{background:var(--red-soft);border:1px solid var(--red-border)}
-.verdict.bad::after{background:radial-gradient(ellipse at 50% 40%,#f8717120,transparent 70%)}
-.verdict.warn{background:var(--amber-soft);border:1px solid var(--amber-border)}
-.verdict.warn::after{background:radial-gradient(ellipse at 50% 40%,#fbbf2420,transparent 70%)}
-.verdict.damaged{background:#78350f18;border:1px solid #78350f}
-.verdict.damaged::after{background:radial-gradient(ellipse at 50% 40%,#f59e0b20,transparent 70%)}
-.verdict-status{font-size:40px;font-weight:700;letter-spacing:.04em;line-height:1}
-.verdict.ok .verdict-status{color:var(--green)}.verdict.bad .verdict-status{color:var(--red)}.verdict.warn .verdict-status{color:var(--amber)}.verdict.damaged .verdict-status{color:#f59e0b}
-.verdict-explain{font-size:14px;color:var(--text);margin-top:16px;line-height:1.6}
-.verdict-meta{display:inline-block;font-size:11px;color:var(--muted);margin-top:16px;padding:4px 12px;border:1px solid var(--border);border-radius:4px}
-.mismatch{border:1px solid var(--red-border);background:var(--red-soft);border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:16px;text-align:left}
-.mm-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
-.mm-label.a{color:var(--red)}.mm-label.b{color:var(--muted)}
-.mm-val{font-size:11px;font-family:var(--mono);word-break:break-all;line-height:1.5}
-.mm-val.a{color:var(--bright)}.mm-val.b{color:var(--muted)}
-.mm-sep{height:1px;background:var(--red-border);margin:10px 0}
-.err{border:1px solid var(--red-border);background:var(--red-soft);border-radius:var(--radius-sm);padding:14px 20px;margin-bottom:16px;font-size:13px;color:var(--red);line-height:1.5;text-align:left}
-.details-toggle{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans)}
-.details-toggle:hover{color:var(--subtle)}
-.details-panel{display:none;margin-top:12px;text-align:left;background:var(--card);border-radius:var(--radius-sm);padding:16px 20px}
-.details-panel.open{display:block}
-.detail{display:flex;gap:8px;margin-bottom:6px;font-size:12px}.detail:last-child{margin-bottom:0}
-.detail-k{color:var(--muted);white-space:nowrap;min-width:80px}
-.detail-v{color:var(--subtle);word-break:break-all;font-family:var(--mono);font-size:11px}
-.save-btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--green);color:var(--bg);font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:opacity 0.15s}
-.save-btn:hover{opacity:0.9}
-.again{margin-top:24px;font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--sans);text-decoration:underline;text-underline-offset:3px}
-.again:hover{color:var(--text)}
-.note{font-size:11px;color:var(--muted);opacity:.4;margin-top:16px}
-footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--border);background:var(--surface)}
-.foot{font-size:10px;color:var(--muted);opacity:.3}
+.dot{width:5px;height:5px;background:var(--gold);border-radius:50%;display:inline-block;margin:0 3px;animation:pulse 1.2s ease-in-out infinite}.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes pulse{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+.proc-label{font-size:10px;color:var(--muted);margin-top:16px;letter-spacing:0.1em;text-transform:uppercase}
+.outcome{display:none;width:100%}
+.verdict{text-align:center;padding:56px 28px 48px;background:var(--surface);border:1px solid var(--rule);margin-bottom:16px;position:relative;overflow:hidden}
+.verdict::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 0.6s}.verdict.show::after{opacity:1}
+.verdict.verified{border-color:var(--gold-dim)}.verdict.verified::after{background:radial-gradient(ellipse at 50% 40%,rgba(201,168,76,0.06),transparent 70%)}
+.verdict.tampered{border-color:#5a3030}.verdict.tampered::after{background:radial-gradient(ellipse at 50% 40%,rgba(194,122,122,0.06),transparent 70%)}
+.verdict.invalid{border-color:var(--subtle)}.verdict.invalid::after{background:radial-gradient(ellipse at 50% 40%,rgba(160,136,96,0.04),transparent 70%)}
+.verdict.naked{border-color:var(--rule);background:var(--bg)}
+.verdict-icon{display:block;margin:0 auto 20px;width:56px;height:56px;animation:icon-in 0.25s ease-out both}
+.verdict.verified .verdict-icon{color:var(--gold)}.verdict.tampered .verdict-icon{color:var(--red)}.verdict.invalid .verdict-icon{color:var(--amber)}
+@keyframes icon-in{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}
+.verdict-status{font-size:clamp(36px,6vw,56px);font-weight:200;line-height:1;letter-spacing:0.02em}
+.verdict.verified .verdict-status{color:var(--gold)}.verdict.tampered .verdict-status{color:var(--red)}.verdict.invalid .verdict-status{color:var(--amber)}.verdict.naked .verdict-status{font-size:28px;color:var(--muted)}
+.verdict-explain{font-size:13px;color:var(--ink-soft);margin-top:16px;line-height:1.7;max-width:380px;margin-left:auto;margin-right:auto}
+.verdict-meta{display:inline-block;font-size:9px;color:var(--muted);margin-top:20px;letter-spacing:0.1em;text-transform:uppercase;border-top:1px solid var(--rule);padding-top:10px}.verdict-meta.match{color:var(--gold)}
+.url-note{display:block;margin-top:14px;font-size:11px;color:var(--muted);line-height:1.5}.url-note a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-dim)}.url-note a:hover{background:var(--gold);color:var(--bg)}
+.body-over{outline:1px solid var(--gold-dim);outline-offset:-8px}
+.batch{display:none;width:100%;text-align:left}.batch.show{display:block}
+.batch-head{text-align:center;margin-bottom:20px}.batch-title{font-size:28px;font-weight:200;color:var(--ink);margin-bottom:6px}.batch-progress{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.batch-counts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.batch-count{font-size:10px;padding:4px 10px;border:1px solid var(--rule);background:var(--surface);color:var(--ink-soft);cursor:pointer;transition:all 0.15s;user-select:none}.batch-count:hover{border-color:var(--gold-dim)}
+.batch-count.active{background:var(--gold-dim);color:var(--bg);border-color:var(--gold-dim)}.batch-count.verified.active{background:var(--gold);border-color:var(--gold);color:var(--bg)}.batch-count.tampered.active{background:var(--red);border-color:var(--red);color:var(--bg)}.batch-count.invalid.active{background:var(--amber);border-color:var(--amber);color:var(--bg)}
+.batch-count[data-count="0"]{opacity:0.3;pointer-events:none}.batch-count svg{width:10px;height:10px;vertical-align:-1px;margin-right:3px}
+.batch-list{display:flex;flex-direction:column;max-height:55vh;overflow-y:auto;border:1px solid var(--rule);background:var(--surface)}
+.batch-row{display:grid;grid-template-columns:100px 1fr auto;gap:12px;padding:8px 14px;font-size:11px;align-items:center;border-bottom:1px solid var(--rule)}.batch-row:last-child{border-bottom:none}.batch-row.hidden-by-filter{display:none}
+.batch-row-state{font-weight:500;font-size:10px;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:5px}.batch-row-state svg{width:11px;height:11px;flex-shrink:0}
+.batch-row.verified .batch-row-state{color:var(--gold)}.batch-row.tampered .batch-row-state{color:var(--red)}.batch-row.invalid .batch-row-state{color:var(--amber)}.batch-row.naked .batch-row-state{color:var(--muted)}
+.batch-row-name{font-family:var(--mono);font-size:11px;color:var(--ink-soft);word-break:break-all}.batch-row-meta{font-family:var(--mono);font-size:9px;color:var(--muted);text-align:right;white-space:nowrap}
+.details-panel{margin-top:16px;text-align:left;background:var(--surface);border:1px solid var(--rule);padding:16px 20px}
+.detail{display:flex;gap:12px;margin-bottom:6px;font-size:11px;line-height:1.5}.detail:last-child{margin-bottom:0}
+.detail-k{color:var(--muted);white-space:nowrap;min-width:80px;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding-top:2px}.detail-v{color:var(--ink-soft);word-break:break-all;font-family:var(--mono);font-size:10px}
+.again{margin-top:20px;font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid var(--subtle);padding:0 0 2px;font-family:var(--sans);transition:all 0.2s}.again:hover{color:var(--gold);border-color:var(--gold)}
+.note{font-size:10px;color:var(--muted);margin-top:14px;letter-spacing:0.05em;opacity:0.5}
+.fatal{display:none;border:1px solid var(--rule);background:var(--surface);padding:56px 24px;text-align:center}.fatal-status{font-size:32px;font-weight:200;color:var(--ink);margin-bottom:10px}.fatal-explain{font-size:12px;color:var(--ink-soft);line-height:1.6;max-width:340px;margin:0 auto}
 .hidden{display:none!important}
-@keyframes enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.enter{animation:enter .3s ease-out both}
+footer{position:relative;z-index:2;padding:20px 28px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;border-top:1px solid var(--rule)}footer a{color:var(--gold-dim);text-decoration:none}footer a:hover{color:var(--gold)}footer strong{color:var(--gold);font-weight:400}
 </style>
 </head>
 <body>
-<nav>
-  <div class="logo">Winstack</div>
-  <span class="badge">browser verifier</span>
-</nav>
-<main>
-<div class="app">
-  <div id="input-state">
-    <h1>Is it alive?</h1>
-    <p class="sub">Drop a .win file. The verifier checks its name tag in your browser.</p>
-    <div class="drop" id="d-win">
-      <input type="file" id="i-win" accept=".win">
-      <div class="drop-label" id="l-win">Drop a .win file</div>
-      <div class="drop-hint">or click to browse</div>
+<canvas id="particles"></canvas>
+<nav><div class="logo"><a href="/">Win<span class="dot">.</span>stack</a></div><div class="parent">A <a href="https://wisest.systems">Wise<strong>.</strong>Est</a> system</div></nav>
+<main><div class="app">
+  <div id="boot-state" class="processing" style="display:block"><div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div class="proc-label">Loading verifier</div></div>
+  <div id="fatal-state" class="fatal"><div class="fatal-status" id="fatal-title">No name tag here</div><div class="fatal-explain" id="fatal-msg">This URL doesn't point to anything Winstack recognizes.</div></div>
+  <div id="input-state" class="hidden">
+    <h1 id="title">Is it <em>alive</em>?</h1>
+    <p class="sub" id="subtitle">Drop a .win file. Recognition runs locally — nothing is uploaded.</p>
+    <div id="preview-block" class="preview hidden">
+      <div class="preview-row"><div class="preview-k">Witness</div><div class="preview-v" id="pv-witness">—</div></div>
+      <div class="preview-row"><div class="preview-k">Born</div><div class="preview-v" id="pv-born">—</div></div>
+      <div class="preview-row"><div class="preview-k">Time</div><div class="preview-v" id="pv-time">—</div></div>
+      <div class="preview-row"><div class="preview-k">Fingerprint</div><div class="preview-v mono" id="pv-hash">—</div></div>
     </div>
-    <button class="legacy-toggle" id="legacy-btn">Have a file + proof.json instead?</button>
-    <div class="legacy-drops" id="legacy-area">
-      <div class="legacy-drop" id="d-file">
-        <input type="file" id="i-file">
-        <div class="legacy-drop-label" id="l-file">File</div>
-        <div class="legacy-drop-sub">any file</div>
-      </div>
-      <div class="legacy-drop" id="d-proof">
-        <input type="file" id="i-proof" accept=".json,.proof.json">
-        <div class="legacy-drop-label" id="l-proof">Name tag</div>
-        <div class="legacy-drop-sub">.proof.json</div>
-      </div>
-    </div>
-    <button class="btn" id="btn-go" disabled>Recognize</button>
-    <p class="note">Nothing is uploaded. Everything runs locally in your browser.</p>
+    <div class="drop" id="drop"><input type="file" id="file-input"><div class="drop-label" id="drop-label">Drop a file</div><div class="drop-hint">or click to browse</div></div>
+    <p class="note">Nothing leaves your device. Recognition runs in-browser via WebAssembly.</p>
   </div>
-  <div class="processing" id="proc-state">
-    <div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-    <div class="proc-label">Recognizing</div>
+  <div id="proc-state" class="processing"><div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div class="proc-label">Recognizing</div></div>
+  <div id="result-state" class="outcome">
+    <div class="verdict" id="verdict"><div class="verdict-icon" id="r-icon"></div><div class="verdict-status" id="r-status"></div><div class="verdict-explain" id="r-explain"></div><div class="verdict-meta hidden" id="r-meta"></div></div>
+    <div id="details-panel" class="details-panel hidden"></div>
+    <button class="again" id="r-again">Try another file</button>
   </div>
-  <div class="outcome" id="result-state">
-    <div class="err hidden" id="r-err"></div>
-    <div class="verdict" id="r-verdict">
-      <div class="verdict-status" id="r-status"></div>
-      <div class="verdict-explain" id="r-explain"></div>
-      <div class="verdict-meta hidden" id="r-meta"></div>
-    </div>
-    <div class="mismatch hidden" id="r-mm">
-      <div class="mm-label a">This file</div><div class="mm-val a" id="r-mm-a"></div>
-      <div class="mm-sep"></div>
-      <div class="mm-label b">The one that was named</div><div class="mm-val b" id="r-mm-b"></div>
-    </div>
-    <button class="save-btn hidden" id="r-save">Save file</button>
-    <button class="details-toggle" id="r-dtoggle">View details</button>
-    <div class="details-panel" id="r-dpanel"></div>
-    <button class="again" id="r-again">Start over</button>
-  </div>
-</div>
-</main>
-<footer><span class="foot">Recognition runs entirely in your browser. No server. No upload.</span></footer>
-
+  <div id="batch-state" class="batch"><div class="batch-head"><div class="batch-title" id="batch-title">Recognizing</div><div class="batch-progress" id="batch-progress">0 of 0</div><div class="batch-counts" id="batch-counts"></div></div><div class="batch-list" id="batch-list"></div><button class="again" id="batch-again">Drop another batch</button></div>
+</div></main>
+<footer>Win<strong>.</strong>stack · A <a href="https://wisest.systems">Wise<strong>.</strong>Est</a> system · Proof or nothing.</footer>
 <script>
-// Block native file-drop navigation
-document.addEventListener('dragover', function(e) { e.preventDefault(); }, true);
-document.addEventListener('drop', function(e) { e.preventDefault(); }, true);
-
-var $ = function(id) { return document.getElementById(id); };
-var esc = function(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
-var trunc = function(s, n) { n = n || 28; return s.length > n ? s.slice(0, n-1) + '\u2026' : s; };
-function dt(k, v) { return '<div class="detail"><span class="detail-k">'+esc(k)+'</span><span class="detail-v">'+esc(v)+'</span></div>'; }
-
-// ── .WIN PARSER (matches win-format crate exactly) ──
-var WIN_MAGIC = [0x57, 0x49, 0x4E, 0x01]; // "WIN\x01"
-
-function parseWin(buf) {
-  var view = new DataView(buf);
-  if (buf.byteLength < 16) return null;
-  for (var i = 0; i < 4; i++) {
-    if (view.getUint8(i) !== WIN_MAGIC[i]) return null;
-  }
-  var nameLen = view.getUint32(4, true);
-  if (nameLen > 4096) return null;
-  var nameEnd = 8 + nameLen;
-  if (buf.byteLength < nameEnd + 8) return null;
-  var nameBytes = new Uint8Array(buf, 8, nameLen);
-  var filename = new TextDecoder().decode(nameBytes);
-  // sanitize
-  var parts = filename.split(/[\/\\]/);
-  filename = parts[parts.length - 1];
-  if (!filename || filename.indexOf('\0') >= 0) return null;
-
-  var fileLenLow = view.getUint32(nameEnd, true);
-  var fileLenHigh = view.getUint32(nameEnd + 4, true);
-  if (fileLenHigh > 0) return null; // >4GB not supported in browser
-  var fileLen = fileLenLow;
-
-  var fileStart = nameEnd + 8;
-  var fileEnd = fileStart + fileLen;
-  if (buf.byteLength < fileEnd + 1) return null; // need at least 1 byte of proof
-
-  var fileBytes = new Uint8Array(buf, fileStart, fileLen);
-  var proofBytes = new Uint8Array(buf, fileEnd);
-  var proofJson = new TextDecoder().decode(proofBytes);
-
-  return { filename: filename, fileBytes: fileBytes, proofJson: proofJson };
-}
-
-// ── SHA-256 ──
-function sha256hex(arrayBuffer) {
-  return crypto.subtle.digest('SHA-256', arrayBuffer).then(function(hash) {
-    return Array.from(new Uint8Array(hash)).map(function(b) { return b.toString(16).padStart(2,'0'); }).join('');
-  });
-}
-
-// ── Ed25519 verify ──
-function ed25519verify(pubKeyHex, messageBytes, signatureHex) {
-  try {
-    var pubBytes = hexToBytes(pubKeyHex);
-    var sigBytes = hexToBytes(signatureHex);
-    return crypto.subtle.importKey('raw', pubBytes, {name:'Ed25519'}, false, ['verify'])
-      .then(function(key) { return crypto.subtle.verify({name:'Ed25519'}, key, sigBytes, messageBytes); })
-      .catch(function() { return null; });
-  } catch(e) { return Promise.resolve(null); }
-}
-
-function hexToBytes(hex) {
-  var bytes = new Uint8Array(hex.length / 2);
-  for (var i = 0; i < hex.length; i += 2) bytes[i/2] = parseInt(hex.substr(i, 2), 16);
-  return bytes;
-}
-
-function buildSignPayload(obj) {
-  var p = {
-    object_id: obj.object_id,
-    object_class: obj.object_class,
-    payload_hash: obj.payload_hash,
-    artifact_size_bytes: obj.artifact_size_bytes,
-    parent_ids: obj.parent_ids,
-    protocol: obj.protocol
-  };
-  if (obj.proof_chain != null) p.proof_chain = obj.proof_chain;
-  return JSON.stringify(p);
-}
-
-var extractedFile = null;
-var extractedName = null;
-
-// ── STATE ──
-var winFile = null;
-var legacyFile = null;
-var legacyProof = null;
-var mode = 'win'; // 'win' or 'legacy'
-
-function show(s) {
-  $('input-state').style.display = s === 'input' ? 'block' : 'none';
-  $('proc-state').style.display = s === 'proc' ? 'block' : 'none';
-  $('result-state').style.display = s === 'result' ? 'block' : 'none';
-}
-
-function updateBtn() {
-  if (mode === 'win') {
-    $('btn-go').disabled = !winFile;
-  } else {
-    $('btn-go').disabled = !(legacyFile && legacyProof);
-  }
-}
-
-// ── DROP WIRING ──
-function wireDrop(inputId, zoneId, labelId, cb) {
-  var input = $(inputId), zone = $(zoneId), label = $(labelId);
-  input.addEventListener('change', function() { if (this.files && this.files[0]) pick(this.files[0]); });
-  zone.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); this.classList.add('over'); });
-  zone.addEventListener('dragleave', function(e) { e.preventDefault(); e.stopPropagation(); this.classList.remove('over'); });
-  zone.addEventListener('drop', function(e) {
-    e.preventDefault(); e.stopPropagation(); this.classList.remove('over');
-    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) pick(e.dataTransfer.files[0]);
-  });
-  function pick(f) { zone.classList.add('picked'); label.textContent = trunc(f.name); cb(f); }
-}
-
-wireDrop('i-win', 'd-win', 'l-win', function(f) {
-  winFile = f; mode = 'win';
-  // Auto-verify .win files immediately — no button click needed
-  show('proc');
-  f.arrayBuffer().then(function(buf) { verifyFromWin(buf, f.name); });
-});
-wireDrop('i-file', 'd-file', 'l-file', function(f) { legacyFile = f; updateBtn(); });
-wireDrop('i-proof', 'd-proof', 'l-proof', function(f) { legacyProof = f; updateBtn(); });
-
-$('legacy-btn').addEventListener('click', function() {
-  var area = $('legacy-area');
-  var open = area.classList.toggle('open');
-  if (open) mode = 'legacy';
-  else mode = 'win';
-  updateBtn();
-});
-
-// ── VERIFY ──
-$('btn-go').addEventListener('click', function() {
-  show('proc');
-  if (mode === 'win' && winFile) {
-    winFile.arrayBuffer().then(function(buf) { verifyFromWin(buf, winFile.name); });
-  } else if (mode === 'legacy' && legacyFile && legacyProof) {
-    Promise.all([legacyFile.arrayBuffer(), legacyProof.text()]).then(function(results) {
-      verifyFromParts(results[0], results[1], legacyFile.name);
-    });
-  }
-});
-
-function verifyFromWin(buf, fname) {
-  var parsed = parseWin(buf);
-  if (!parsed) { extractedFile = null; extractedName = null; show('result'); renderResult('DYING', '', '', null, fname, 'This name tag is decomposing — the .win container is incomplete.'); return; }
-  extractedFile = parsed.fileBytes; extractedName = parsed.filename;
-  var proofText = parsed.proofJson;
-  var bundle;
-  try { bundle = JSON.parse(proofText); } catch(e) { show('result'); renderResult('DYING', '', '', null, fname, 'This name tag is decomposing — the proof section is not valid.'); return; }
-  if (!bundle.object || !bundle.object.payload_hash) { show('result'); renderResult('DYING', '', '', null, fname, 'This name tag is decomposing — the proof section is incomplete.'); return; }
-  doVerify(parsed.fileBytes.buffer, bundle, fname);
-}
-
-function verifyFromParts(fileBuf, proofText, fname) {
-  var bundle;
-  try { bundle = JSON.parse(proofText); } catch(e) { show('result'); showErr('The proof file is not valid JSON.'); return; }
-  if (!bundle.object || !bundle.object.payload_hash) { show('result'); showErr('The proof file is incomplete.'); return; }
-  doVerify(fileBuf, bundle, fname);
-}
-
-function doVerify(fileBuf, bundle, fname) {
-  sha256hex(fileBuf).then(function(fileHash) {
-    var expected = bundle.object.payload_hash;
-
-    // 1. Hash check — file content vs name tag's recorded hash
-    if (fileHash !== expected) {
-      show('result');
-      renderResult('WOUNDED', fileHash, expected, bundle, fname);
-      return;
-    }
-
-    // 2. Size check
-    var actualSize = fileBuf.byteLength;
-    var claimedSize = bundle.object.artifact_size_bytes;
-    if (claimedSize !== undefined && actualSize !== claimedSize) {
-      show('result');
-      renderResult('UNRECOGNIZED', fileHash, expected, bundle, fname, 'Size mismatch: name tag records ' + claimedSize + ' bytes, file has ' + actualSize);
-      return;
-    }
-
-    // 3. Structure checks
-    if (bundle.object.protocol !== 'V1') {
-      show('result');
-      renderResult('UNRECOGNIZED', fileHash, expected, bundle, fname, 'Unsupported protocol: ' + bundle.object.protocol);
-      return;
-    }
-    if (!bundle.creator_identity) {
-      show('result');
-      renderResult('UNRECOGNIZED', fileHash, expected, bundle, fname, 'No witness on this name tag');
-      return;
-    }
-    if (bundle.object.policy_proof && bundle.object.policy_proof.decision !== 'Permit') {
-      show('result');
-      renderResult('UNRECOGNIZED', fileHash, expected, bundle, fname, 'Policy decision is not Permit');
-      return;
-    }
-
-    // 4. Signature check — does the witness's hand verify?
-    var signPayload = buildSignPayload(bundle.object);
-    var signBytes = new TextEncoder().encode(signPayload);
-    var pubKey = bundle.creator_identity.public_key_hex;
-    var sig = bundle.object.object_signature;
-
-    if (pubKey && sig && pubKey.length === 64 && sig.length === 128) {
-      ed25519verify(pubKey, signBytes, sig).then(function(sigValid) {
-        if (sigValid === false) {
-          show('result');
-          renderResult('UNRECOGNIZED', fileHash, expected, bundle, fname, "The witness's signature does not verify.");
-        } else {
-          show('result');
-          renderResult('ALIVE', fileHash, expected, bundle, fname, null, sigValid);
-        }
-      });
-    } else {
-      show('result');
-      renderResult('ALIVE', fileHash, expected, bundle, fname, null, null);
-    }
-  });
-}
-
-function showErr(m) { $('r-verdict').style.display = 'none'; $('r-err').classList.remove('hidden'); $('r-err').textContent = m; }
-
-function renderResult(result, fileHash, expected, bundle, fname, issue, sigChecked) {
-  $('r-err').classList.add('hidden');
-  $('r-mm').classList.add('hidden');
-  $('r-meta').classList.add('hidden');
-  $('r-save').classList.add('hidden');
-  $('r-dpanel').classList.remove('open');
-  $('r-dtoggle').textContent = 'View details';
-
-  var v = $('r-verdict'); v.style.display = 'block';
-
-  if (result === 'ALIVE') {
-    v.className = 'verdict enter ok';
-    $('r-status').textContent = 'Alive';
-    $('r-explain').textContent = 'This file is alive. Unchanged since it was named.';
-    var m = $('r-meta'); m.classList.remove('hidden');
-    var timeBit = (bundle.object.time_event && bundle.object.time_event.time_source === 'External')
-      ? ' \u2022 Anchored birthday' : ' \u2022 Local birthday only';
-    if (sigChecked === true) {
-      m.textContent = 'Witness recognized' + timeBit;
-    } else if (sigChecked === null) {
-      m.textContent = 'File matches name tag' + timeBit + ' \u2022 Witness signature not checkable in this browser';
-    }
-    var chain = bundle.object.proof_chain;
-    if (chain) {
-      var label = chain.predecessor_proof_id ? 'Part of a lineage.' : 'First in its lineage.';
-      $('r-explain').textContent += ' ' + label;
-    }
-    if (extractedFile && extractedName) {
-      var sb = $('r-save');
-      sb.classList.remove('hidden');
-      sb.textContent = 'Save ' + extractedName;
-    }
-  } else if (result === 'WOUNDED') {
-    v.className = 'verdict enter bad';
-    $('r-status').textContent = 'Wounded';
-    $('r-explain').textContent = 'This file was alive once. It has been changed since it was named. The original is gone.';
-    $('r-mm').classList.remove('hidden');
-    $('r-mm-a').textContent = fileHash;
-    $('r-mm-b').textContent = expected;
-  } else if (result === 'DYING') {
-    v.className = 'verdict enter damaged';
-    $('r-status').textContent = 'Dying';
-    $('r-explain').textContent = (issue || 'This name tag is decomposing.') + ' The file underneath may still be alive \u2014 its name tag is just unreadable.';
-  } else {
-    // UNRECOGNIZED \u2014 and any unhandled result falls here as well
-    v.className = 'verdict enter warn';
-    $('r-status').textContent = 'Unrecognized';
-    $('r-explain').textContent = "I can't read this name tag. The file may still be fine, but I can't tell you who named it." + (issue ? ' ' + issue + '.' : '');
-  }
-  requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
-
-  if (!bundle) { $('r-dpanel').innerHTML = dt('File', fname); return; }
-  var ts = bundle.object.time_event ? bundle.object.time_event.time_source : 'unknown';
-  var timeLabel = ts === 'External'
-    ? 'Anchored \u2014 externally timestamped (RFC 3161)'
-    : 'Local \u2014 from the witness\u2019s device clock';
-  $('r-dpanel').innerHTML = [
-    dt('File', fname),
-    dt('Born', bundle.object.origin ? bundle.object.origin.created_at : 'unknown'),
-    dt('Hash', expected),
-    dt('Size', bundle.object.artifact_size_bytes + ' bytes'),
-    dt('Time', timeLabel),
-    dt('Witness', bundle.creator_identity ? bundle.creator_identity.public_key_hex.slice(0,8) + '\u2026' + bundle.creator_identity.public_key_hex.slice(56) : 'unknown'),
-    dt('Recognized by', 'Browser (no server)'),
-  ].join('');
-}
-
-$('r-dtoggle').addEventListener('click', function() {
-  var o = $('r-dpanel').classList.toggle('open');
-  $('r-dtoggle').textContent = o ? 'Hide details' : 'View details';
-});
-$('r-save').addEventListener('click', function() {
-  if (!extractedFile || !extractedName) return;
-  var blob = new Blob([extractedFile]);
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url; a.download = extractedName;
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-});
-$('r-again').addEventListener('click', function() {
-  extractedFile = null; extractedName = null;
-  winFile = null; legacyFile = null; legacyProof = null; mode = 'win';
-  $('i-win').value = ''; $('i-file').value = ''; $('i-proof').value = '';
-  $('d-win').classList.remove('picked'); $('d-file').classList.remove('picked'); $('d-proof').classList.remove('picked');
-  $('l-win').textContent = 'Drop a .win file'; $('l-file').textContent = 'File'; $('l-proof').textContent = 'Proof';
-  $('legacy-area').classList.remove('open');
-  $('btn-go').disabled = true;
-  show('input');
-});
-
-// Drop a .win anywhere on the page — auto-verify immediately
-document.body.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); });
-document.body.addEventListener('drop', function(e) {
-  e.preventDefault(); e.stopPropagation();
-  var files = e.dataTransfer && e.dataTransfer.files;
-  if (files && files.length > 0) {
-    var f = files[0];
-    if (f.name.endsWith('.win')) {
-      winFile = f; mode = 'win';
-      show('proc');
-      f.arrayBuffer().then(function(buf) { verifyFromWin(buf, f.name); });
-    }
-  }
-});
+(function(){var c=document.getElementById('particles'),x=c.getContext('2d');var W,H,cols,drops,chars='0123456789ABCDEF';function resize(){c.width=W=window.innerWidth;c.height=H=window.innerHeight;cols=Math.floor(W/16);drops=[];for(var i=0;i<cols;i++)drops[i]=Math.random()*-50;}resize();window.addEventListener('resize',resize);function draw(){x.fillStyle='rgba(5,5,5,0.06)';x.fillRect(0,0,W,H);x.fillStyle='#c9a84c';x.font='12px monospace';for(var i=0;i<cols;i++){if(drops[i]>0){x.globalAlpha=0.05+Math.random()*0.06;x.fillText(chars[Math.floor(Math.random()*16)],i*16,drops[i]*16);}drops[i]+=0.12+Math.random()*0.12;if(drops[i]*16>H&&Math.random()>0.99)drops[i]=0;}x.globalAlpha=1;requestAnimationFrame(draw);}draw();})();
+</script>
+<script type="module">
+import init, { recognize_win, recognize_bundle } from '/wasm/verifier_wasm.js';
+document.addEventListener('dragover',(e)=>e.preventDefault(),true);document.addEventListener('drop',(e)=>e.preventDefault(),true);
+const $=(id)=>document.getElementById(id);const esc=(s)=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const STATES=['boot-state','fatal-state','input-state','proc-state','result-state','batch-state'];
+function show(name){for(const id of STATES){const el=$(id);if(id===name){el.classList.remove('hidden');if(id==='batch-state')el.classList.add('show');el.style.display='block';}else{el.classList.add('hidden');el.classList.remove('show');el.style.display='none';}}}
+function fatal(t,m){$('fatal-title').textContent=t;$('fatal-msg').textContent=m;show('fatal-state');}
+function urlHash(){const m=location.pathname.match(/^\/v\/([a-f0-9]{32,128})\/?$/i);return m?m[1].toLowerCase():null;}
+let mode='homepage';let fetchedBundleJson=null;let fetchedBundleObj=null;let rWin,rBundle;
+async function boot(){try{await init();rWin=recognize_win;rBundle=recognize_bundle;}catch(e){fatal('Verifier unavailable','WebAssembly verifier could not load.');return;}const hash=urlHash();if(hash){mode='urlflow';await initUrlFlow(hash);}else{mode='homepage';initHomepageFlow();}}
+async function initUrlFlow(hash){let res;try{res=await fetch(`/v/${hash}.json`,{headers:{'Accept':'application/json'}});}catch(e){fatal('Cannot reach','Network failed.');return;}if(res.status===404){fatal('No name tag here','No file named at this hash.');return;}if(!res.ok){fatal('Cannot read',`Server returned ${res.status}.`);return;}let bundle;try{fetchedBundleJson=await res.text();bundle=JSON.parse(fetchedBundleJson);}catch(e){fatal('Invalid','Not valid.');return;}if(!bundle.object||!bundle.object.payload_hash){fatal('Invalid','Incomplete.');return;}if(bundle.object.payload_hash.toLowerCase()!==hash){fatal('Invalid',"Hash mismatch.");return;}fetchedBundleObj=bundle;renderPreview(bundle);$('title').innerHTML='Is this file <em>alive</em>?';$('subtitle').textContent='Drop the file you received.';$('drop-label').textContent='Drop the file here';$('preview-block').classList.remove('hidden');show('input-state');}
+function renderPreview(b){const c=b.creator_identity||{};const k=c.public_key_hex||'';$('pv-witness').textContent=k?`${k.slice(0,8)}…${k.slice(56)}`:'unknown';$('pv-born').textContent=b.object.origin?.created_at||'unknown';$('pv-time').textContent=b.object.time_event?.time_source==='External'?'Anchored (RFC 3161)':'Local birthday only';$('pv-hash').textContent=b.object.payload_hash;}
+function initHomepageFlow(){$('title').innerHTML='Is it <em>alive</em>?';$('subtitle').textContent='Drop a .win file. Recognition runs locally — nothing is uploaded.';$('drop-label').textContent='Drop a .win file';$('preview-block').classList.add('hidden');show('input-state');}
+function iconSvg(s){if(s==='Verified')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 7"/></svg>';if(s==='Tampered')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';if(s==='Invalid')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 9a3 3 0 1 1 5.5 1.6c-.5.7-1.2 1-1.7 1.5-.4.5-.6 1-.6 1.7"/><circle cx="12.2" cy="17.5" r="0.9" fill="currentColor"/></svg>';return'';}
+function isWin(b){return b.length>=4&&b[0]===0x57&&b[1]===0x49&&b[2]===0x4E&&b[3]===0x01;}
+async function sha256hex(buf){const h=await crypto.subtle.digest('SHA-256',buf);return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+function dispatch(files){const a=Array.from(files||[]);if(!a.length)return;if(a.length===1)handleFile(a[0]);else handleBatch(a);}
+function wireDrop(){const input=$('file-input');const zone=$('drop');input.setAttribute('multiple','');input.addEventListener('change',()=>{if(input.files?.length)dispatch(input.files);});zone.addEventListener('dragover',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.add('over');});zone.addEventListener('dragleave',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over');});zone.addEventListener('drop',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over');document.body.classList.remove('body-over');dispatch(e.dataTransfer?.files);});document.body.addEventListener('dragover',(e)=>{e.preventDefault();document.body.classList.add('body-over');});document.body.addEventListener('dragleave',(e)=>{if(!e.relatedTarget)document.body.classList.remove('body-over');});document.body.addEventListener('drop',(e)=>{e.preventDefault();document.body.classList.remove('body-over');dispatch(e.dataTransfer?.files);});}
+async function handleFile(file){show('proc-state');const buf=new Uint8Array(await file.arrayBuffer());if(isWin(buf)){let r;try{r=rWin(buf);}catch(e){fatal('Error',String(e?.message||e));return;}if(mode==='urlflow'&&r.payload_hash){const u=urlHash();if(r.payload_hash.toLowerCase()===u)r._url_match=true;else{r._url_match=false;r._url_other=r.payload_hash.toLowerCase();}}renderResult(r,file.name);return;}if(mode==='urlflow'){let r;try{r=rBundle(fetchedBundleJson,buf);}catch(e){fatal('Error',String(e?.message||e));return;}renderResult(r,file.name);return;}await renderNaked(file,buf);}
+function renderResult(r,fname){const v=$('verdict');$('details-panel').classList.add('hidden');$('r-meta').classList.add('hidden');$('r-meta').classList.remove('match');const s=r.status;v.className=`verdict ${s.toLowerCase()}`;$('r-icon').innerHTML=iconSvg(s);$('r-status').textContent=s;let html=esc(r.message);if(s==='Verified'){const m=$('r-meta');m.classList.remove('hidden');let t='Recognized';t+=r.anchored?' \u2022 Anchored birthday':' \u2022 Local birthday only';if(r.lineage==='Successor')t+=' \u2022 Lineage successor';else if(r.lineage==='Origin')t+=' \u2022 First in lineage';if(r._url_match===true){t+=' \u2022 Matches this URL';m.classList.add('match');}m.textContent=t;}if(r._url_match===false&&r._url_other){html+=`<span class="url-note">Different name tag. <a href="/v/${esc(r._url_other)}">See it \u2192</a></span>`;}$('r-explain').innerHTML=html;const dt=(k,v)=>`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`;if(r.witness||r.born||r.payload_hash){const w=r.witness?.public_key_hex?`${r.witness.public_key_hex.slice(0,8)}\u2026${r.witness.public_key_hex.slice(56)}`:'unknown';const tm=r.anchored?'Anchored \u2014 RFC 3161':'Local \u2014 witness device clock';$('details-panel').innerHTML=[dt('File',fname),dt('Born',r.born||'unknown'),dt('Fingerprint',r.payload_hash||'unknown'),dt('Size',r.size_bytes!=null?`${r.size_bytes} bytes`:'unknown'),dt('Time',tm),dt('Witness',w),dt('Lineage',r.lineage||'Unknown'),dt('Recognized by','WebAssembly verifier')].join('');$('details-panel').classList.remove('hidden');}show('result-state');requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));}
+async function renderNaked(file,buf){const v=$('verdict');v.className='verdict naked';$('r-icon').innerHTML='';$('r-status').textContent='No name tag';$('r-explain').innerHTML="This file has no name tag. There's nothing to recognize yet.";$('r-meta').classList.add('hidden');$('r-meta').classList.remove('match');const h=await sha256hex(buf.buffer);const dt=(k,v)=>`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`;$('details-panel').innerHTML=[dt('File',file.name),dt('Size',`${file.size} bytes`),dt('Fingerprint',h)].join('');$('details-panel').classList.remove('hidden');show('result-state');requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));}
+$('r-again').addEventListener('click',()=>{$('file-input').value='';show('input-state');});
+const STATE_ORDER=['Verified','Tampered','Invalid','Naked'];
+async function handleBatch(files){show('batch-state');const counts={Alive:0,Wounded:0,Unrecognized:0,Naked:0};$('batch-list').innerHTML='';$('batch-progress').textContent=`0 of ${files.length}`;$('batch-counts').innerHTML=renderCountsHtml(counts,null);wireBF(null);for(let i=0;i<files.length;i++){let r;try{r=await processOne(files[i]);}catch(e){r={state:'Invalid',name:files[i].name,size:files[i].size};}counts[r.state]=(counts[r.state]||0)+1;$('batch-list').insertAdjacentHTML('beforeend',renderRow(r));$('batch-progress').textContent=`${i+1} of ${files.length}`;$('batch-counts').innerHTML=renderCountsHtml(counts,cbf);wireBF(cbf);if((i+1)%8===0)await new Promise(r=>setTimeout(r,0));}applyBF(cbf);}
+async function processOne(f){const buf=new Uint8Array(await f.arrayBuffer());if(!isWin(buf))return{state:'Naked',name:f.name,size:f.size};let r;try{r=rWin(buf);}catch(e){return{state:'Invalid',name:f.name,size:f.size};}return{state:r.status,name:f.name,size:f.size,born:r.born,payload_hash:r.payload_hash,witness:r.witness?.public_key_hex};}
+function renderRow(r){const cls=r.state.toLowerCase();const meta=[];if(r.born)meta.push(r.born.split('T')[0]);if(r.witness)meta.push(`${r.witness.slice(0,8)}\u2026`);if(!meta.length&&r.size!=null)meta.push(`${r.size} B`);return`<div class="batch-row ${cls}" data-state="${cls}"><span class="batch-row-state">${iconSvg(r.state)}${esc(r.state)}</span><span class="batch-row-name">${esc(r.name)}</span><span class="batch-row-meta">${esc(meta.join(' \u00b7 '))}</span></div>`;}
+function renderCountsHtml(counts,active){const total=Object.values(counts).reduce((a,b)=>a+b,0);const pills=[`<span class="batch-count ${active===null?'active':''}" data-state="all" data-count="${total}">${total} total</span>`];for(const s of STATE_ORDER){const v=counts[s]||0;pills.push(`<span class="batch-count ${s.toLowerCase()} ${active===s?'active':''}" data-state="${s}" data-count="${v}">${iconSvg(s)}${v} ${s}</span>`);}return pills.join('');}
+let cbf=null;
+function wireBF(active){for(const el of $('batch-counts').querySelectorAll('.batch-count')){el.addEventListener('click',()=>{const s=el.getAttribute('data-state');cbf=(s==='all')?null:s;applyBF(cbf);const re=$('batch-counts');const counts={};for(const c of re.querySelectorAll('.batch-count')){const st=c.getAttribute('data-state');if(st!=='all')counts[st]=parseInt(c.getAttribute('data-count'),10)||0;}re.innerHTML=renderCountsHtml(counts,cbf);wireBF(cbf);},{once:true});}}
+function applyBF(active){for(const row of $('batch-list').querySelectorAll('.batch-row')){row.classList.toggle('hidden-by-filter',active!==null&&row.getAttribute('data-state')!==active.toLowerCase());}}
+$('batch-again').addEventListener('click',()=>{$('file-input').value='';cbf=null;show('input-state');});
+wireDrop();boot();
 </script>
 </body>
 </html>
