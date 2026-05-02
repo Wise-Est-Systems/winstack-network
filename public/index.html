@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wise — Is it alive?</title>
+<title>Wise — verify a .win file</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
@@ -96,7 +96,7 @@ footer{position:relative;z-index:2;padding:20px 28px;text-align:center;color:var
   </div>
   <div id="batch-state" class="batch"><div class="batch-head"><div class="batch-title" id="batch-title">Verifying</div><div class="batch-progress" id="batch-progress">0 of 0</div><div class="batch-counts" id="batch-counts"></div></div><div class="batch-list" id="batch-list"></div><button class="again" id="batch-again">Drop another batch</button></div>
 </div></main>
-<footer>Win<strong>.</strong>stack · A <a href="https://wisest.systems">Wise<strong>.</strong>Est</a> system · Proof or nothing.</footer>
+<footer>Wise · A <a href="https://wisest.systems">Wise<strong>.</strong>Est</a> system · <a href="https://proofs.systems">What is a .win?</a> · Proof or nothing.</footer>
 <script>
 (function(){var c=document.getElementById('particles'),x=c.getContext('2d');var W,H,cols,drops,chars='0123456789ABCDEF';function resize(){c.width=W=window.innerWidth;c.height=H=window.innerHeight;cols=Math.floor(W/16);drops=[];for(var i=0;i<cols;i++)drops[i]=Math.random()*-50;}resize();window.addEventListener('resize',resize);function draw(){x.fillStyle='rgba(5,5,5,0.06)';x.fillRect(0,0,W,H);x.fillStyle='#c9a84c';x.font='12px monospace';for(var i=0;i<cols;i++){if(drops[i]>0){x.globalAlpha=0.05+Math.random()*0.06;x.fillText(chars[Math.floor(Math.random()*16)],i*16,drops[i]*16);}drops[i]+=0.12+Math.random()*0.12;if(drops[i]*16>H&&Math.random()>0.99)drops[i]=0;}x.globalAlpha=1;requestAnimationFrame(draw);}draw();})();
 </script>

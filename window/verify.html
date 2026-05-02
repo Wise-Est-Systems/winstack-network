@@ -120,10 +120,10 @@ document.addEventListener('dragover', function(e) { e.preventDefault(); }, true)
 document.addEventListener('drop', function(e) { e.preventDefault(); }, true);
 
 var API_PORT = 13845;
-function getAPI() { return window.WINSTACK_API_BASE || ('http://127.0.0.1:' + API_PORT); }
+function getAPI() { return window.WISE_API_BASE || ('http://127.0.0.1:' + API_PORT); }
 function authHeaders() {
   var h = {};
-  if (window.WINSTACK_TOKEN) h['Authorization'] = 'Bearer ' + window.WINSTACK_TOKEN;
+  if (window.WISE_TOKEN) h['Authorization'] = 'Bearer ' + window.WISE_TOKEN;
   return h;
 }
 var $ = function(id) { return document.getElementById(id); };

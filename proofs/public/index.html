@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wise.Est Proof — prove you wrote it, before they say you didn't</title>
-<meta name="description" content="A sealed, witnessed record of your work — produced before any AI accusation can be made. Verifiable by anyone, forever, with no account required.">
+<title>Wise — what is a .win file?</title>
+<meta name="description" content="A .win file is a sealed, self-verifying record of an artifact at a moment in time. Anyone can check it offline, with no account, even if we disappear. Plain-English intro.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
@@ -102,97 +102,85 @@ footer strong{color:var(--gold);font-weight:400}
 <canvas id="particles"></canvas>
 
 <nav>
-  <div class="logo"><a href="/">Wise<span class="dot">.</span>Est Proof</a></div>
-  <div class="parent">A <a href="https://wisest.systems">Wise<strong>.</strong>Est</a> system</div>
+  <div class="logo"><a href="/">Wise</a></div>
+  <div class="parent">files that prove themselves</div>
 </nav>
 
 <main>
 
 <section class="hero">
-  <span class="eyebrow">For when the detector is wrong</span>
-  <h1><span class="nb">Prove you wrote it.</span><br><em><span class="nb">Before they say you didn't.</span></em></h1>
-  <p class="lede">A sealed, witnessed record of your work — produced before any AI accusation can be made. Verifiable by anyone, forever, with no account, no subscription, and no dependency on us being around tomorrow.</p>
+  <span class="eyebrow">A plain-English intro</span>
+  <h1><span class="nb">What is a</span> <em><span class="nb">.win</span></em> <span class="nb">file?</span></h1>
+  <p class="lede">A <strong style="color:var(--ink)">.win</strong> is a sealed record of a file at a moment in time. Anyone can check it. They don't need an account. They don't need to trust us. They don't even need us to be around tomorrow.</p>
   <div class="cta-row">
-    <a href="#buy" class="cta primary">Defend my work</a>
-    <a href="#how" class="cta">How it works</a>
+    <a href="https://truth.systems/verify" class="cta primary">Try the verifier</a>
+    <a href="#what" class="cta">Read more</a>
   </div>
-  <span class="cta-note">Free during launch. No login. No subscription. Yours forever.</span>
+  <span class="cta-note">Free. Forever. No account on either side.</span>
+</section>
+
+<section id="what">
+  <span class="eyebrow">In one paragraph</span>
+  <h2>What <em>Wise</em> is.</h2>
+  <p>Wise is a small protocol. You take a file you made, and a witness signs that it existed at a specific moment, with a fingerprint of its bytes. The witness's signature plus the timestamp plus the fingerprint is a tag that travels with the file forever. Anyone who later receives the file can drop it on the verifier and get a one-word answer about whether the file is the same one the witness saw.</p>
+  <p>The witness is a real party — today that's us, Wise.Est Systems. Tomorrow it can be a hardware device you own, a notary public, or any person whose key the receiver knows.</p>
 </section>
 
 <section>
-  <span class="eyebrow">The situation</span>
-  <h2>You did the work. <em>The detector said you didn't.</em></h2>
-  <p>AI-detection tools are wrong constantly. False-positive rates of 1–10% are normal, and on certain writing styles they exceed 50%. The detector flags your work; you have nothing to show but the work itself; the accusation stands.</p>
-  <div class="scenarios">
-    <div class="scenario">
-      <div class="who">The student</div>
-      <div class="what">Wrote the essay. Turnitin flagged it 78% AI. Academic integrity hearing next week. No way to prove the writing process happened.</div>
-    </div>
-    <div class="scenario">
-      <div class="who">The freelance writer</div>
-      <div class="what">Filed the article. Editor's tool said it looks generated. Payment held. Reputation on the line. No defense.</div>
-    </div>
-    <div class="scenario">
-      <div class="who">The illustrator</div>
-      <div class="what">Submitted the work. Marketplace pulled it as suspected AI. Account flagged. No way to demonstrate the human hand behind it.</div>
-    </div>
+  <span class="eyebrow">The three results</span>
+  <h2>What the verifier <em>tells you.</em></h2>
+  <p>Drop a file on <a href="https://truth.systems/verify" style="color:var(--gold);border-bottom:1px solid var(--gold-dim);text-decoration:none">the verifier</a> and you get exactly one of three answers. No maybes. No confidence scores. No fifth state.</p>
+  <div class="split">
+    <h3>Verified</h3>
+    <p>The file's fingerprint matches the tag. The witness signature checks out. The file is exactly the one the witness saw, unchanged.</p>
   </div>
-</section>
-
-<section id="how">
-  <span class="eyebrow">How it works</span>
-  <h2>Drop a file. <em>Walk away with a defense.</em></h2>
-  <p>One action. The whole sealing happens off the drop. No menus. No forms. No saved profile.</p>
-  <div class="steps">
-    <div class="step"><div class="step-body"><strong>You drop the file</strong><span>Essay, photo, illustration, code, audio — anything. The file never leaves your control unsealed.</span></div></div>
-    <div class="step"><div class="step-body"><strong>Wise.Est Systems witnesses</strong><span>We sign that we received your file at this exact moment. Our key is the witness; the time is anchored to RFC 3161.</span></div></div>
-    <div class="step"><div class="step-body"><strong>You get a .win file back</strong><span>One file. Contains your original plus the sealed record. Yours. Forever.</span></div></div>
-    <div class="step"><div class="step-body"><strong>If accused, you hand over the .win</strong><span>Your professor, editor, HR, court — anyone — drops it on <a href="https://truth.systems/verify" style="color:var(--gold);border-bottom:1px solid var(--gold-dim);text-decoration:none">truth.systems</a> and gets a verdict in seconds. They don't need an account. They don't need to trust us. The math speaks.</span></div></div>
+  <div class="split">
+    <h3>Tampered</h3>
+    <p>The tag is intact, but the file's bytes don't match it. The file was changed after sealing. The original is gone.</p>
+  </div>
+  <div class="split">
+    <h3>Invalid</h3>
+    <p>The tag itself is malformed or the witness signature doesn't check out. We can't tell you anything about the file from this tag.</p>
   </div>
 </section>
 
 <section>
-  <span class="eyebrow">What you actually get</span>
-  <h2>A file that <em>verifies itself.</em></h2>
+  <span class="eyebrow">Honesty first</span>
+  <h2>What a .win <em>does not prove.</em></h2>
+  <p>This is the part most provenance systems oversell. Wise will not.</p>
   <div class="split">
-    <h3>Verifiable by anyone</h3>
-    <p>The .win file is a complete, self-contained proof. Anyone, anywhere, with the free verifier at truth.systems can check it offline. They don't need to trust Wise.Est. They check the math.</p>
+    <h3>It does not prove the file is true</h3>
+    <p>A .win can seal a lie just as easily as a truth. All it proves is that the file existed at a moment, unchanged since, witnessed by a specific party. It says nothing about whether what's inside is correct.</p>
   </div>
   <div class="split">
-    <h3>Verifiable forever</h3>
-    <p>If Wise.Est shuts down tomorrow, every .win we ever sealed still verifies. The proof does not depend on our servers being alive. This is the whole point.</p>
+    <h3>It does not prove the author wrote it</h3>
+    <p>The witness saw a file. The witness did not see who wrote it. A sealed essay proves the essay existed at a time, not that the person sealing it is the author.</p>
   </div>
   <div class="split">
-    <h3>No account on either side</h3>
-    <p>You don't sign up. The verifier doesn't sign up. There is nothing to log into, nothing to recover, nothing to lose. You bought a thing; you own the thing.</p>
+    <h3>It does not prove the file is original</h3>
+    <p>Someone could copy a file and seal the copy. The seal is real; the originality claim is not part of it.</p>
+  </div>
+  <div class="split">
+    <h3>It does not depend on us being alive</h3>
+    <p>If Wise.Est Systems disappears tomorrow, every .win ever sealed still verifies. The proof is mathematical, not organizational. This is the whole point.</p>
   </div>
 </section>
 
-<section id="buy">
-  <span class="eyebrow">Defend your work</span>
-  <h2>Free during launch. <em>Yours forever.</em></h2>
-  <div class="price-row" style="grid-template-columns:1fr;max-width:480px;margin-left:auto;margin-right:auto">
-    <div class="price featured">
-      <div class="price-label">Single seal · launch</div>
-      <div class="price-amount"><em>Free</em></div>
-      <div class="price-unit">one file · no account · no card</div>
-      <ul>
-        <li>Seal one file with the Wise.Est witness</li>
-        <li>Receive the .win immediately</li>
-        <li>Verifiable forever, by anyone, on truth.systems</li>
-        <li>The .win is yours — no subscription, nothing to cancel</li>
-      </ul>
-      <a href="#" class="cta primary" data-stripe="single">Defend my work</a>
-    </div>
+<section>
+  <span class="eyebrow">Try it</span>
+  <h2>Drop a file on <em>the verifier.</em></h2>
+  <p>The verifier is the public demo. It runs in your browser via WebAssembly. Files don't leave your device. There's no account, no signup, no contact with our servers in the verification path.</p>
+  <div class="cta-row">
+    <a href="https://truth.systems/verify" class="cta primary">Open the verifier</a>
   </div>
+  <span class="cta-note">If you don't have a .win to test, drop any file — it'll come back as Invalid (no tag).</span>
 
   <div class="trust">
     <h3>Honest notes about how this works</h3>
-    <p><strong style="color:var(--ink)">Free during launch.</strong> Sealing is free while we're building this out. We'll add a paid option later for unlimited sealing and for the hardware witness device — but every seal made during launch stays valid forever, no matter what happens to pricing.</p>
-    <p><strong style="color:var(--ink)">Verification is free forever, by design.</strong> Anyone you send a .win to can verify it on <a href="https://truth.systems/verify">truth.systems</a> with no account, no payment, no contact with us. That part of the protocol is open source and will never be paywalled. It works even if we disappear.</p>
-    <p><strong style="color:var(--ink)">The witness, today, is Wise.Est Systems.</strong> We sign your seal with our Ed25519 key — proving a real third party received your file at a specific moment, the role a notary plays for paper documents. Our public key is pinned in the verifier and published openly.</p>
-    <p><strong style="color:var(--ink)">A hardware witness is coming.</strong> A small device that holds your own witness key — so you don't have to depend on us being the witness at all. Once it's out, your seals are signed by your own hand, not ours. The protocol is built so this transition just works.</p>
-    <p><strong style="color:var(--ink)">Read the protocol.</strong> Specs and source at <a href="https://github.com/Wise-Est-Systems/wise">github.com/Wise-Est-Systems</a>. Built to be implementable from scratch by anyone — so it survives us, and the people we love after us.</p>
+    <p><strong style="color:var(--ink)">The witness, today, is Wise.Est Systems.</strong> We sign with our Ed25519 key. Our public key is pinned in the verifier and published openly. Anyone can check that the witness on a .win matches our published key.</p>
+    <p><strong style="color:var(--ink)">A hardware witness is coming.</strong> A small device that holds your own witness key — so you don't have to depend on us being the witness at all. Once it's out, your seals are signed by your own hand, not ours. The protocol is already built to support this transition.</p>
+    <p><strong style="color:var(--ink)">Sealing is not yet open to the public.</strong> Right now you can only verify .win files, not produce them. The sealing flow is being built. When it ships, sealing will be free during launch and remain free for verification forever.</p>
+    <p><strong style="color:var(--ink)">Read the protocol.</strong> Source and specs at <a href="https://github.com/Wise-Est-Systems/wise">github.com/Wise-Est-Systems</a>. Built to be implementable from scratch by anyone — so it survives us.</p>
   </div>
 </section>
 
