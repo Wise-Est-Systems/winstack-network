@@ -29,9 +29,9 @@ body:
     attributes:
       label: Surface
       options:
-        - CLI (wise / win / winopen)
+        - CLI (win)
         - Desktop app
-        - Browser verifier (window/check.html, public/v.html)
+        - Browser verifier (window/verify.html, public/index.html)
         - WASM verifier (verifier-wasm)
         - Library crate (specify in description)
     validations:

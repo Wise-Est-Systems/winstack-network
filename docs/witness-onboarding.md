@@ -32,10 +32,10 @@ cargo install --git https://github.com/Wise-Est-Systems/wise wise
 
 # Initialize your witness identity. Keys live in ~/.wise/ on Linux/macOS,
 # %APPDATA%\Wise\ on Windows. Permissions are restricted to your user.
-wise win /dev/null   # or any file; this also bootstraps the key on first run
+win seal /dev/null   # or any file; this also bootstraps the key on first run
 ```
 
-After the first `win win`, your witness key exists at:
+After the first `win seal`, your witness key exists at:
 
 | Platform | Path                                          |
 |----------|-----------------------------------------------|

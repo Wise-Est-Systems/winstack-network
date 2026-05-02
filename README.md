@@ -24,7 +24,7 @@ A file without a win tag is *untagged*: neutral, not dangerous.
 | Verifier (Rust)      | Stable. 189 tests, `#![forbid(unsafe_code)]`            |
 | Verifier (WASM)      | Stable. ≤ 1 MB compressed budget enforced in CI         |
 | `.win` container v1  | Stable. Backwards-compatibility contract in CONTRIBUTING |
-| CLI                  | `win` / `winopen` — Linux / macOS / Windows              |
+| CLI                  | `win` — Linux / macOS / Windows                          |
 | Desktop app          | macOS Apple Silicon shipping; Linux / Windows in CI     |
 | URL verifier         | `winstack.dev/v/<hash>` — share-anywhere static page     |
 
@@ -167,7 +167,7 @@ verifier-wasm     wasm-bindgen export. Same logic, JS-callable.
 win-format        The .win container. Zero workspace dependencies.
 registry-core     10-step sealing pipeline. Fail-closed on persistence.
 window-api        Axum HTTP API used by the desktop app.
-cli               wise + winopen binaries.
+cli               win binary.
 desktop           Tauri 2 frontend.
 ```
 

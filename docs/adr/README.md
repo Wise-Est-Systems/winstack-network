@@ -10,7 +10,7 @@ Format: [Michael Nygard](https://cognitect.com/blog/2011/11/15/documenting-archi
 ## Index
 
 - [0001 — Record architecture decisions](0001-record-architecture-decisions.md)
-- [0002 — Four-state grammar](0002-four-state-grammar.md)
+- [0002 — Three-state grammar](0002-three-state-grammar.md)
 - [0003 — Custom .win container format](0003-win-container-format.md)
 - [0004 — Witnesses bring their own keys](0004-witnesses-bring-their-own-keys.md)
 - [0005 — WASM as the canonical receiver](0005-wasm-as-canonical-receiver.md)

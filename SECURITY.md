@@ -33,9 +33,9 @@ In scope:
 - The verifier (`crates/verifier`, `crates/verifier-wasm`)
 - The `.win` container and proof-bundle parsers (`crates/win-format`, `crates/canon-types`)
 - The cryptographic primitives (`crates/crypto`)
-- The CLI binaries (`wise`, `win`, `winopen`)
+- The `win` CLI binary
 - The desktop app (`desktop`)
-- The browser verifier (`window/`, `public/v.html`)
+- The browser verifier (`window/verify.html`, `public/index.html`)
 - The window API (`crates/window-api`) when used per documented configuration
 
 Out of scope:

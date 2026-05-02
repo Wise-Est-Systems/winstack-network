@@ -109,8 +109,10 @@ Any structural change requires:
 - Integration tests live in `crates/registry-core/tests/integration.rs`
   and cover the full sealing → verification round trip plus adversarial
   inputs.
-- Browser tests are manual today. A Playwright harness for `public/v.html`
-  is planned.
+- Browser tests are manual today. A Playwright harness for `public/index.html`
+  is planned. The CLI binary is covered by 21 e2e tests in
+  `crates/cli/tests/cli_e2e.rs` and 5 property tests
+  (~320 generated cases) in `crates/cli/tests/cli_proptest.rs`.
 - WASM is exercised by the Rust unit tests indirectly (the wasm crate is
   a thin wrapper) and by deploy verification of the produced artifact.
 
@@ -118,7 +120,8 @@ When adding a verification check, test:
 
 1. The positive case (an honest input passes).
 2. The exact failure code that fires on a malicious input.
-3. The four-state outcome via `from_failures` mapping.
+3. The three-state outcome (Verified / Tampered / Invalid) via the
+   `from_failures` mapping.
 
 ## Security
 
@@ -131,7 +134,7 @@ in non-test paths; CLI binaries may panic on operator errors.
 
 ## Browser surfaces
 
-`window/verify.html` and `public/v.html` must work:
+`window/verify.html` (Tauri-embedded) and `public/index.html` (browser) must work:
 
 - Opened directly from disk (no server)
 - Hosted on any static server

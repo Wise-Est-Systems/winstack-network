@@ -30,9 +30,9 @@ Keep PRs small. One logical change per PR.
 
 <!--
 If this PR touches user-facing strings, confirm:
-- [ ] Reads in the four-state grammar (Alive / Wounded / Unrecognized / Dying)
-- [ ] No prohibited engineering vocabulary in user surfaces (see spec/grammar.md § 4)
-- [ ] No fifth state introduced
+- [ ] Reads in the three-state grammar (Verified / Tampered / Invalid)
+- [ ] No prohibited engineering vocabulary in user surfaces (see spec/grammar.md § 3)
+- [ ] No fourth state introduced
 -->
 
 ## Backwards compatibility

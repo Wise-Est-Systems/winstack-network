@@ -3,7 +3,7 @@
 # require an ADR.
 cognitive-complexity-threshold = 30
 
-# Avoid drift between code and the four-state grammar (spec/grammar.md § 4).
+# Avoid drift between code and the three-state grammar (spec/grammar.md § 3).
 # Any user-surface string of these is an outage of the grammar contract.
 disallowed-types = []
 

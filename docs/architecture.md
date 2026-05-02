@@ -65,7 +65,7 @@ registry-core      ─→ The 10-step sealing pipeline. Wraps verifier on the
                        │
 window-api         ─→ Axum HTTP API consumed by the desktop app.
                        │
-cli                ─→ wise / winopen binaries.
+cli                ─→ win binary.
                        │
 desktop            ─→ Tauri 2 desktop frontend.
 ```
@@ -74,11 +74,10 @@ desktop            ─→ Tauri 2 desktop frontend.
 
 | Surface             | Crate / path                       | Purpose                                                    |
 |---------------------|------------------------------------|------------------------------------------------------------|
-| `wise` CLI      | `crates/cli/src/bin/win.rs`   | seal / verify / inspect / open / publish / trust           |
-| `winopen`           | `crates/cli/src/bin/winopen.rs`    | Double-click handler for `.win` files                      |
+| `win` CLI           | `crates/cli/src/bin/win.rs`        | seal / verify / inspect / open / publish / trust           |
 | Desktop app         | `desktop/`                         | Tauri 2 macOS app (Windows/Linux planned — see ROADMAP)    |
 | Desktop verifier UI | `window/verify.html`               | The desktop app's window — talks to the embedded HTTP API  |
-| URL verifier        | `public/index.html`                | Share-anywhere — `truth.systems/v/<hash>` — uses WASM       |
+| URL verifier        | `public/index.html`                | Share-anywhere — `winstack.dev/v/<hash>` — uses WASM        |
 | WASM verifier       | `crates/verifier-wasm`             | Canonical receiver-side library (see ADR 0005)             |
 | HTTP API            | `crates/window-api`                | `/check`, `/verify`, `/seal`, `/save-and-open`             |
 

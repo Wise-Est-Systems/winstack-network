@@ -2,21 +2,21 @@
 
 ## Shipping today
 
-- [x] Four-state grammar verifier
+- [x] Three-state grammar verifier (Verified / Tampered / Invalid)
 - [x] `.win` container format
 - [x] Proof chaining + key delegation
 - [x] RFC 3161 anchored timestamps
 - [x] Full chain-walk verification
-- [x] Browser verifier (`public/v.html`, WASM-backed)
+- [x] Browser verifier (`public/index.html`, WASM-backed)
 - [x] WASM verifier crate (`verifier-wasm`)
-- [x] URL verifier (`truth.systems/v/<hash>`)
+- [x] URL verifier (`truth.systems/v/<hash>` and `winstack.dev/v/<hash>`)
+- [x] Plain-English explainer (`proofs.systems`)
 - [x] Desktop app (macOS Apple Silicon)
 - [x] Cross-platform CI (Linux + macOS + Windows)
 - [x] Workspace lints, cargo-deny, weekly supply-chain audit
 
 ## Phase 0 → Phase 1 (next)
 
-- [ ] Wire WASM into `public/v.html` (collapse the duplicate JS verifier)
 - [ ] Demo video — 60-second seal → publish → recognize round trip
 - [ ] Anchor-user outreach (Cursor / Substack / Notion / journalism CMS)
 - [ ] Windows release artifacts (.msi)
