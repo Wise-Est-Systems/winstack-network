@@ -2,7 +2,7 @@
 
 A short guide for anyone — a person, an organization, an AI lab — who
 wants to start naming files. Five minutes from "never heard of
-Winstack" to "you've named your first file."
+Wise" to "you've named your first file."
 
 ## What being a witness means
 
@@ -28,20 +28,20 @@ Three things follow from that:
 
 ```bash
 # Install the CLI (one-time)
-cargo install --git https://github.com/Wise-Est-Systems/winstack-network winstack
+cargo install --git https://github.com/Wise-Est-Systems/wise wise
 
-# Initialize your witness identity. Keys live in ~/.winstack/ on Linux/macOS,
-# %APPDATA%\Winstack\ on Windows. Permissions are restricted to your user.
-winstack win /dev/null   # or any file; this also bootstraps the key on first run
+# Initialize your witness identity. Keys live in ~/.wise/ on Linux/macOS,
+# %APPDATA%\Wise\ on Windows. Permissions are restricted to your user.
+wise win /dev/null   # or any file; this also bootstraps the key on first run
 ```
 
-After the first `winstack win`, your witness key exists at:
+After the first `win win`, your witness key exists at:
 
 | Platform | Path                                          |
 |----------|-----------------------------------------------|
-| macOS    | `~/Library/Application Support/Winstack/`     |
-| Linux    | `~/.winstack/`                                |
-| Windows  | `%APPDATA%\Winstack\`                         |
+| macOS    | `~/Library/Application Support/Wise/`     |
+| Linux    | `~/.wise/`                                |
+| Windows  | `%APPDATA%\Wise\`                         |
 
 The directory is `0700` (owner-only) and contains:
 
@@ -69,13 +69,13 @@ identity.
 ## Name your first file
 
 ```bash
-winstack win report.pdf
+wise win report.pdf
 
 # Output:
 #   Won           report.pdf
 #   →  report.win
-#   Share URL     https://winstack.dev/v/<hash>
-#   (run `winstack publish report.win` to make the URL resolve)
+#   Share URL     https://truth.systems/v/<hash>
+#   (run `win publish report.win` to make the URL resolve)
 ```
 
 The `.win` is a single portable container holding the file plus its
@@ -84,11 +84,11 @@ they can recognize it offline.
 
 ## Make the share URL resolve
 
-Sealing produces a `.win`. Publishing makes the URL `winstack.dev/v/<hash>`
+Sealing produces a `.win`. Publishing makes the URL `truth.systems/v/<hash>`
 return a name tag.
 
 ```bash
-winstack publish report.win
+wise publish report.win
 # Default: writes public/v/<hash>.json relative to the current dir.
 # Use --to <path> to write to a different deploy root.
 ```
@@ -102,7 +102,7 @@ browser; we just serve the static name tag.
 | Path                                  | Best for                              | Tradeoff                              |
 |---------------------------------------|---------------------------------------|---------------------------------------|
 | **Push to your own static host**      | Witnesses with infrastructure         | You keep control; you carry the cost  |
-| **Push to a shared `winstack.dev` mirror** | Individuals; first-time witnesses | Convenient; fewer guarantees          |
+| **Push to a shared `truth.systems` mirror** | Individuals; first-time witnesses | Convenient; fewer guarantees          |
 | **Bundle as `.win` only, no URL**     | Air-gapped or paranoid contexts       | Survives without DNS; no link to share |
 
 The recipient's verifier cares only about the bytes of the name tag.
@@ -112,7 +112,7 @@ Where you serve them from is a deployment choice.
 
 When something happens to your key, publish a notice. It's a small
 JSON document, signed with the same key (or your designated heir
-key), placed at `https://<your-domain>/.well-known/winstack/notices.json`.
+key), placed at `https://<your-domain>/.well-known/win/notices.json`.
 
 Three notice types — see [`docs/adr/`](adr/) for the upcoming ADR on
 the format:
@@ -137,7 +137,7 @@ For graceful succession — a new device, a colleague taking over the
 witness role at an org, a planned algorithm migration:
 
 ```bash
-# Sketch — `winstack delegate` lands in a future release.
+# Sketch — `win delegate` lands in a future release.
 # Until then: generate a new key, sign a delegation JSON with the
 # previous key, distribute alongside future name tags. The verifier
 # walks the delegation chain so old name tags continue to verify
@@ -159,7 +159,7 @@ Repeating, because it matters:
   hosting, not a database of users).
 - We can't recover anything for you.
 
-This is the contract. It makes Winstack a tool you *use*, not a
+This is the contract. It makes Wise a tool you *use*, not a
 service you *depend on.* If we vanished tomorrow, every name tag
 ever made would still verify — because verification is just bytes
 plus the open WASM verifier and an open spec.
@@ -184,7 +184,7 @@ get a name tag identifying *which model* wrote the bytes.
 
 **Q: What if my witness gets sued?**
 Out of scope for the protocol. Witnesses speak for themselves.
-Winstack does not represent or insure them.
+Wise does not represent or insure them.
 
 **Q: How do I tell people I'm a witness?**
 Publish your public key on a place they trust (your domain, your

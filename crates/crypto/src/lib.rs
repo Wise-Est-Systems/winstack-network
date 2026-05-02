@@ -99,7 +99,7 @@ mod tests {
     #[test]
     fn sign_and_verify() {
         let kp = KeyPair::generate();
-        let data = b"hello winstack";
+        let data = b"hello wise";
         let sig = kp.sign_bytes(data);
         assert!(verify_signature(&kp.public_key_hex(), data, &sig).is_ok());
     }

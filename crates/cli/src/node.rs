@@ -1,6 +1,6 @@
 use canon_types::*;
 use std::path::Path;
-use winstack_crypto as crypto;
+use wise_crypto as crypto;
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct NodeConfig {
@@ -101,7 +101,7 @@ pub fn load_registry_from_node(node_dir: &Path) -> registry_core::Registry {
     let node_json = node_dir.join("node.json");
 
     if !node_json.exists() {
-        eprintln!("ERROR: node not initialized — run 'winstack prove <file>' first");
+        eprintln!("ERROR: node not initialized — run 'win prove <file>' first");
         std::process::exit(2);
     }
 
@@ -209,7 +209,7 @@ mod tests {
     use std::os::unix::fs::PermissionsExt;
 
     fn make_temp_node() -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("winstack-test-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("wise-test-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         // Create a dummy node.json
         std::fs::write(dir.join("node.json"), "{}").unwrap();
@@ -291,7 +291,7 @@ mod tests {
     #[test]
     fn missing_files_do_not_crash() {
         let dir =
-            std::env::temp_dir().join(format!("winstack-test-empty-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("wise-test-empty-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         // No node.json or graph.db — should not panic
         check_and_repair_permissions(&dir);

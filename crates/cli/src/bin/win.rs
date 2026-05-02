@@ -2,7 +2,7 @@ use canon_types::*;
 use clap::{Parser, Subcommand};
 use std::io::Read as _;
 use std::path::PathBuf;
-use winstack_crypto as crypto;
+use wise_crypto as crypto;
 
 // Shared node loading logic
 #[path = "../node.rs"]
@@ -11,7 +11,7 @@ mod node;
 mod trust;
 
 #[derive(Parser)]
-#[command(name = "winstack", about = "Winstack — seal and verify files")]
+#[command(name = "win", about = "Wise — seal and verify files")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -23,7 +23,7 @@ enum Commands {
     /// publishes their win tags so the share URLs resolve immediately.
     /// Use `--private` to skip publishing.
     Win {
-        /// Files to seal. Accepts shell globs: `winstack win *.pdf`.
+        /// Files to seal. Accepts shell globs: `win seal *.pdf`.
         #[arg(num_args = 1..)]
         files: Vec<PathBuf>,
         #[arg(long)]
@@ -34,12 +34,12 @@ enum Commands {
         /// locally; share URLs print but won't resolve.
         #[arg(long)]
         private: bool,
-        /// Override the publish target. Defaults to `WINSTACK_PUBLISH_DIR`,
+        /// Override the publish target. Defaults to `WISE_PUBLISH_DIR`,
         /// then to the nearest `public/` directory in the file tree.
         #[arg(long)]
         publish_to: Option<PathBuf>,
-        /// Base URL for the share links. Defaults to `https://winstack.dev`.
-        #[arg(long, default_value = "https://winstack.dev")]
+        /// Base URL for the share links. Defaults to `https://truth.systems/verify`.
+        #[arg(long, default_value = "https://truth.systems/verify")]
         base_url: String,
     },
     /// Verify a .win file (or legacy file + proof pair)
@@ -78,7 +78,7 @@ enum Commands {
         #[arg(long, default_value = "public")]
         to: PathBuf,
         /// Base URL where the directory will be served from.
-        #[arg(long, default_value = "https://winstack.dev")]
+        #[arg(long, default_value = "https://truth.systems/verify")]
         base_url: String,
     },
     /// Manage local trusted keys
@@ -111,13 +111,13 @@ enum TrustAction {
 /// contain `v/<hash>.json` once the file is sealed.
 ///
 /// Resolution order:
-/// 1. `WINSTACK_PUBLISH_DIR` env var (explicit override).
+/// 1. `WISE_PUBLISH_DIR` env var (explicit override).
 /// 2. The nearest ancestor directory containing a `public/` subdirectory
-///    AND a `vercel.json` file — this is the "you're inside a Winstack
+///    AND a `vercel.json` file — this is the "you're inside a Wise
 ///    deploy project" heuristic.
 /// 3. None — caller will skip auto-publishing.
 fn detect_publish_dir() -> Option<PathBuf> {
-    if let Ok(d) = std::env::var("WINSTACK_PUBLISH_DIR") {
+    if let Ok(d) = std::env::var("WISE_PUBLISH_DIR") {
         let p = PathBuf::from(d);
         if !p.as_os_str().is_empty() {
             return Some(p);
@@ -183,7 +183,7 @@ fn resolve_node_dir() -> PathBuf {
         .and_then(|p| p.parent())
         .unwrap()
         .to_path_buf();
-    project_root.join(".winstack")
+    project_root.join(".wise")
 }
 
 fn ensure_node() -> (registry_core::Registry, PathBuf) {
@@ -196,7 +196,7 @@ fn ensure_node() -> (registry_core::Registry, PathBuf) {
     } else {
         // Initialize new node
         std::fs::create_dir_all(&node_path).unwrap();
-        // Restrict .winstack directory to owner-only access
+        // Restrict .wise directory to owner-only access
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -230,7 +230,7 @@ fn ensure_node() -> (registry_core::Registry, PathBuf) {
 
         let mut module_registry = identity_core::ModuleRegistry::new();
         let mod_key = crypto::KeyPair::from_secret_bytes(&creator_secret);
-        let module_hash = crypto::sha256_hex(b"winstack-cli");
+        let module_hash = crypto::sha256_hex(b"wise-cli");
         let (module_id, _) = module_registry.register(
             ModuleKind::Document,
             "*",
@@ -474,7 +474,7 @@ fn main() {
                 let (artifact_bytes, bundle, proof_json) = win_file(file, &tsa_url, &from);
 
                 // The container's internal filename keeps the full original
-                // name (with extension) so `winstack open` restores `report.pdf`.
+                // name (with extension) so `win open` restores `report.pdf`.
                 // The filesystem name is just `<basename>.win`.
                 let internal_filename = file
                     .file_name()
@@ -543,7 +543,7 @@ fn main() {
             // Helpful nudge if the user's seal can't actually resolve yet.
             if publish_dir.is_none() && !private {
                 println!();
-                println!("  (Set WINSTACK_PUBLISH_DIR or run inside a project with a `public/`");
+                println!("  (Set WISE_PUBLISH_DIR or run inside a project with a `public/`");
                 println!(
                     "   directory to make share URLs resolve. Use --private to silence this.)"
                 );
@@ -712,7 +712,7 @@ fn main() {
                     println!("  Verified");
                 },
                 canon_types::VerificationStatus::Tampered => {
-                    let file_hash = winstack_crypto::sha256_hex(&artifact_bytes);
+                    let file_hash = wise_crypto::sha256_hex(&artifact_bytes);
                     let expected = &bundle.object.payload_hash;
                     println!("  Tampered      {}", file.display());
                     println!("    file      sha256:{}", file_hash);

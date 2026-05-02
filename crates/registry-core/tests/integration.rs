@@ -1,7 +1,7 @@
 use canon_types::*;
 use registry_core::test_registry;
 use uuid::Uuid;
-use winstack_crypto as crypto;
+use wise_crypto as crypto;
 
 // ---------------------------------------------------------------------------
 // 1. Valid native object seals and re-verifies
@@ -71,7 +71,7 @@ fn valid_sealed_import() {
         .get_key(&creator_id)
         .unwrap()
         .secret_key_bytes();
-    let ck = winstack_crypto::KeyPair::from_secret_bytes(&ck_bytes);
+    let ck = wise_crypto::KeyPair::from_secret_bytes(&ck_bytes);
     let (import_mod_id, _) = reg.module_registry.register(
         ModuleKind::Import,
         "imports/*",
@@ -656,7 +656,7 @@ fn module_scope_mismatch_fails() {
         .get_key(&creator_id)
         .unwrap()
         .secret_key_bytes();
-    let ck = winstack_crypto::KeyPair::from_secret_bytes(&ck_bytes);
+    let ck = wise_crypto::KeyPair::from_secret_bytes(&ck_bytes);
     let (import_mod_id, _) = reg.module_registry.register(
         ModuleKind::Import,
         "imports/*",
@@ -837,7 +837,7 @@ fn synthetic_tsa_token_rejected_by_full_verification() {
 
     let (mut reg, creator_id, module_id, _) = test_registry();
     let artifact = b"tsa anchored content".to_vec();
-    let payload_hash = winstack_crypto::sha256_hex(&artifact);
+    let payload_hash = wise_crypto::sha256_hex(&artifact);
     let hash_bytes = hex::decode(&payload_hash).unwrap();
 
     // Synthetic TSA response has correct hash but no real CMS signatures/certs.
@@ -873,7 +873,7 @@ fn tsa_hash_only_verification_still_works() {
     use base64::{engine::general_purpose::STANDARD as B64, Engine};
 
     let artifact = b"hash check content".to_vec();
-    let payload_hash = winstack_crypto::sha256_hex(&artifact);
+    let payload_hash = wise_crypto::sha256_hex(&artifact);
     let hash_bytes = hex::decode(&payload_hash).unwrap();
 
     let tsa_resp = time_core::tsa::build_test_tsa_response(&hash_bytes);
@@ -1556,8 +1556,8 @@ fn chain_walk_wrong_predecessor_content() {
 
 #[test]
 fn key_delegation_valid() {
-    let old_key = winstack_crypto::KeyPair::generate();
-    let new_key = winstack_crypto::KeyPair::generate();
+    let old_key = wise_crypto::KeyPair::generate();
+    let new_key = wise_crypto::KeyPair::generate();
     let lineage = uuid::Uuid::new_v4();
     let deleg = verifier::create_delegation(lineage, &old_key, &new_key.public_key_hex());
     assert!(verifier::verify_delegation(
@@ -1570,8 +1570,8 @@ fn key_delegation_valid() {
 
 #[test]
 fn key_delegation_tampered_fails() {
-    let old_key = winstack_crypto::KeyPair::generate();
-    let new_key = winstack_crypto::KeyPair::generate();
+    let old_key = wise_crypto::KeyPair::generate();
+    let new_key = wise_crypto::KeyPair::generate();
     let lineage = uuid::Uuid::new_v4();
     let mut deleg = verifier::create_delegation(lineage, &old_key, &new_key.public_key_hex());
     deleg.to_key_hex = "aa".repeat(32);
@@ -1658,7 +1658,7 @@ fn chain_walk_with_valid_delegation() {
         .get_key(&creator_id)
         .unwrap()
         .secret_key_bytes();
-    let old_key = winstack_crypto::KeyPair::from_secret_bytes(&old_key_bytes);
+    let old_key = wise_crypto::KeyPair::from_secret_bytes(&old_key_bytes);
     let new_pub = reg
         .identity_store
         .get(&creator2_id)
@@ -1738,32 +1738,32 @@ fn single_byte_file() {
 #[test]
 fn large_artifact_hash_deterministic() {
     let data = vec![0xAB; 1_000_000];
-    let h1 = winstack_crypto::sha256_hex(&data);
-    let h2 = winstack_crypto::sha256_hex(&data);
+    let h1 = wise_crypto::sha256_hex(&data);
+    let h2 = wise_crypto::sha256_hex(&data);
     assert_eq!(h1, h2);
     assert_eq!(h1.len(), 64);
 }
 
 #[test]
 fn different_data_different_hash() {
-    let h1 = winstack_crypto::sha256_hex(b"hello");
-    let h2 = winstack_crypto::sha256_hex(b"hello!");
+    let h1 = wise_crypto::sha256_hex(b"hello");
+    let h2 = wise_crypto::sha256_hex(b"hello!");
     assert_ne!(h1, h2);
 }
 
 #[test]
 fn signature_with_wrong_key_fails() {
-    let k1 = winstack_crypto::KeyPair::generate();
-    let k2 = winstack_crypto::KeyPair::generate();
+    let k1 = wise_crypto::KeyPair::generate();
+    let k2 = wise_crypto::KeyPair::generate();
     let sig = k1.sign_bytes(b"test");
-    assert!(winstack_crypto::verify_signature(&k2.public_key_hex(), b"test", &sig).is_err());
+    assert!(wise_crypto::verify_signature(&k2.public_key_hex(), b"test", &sig).is_err());
 }
 
 #[test]
 fn signature_over_empty_data() {
-    let kp = winstack_crypto::KeyPair::generate();
+    let kp = wise_crypto::KeyPair::generate();
     let sig = kp.sign_bytes(b"");
-    assert!(winstack_crypto::verify_signature(&kp.public_key_hex(), b"", &sig).is_ok());
+    assert!(wise_crypto::verify_signature(&kp.public_key_hex(), b"", &sig).is_ok());
 }
 
 // ── IDENTITY EDGE CASES ──
@@ -2149,7 +2149,7 @@ fn swapped_creator_key_fails() {
         })
         .unwrap();
     let mut b = reg.build_proof_bundle(&obj.object_id).unwrap();
-    let fake = winstack_crypto::KeyPair::generate();
+    let fake = wise_crypto::KeyPair::generate();
     b.creator_identity.public_key_hex = fake.public_key_hex();
     let r = verifier::verify_from_proof_bundle(&b, b"key swap");
     assert!(r.status.is_failed());
@@ -2580,8 +2580,8 @@ fn chain_wrong_lineage_invalidates_sig() {
 
 #[test]
 fn delegation_wrong_lineage_fails() {
-    let old = winstack_crypto::KeyPair::generate();
-    let new = winstack_crypto::KeyPair::generate();
+    let old = wise_crypto::KeyPair::generate();
+    let new = wise_crypto::KeyPair::generate();
     let lin1 = Uuid::new_v4();
     let lin2 = Uuid::new_v4();
     let deleg = verifier::create_delegation(lin1, &old, &new.public_key_hex());
@@ -2595,9 +2595,9 @@ fn delegation_wrong_lineage_fails() {
 
 #[test]
 fn delegation_wrong_from_key_fails() {
-    let old = winstack_crypto::KeyPair::generate();
-    let new = winstack_crypto::KeyPair::generate();
-    let other = winstack_crypto::KeyPair::generate();
+    let old = wise_crypto::KeyPair::generate();
+    let new = wise_crypto::KeyPair::generate();
+    let other = wise_crypto::KeyPair::generate();
     let lin = Uuid::new_v4();
     let deleg = verifier::create_delegation(lin, &old, &new.public_key_hex());
     assert!(!verifier::verify_delegation(
@@ -2610,9 +2610,9 @@ fn delegation_wrong_from_key_fails() {
 
 #[test]
 fn delegation_wrong_to_key_fails() {
-    let old = winstack_crypto::KeyPair::generate();
-    let new = winstack_crypto::KeyPair::generate();
-    let other = winstack_crypto::KeyPair::generate();
+    let old = wise_crypto::KeyPair::generate();
+    let new = wise_crypto::KeyPair::generate();
+    let other = wise_crypto::KeyPair::generate();
     let lin = Uuid::new_v4();
     let deleg = verifier::create_delegation(lin, &old, &new.public_key_hex());
     assert!(!verifier::verify_delegation(
@@ -2756,7 +2756,7 @@ fn ai_object_without_generation_record_fails() {
 fn sealed_import_is_foreign() {
     let (mut reg, cid, _, _) = test_registry();
     let ck = reg.identity_store.get_key(&cid).unwrap().secret_key_bytes();
-    let k = winstack_crypto::KeyPair::from_secret_bytes(&ck);
+    let k = wise_crypto::KeyPair::from_secret_bytes(&ck);
     let (imp_mid, _) = reg.module_registry.register(
         ModuleKind::Import,
         "imp/*",
@@ -3164,18 +3164,18 @@ fn created_at_is_rfc3339() {
 
 #[test]
 fn key_pair_roundtrip() {
-    let kp = winstack_crypto::KeyPair::generate();
+    let kp = wise_crypto::KeyPair::generate();
     let bytes = kp.secret_key_bytes();
-    let kp2 = winstack_crypto::KeyPair::from_secret_bytes(&bytes);
+    let kp2 = wise_crypto::KeyPair::from_secret_bytes(&bytes);
     assert_eq!(kp.public_key_hex(), kp2.public_key_hex());
     let sig = kp.sign_bytes(b"test");
-    assert!(winstack_crypto::verify_signature(&kp2.public_key_hex(), b"test", &sig).is_ok());
+    assert!(wise_crypto::verify_signature(&kp2.public_key_hex(), b"test", &sig).is_ok());
 }
 
 #[test]
 fn two_different_keys_produce_different_sigs() {
-    let k1 = winstack_crypto::KeyPair::generate();
-    let k2 = winstack_crypto::KeyPair::generate();
+    let k1 = wise_crypto::KeyPair::generate();
+    let k2 = wise_crypto::KeyPair::generate();
     let s1 = k1.sign_bytes(b"same data");
     let s2 = k2.sign_bytes(b"same data");
     assert_ne!(s1, s2);

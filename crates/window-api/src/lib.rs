@@ -253,7 +253,7 @@ async fn inspect_object(
     let artifact = reg.object_store.get_artifact(&id);
     let (hash_status, sig_status) = match artifact {
         Some(bytes) => {
-            let computed = winstack_crypto::sha256_hex(bytes);
+            let computed = wise_crypto::sha256_hex(bytes);
             let hash_ok = computed == obj.payload_hash;
             let sig_ok = if let Some(creator_ident) =
                 reg.identity_store.get(&obj.origin.creator_identity_id)
@@ -278,7 +278,7 @@ async fn inspect_object(
                     protocol: &obj.protocol,
                     proof_chain: &obj.proof_chain,
                 };
-                winstack_crypto::verify_json_signature(
+                wise_crypto::verify_json_signature(
                     &creator_ident.public_key_hex,
                     &payload,
                     &obj.object_signature,
@@ -550,7 +550,7 @@ async fn verify_upload(
         )
     })?;
 
-    let file_hash = winstack_crypto::sha256_hex(&file_bytes);
+    let file_hash = wise_crypto::sha256_hex(&file_bytes);
     let expected_hash = bundle.object.payload_hash.clone();
     let object_id = bundle.object.object_id.to_string();
     let trust_class = format!("{:?}", bundle.object.object_class.trust_class());
@@ -759,7 +759,7 @@ async fn prove_upload(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ErrorResponse {
                     error: ErrorDetail {
-                        message: "no creator identity found — run 'winstack prove' first to initialize the node".into(),
+                        message: "no creator identity found — run 'win prove' first to initialize the node".into(),
                     },
                 }),
             )
@@ -771,7 +771,7 @@ async fn prove_upload(
             Json(ErrorResponse {
                 error: ErrorDetail {
                     message:
-                        "no module registered — run 'winstack prove' first to initialize the node"
+                        "no module registered — run 'win prove' first to initialize the node"
                             .into(),
                 },
             }),
@@ -1143,7 +1143,7 @@ async fn check_bundle(
         },
     };
 
-    let file_hash = winstack_crypto::sha256_hex(&file_bytes);
+    let file_hash = wise_crypto::sha256_hex(&file_bytes);
     let expected_hash = bundle.object.payload_hash.clone();
     let object_id = bundle.object.object_id.to_string();
     let trust_class = format!("{:?}", bundle.object.object_class.trust_class());

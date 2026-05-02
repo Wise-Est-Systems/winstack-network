@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Winstack</title>
+<title>Wise — Verify</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -78,7 +78,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
 </style>
 </head>
 <body>
-<nav><div class="logo">Winstack</div></nav>
+<nav><div class="logo">Wise</div></nav>
 <main>
 <div class="app">
   <div id="input-state">
@@ -113,7 +113,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
   </div>
 </div>
 </main>
-<footer><span class="foot">Winstack</span></footer>
+<footer><span class="foot">Wise</span></footer>
 <script>
 // Block ALL native file-drop navigation — must be first, capture phase
 document.addEventListener('dragover', function(e) { e.preventDefault(); }, true);
@@ -296,7 +296,7 @@ function renderSeal(orig, winName) {
   v.className = 'verdict enter sealed';
   requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
   $('r-status').textContent = 'Sealed';
-  $('r-explain').textContent = winName + ' saved to your Downloads folder. Send it to anyone \u2014 they can verify it by dropping it here or at winstack.dev.';
+  $('r-explain').textContent = winName + ' saved to your Downloads folder. Send it to anyone \u2014 they can verify it by dropping it here or at truth.systems.';
   var m = $('r-meta'); m.classList.remove('hidden'); m.textContent = 'File + win tag in one package';
 }
 

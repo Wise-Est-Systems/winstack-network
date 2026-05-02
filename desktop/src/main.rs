@@ -4,11 +4,11 @@
 use canon_types::*;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use winstack_crypto as crypto;
+use wise_crypto as crypto;
 
 fn node_dir() -> PathBuf {
     let base = dirs_next().unwrap_or_else(|| std::env::current_dir().unwrap());
-    base.join(".winstack")
+    base.join(".wise")
 }
 
 fn dirs_next() -> Option<PathBuf> {
@@ -19,20 +19,20 @@ fn dirs_next() -> Option<PathBuf> {
             PathBuf::from(h)
                 .join("Library")
                 .join("Application Support")
-                .join("Winstack")
+                .join("Wise")
         })
     }
     #[cfg(target_os = "windows")]
     {
         std::env::var("APPDATA")
             .ok()
-            .map(|d| PathBuf::from(d).join("Winstack"))
+            .map(|d| PathBuf::from(d).join("Wise"))
     }
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     {
         std::env::var("HOME")
             .ok()
-            .map(|h| PathBuf::from(h).join(".winstack"))
+            .map(|h| PathBuf::from(h).join(".wise"))
     }
 }
 
@@ -43,7 +43,7 @@ fn ensure_node(node_path: &PathBuf) {
     }
 
     std::fs::create_dir_all(node_path).unwrap();
-    // Restrict .winstack directory to owner-only access
+    // Restrict .wise directory to owner-only access
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -65,7 +65,7 @@ fn ensure_node(node_path: &PathBuf) {
     let pe_secret = identity_store.get_key(&pe_id).unwrap().secret_key_bytes();
 
     let mod_key = crypto::KeyPair::from_secret_bytes(&creator_secret);
-    let module_hash = crypto::sha256_hex(b"winstack-desktop");
+    let module_hash = crypto::sha256_hex(b"wise-desktop");
 
     let mut module_registry = identity_core::ModuleRegistry::new();
     let (module_id, _) = module_registry.register(
@@ -313,7 +313,7 @@ fn main() {
     }
 
     let inject_js = format!(
-        "window.WINSTACK_API_BASE = 'http://{}'; window.WINSTACK_TOKEN = '{}';",
+        "window.WISE_API_BASE = 'http://{}'; window.WISE_TOKEN = '{}';",
         addr, session_token
     );
 
@@ -325,7 +325,7 @@ fn main() {
             }
         })
         .build(tauri::generate_context!("./tauri.conf.json"))
-        .expect("error while building Winstack");
+        .expect("error while building Wise");
 
     app.run(move |_app_handle, event| {
         if let tauri::RunEvent::Opened { urls } = event {

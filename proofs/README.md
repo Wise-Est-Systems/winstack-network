@@ -2,14 +2,14 @@
 
 Front-end for Wise.Est Proof — the AI-exoneration product.
 
-Sender side of the protocol. Free verifier lives at winstack.dev.
+Sender side of the protocol. Free verifier lives at truth.systems.
 
 ## Deploy
 
-Separate Vercel project from the parent winstack.dev deploy. From this directory:
+Separate Vercel project from the parent truth.systems deploy. From this directory:
 
 ```sh
-vercel link        # link to a new Vercel project (not the winstack-network one)
+vercel link        # link to a new Vercel project (not the wise one)
 vercel --prod      # deploy
 ```
 

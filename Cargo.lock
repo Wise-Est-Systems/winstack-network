@@ -527,7 +527,7 @@ dependencies = [
  "uuid",
  "verifier",
  "win-format",
- "winstack-crypto",
+ "wise-crypto",
 ]
 
 [[package]]
@@ -1972,7 +1972,7 @@ dependencies = [
  "serde_json",
  "thiserror 1.0.69",
  "uuid",
- "winstack-crypto",
+ "wise-crypto",
 ]
 
 [[package]]
@@ -2671,7 +2671,7 @@ dependencies = [
  "serde_json",
  "thiserror 1.0.69",
  "uuid",
- "winstack-crypto",
+ "wise-crypto",
 ]
 
 [[package]]
@@ -3035,7 +3035,7 @@ dependencies = [
  "serde_json",
  "thiserror 1.0.69",
  "uuid",
- "winstack-crypto",
+ "wise-crypto",
 ]
 
 [[package]]
@@ -3360,7 +3360,7 @@ dependencies = [
  "time-core 0.1.0",
  "uuid",
  "verifier",
- "winstack-crypto",
+ "wise-crypto",
 ]
 
 [[package]]
@@ -4511,7 +4511,7 @@ dependencies = [
  "spki",
  "thiserror 1.0.69",
  "uuid",
- "winstack-crypto",
+ "wise-crypto",
  "x509-cert",
 ]
 
@@ -4985,7 +4985,7 @@ dependencies = [
  "thiserror 1.0.69",
  "time-core 0.1.0",
  "uuid",
- "winstack-crypto",
+ "wise-crypto",
 ]
 
 [[package]]
@@ -5002,7 +5002,7 @@ dependencies = [
  "verifier",
  "wasm-bindgen",
  "win-format",
- "winstack-crypto",
+ "wise-crypto",
 ]
 
 [[package]]
@@ -5365,7 +5365,7 @@ dependencies = [
  "uuid",
  "verifier",
  "win-format",
- "winstack-crypto",
+ "wise-crypto",
 ]
 
 [[package]]
@@ -5806,7 +5806,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "winstack-crypto"
+name = "wise-crypto"
 version = "0.1.0"
 dependencies = [
  "ed25519-dalek",
@@ -5819,7 +5819,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "winstack-desktop"
+name = "wise-desktop"
 version = "0.2.0"
 dependencies = [
  "canon-types",
@@ -5841,7 +5841,7 @@ dependencies = [
  "verifier",
  "win-format",
  "window-api",
- "winstack-crypto",
+ "wise-crypto",
 ]
 
 [[package]]

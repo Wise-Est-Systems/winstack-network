@@ -1,14 +1,14 @@
-# Winstack
+# Wise
 
-[![CI](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/ci.yml/badge.svg)](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/ci.yml)
-[![WASM](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/wasm.yml/badge.svg)](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/wasm.yml)
-[![Audit](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/audit.yml/badge.svg)](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/audit.yml)
+[![CI](https://github.com/Wise-Est-Systems/wise/actions/workflows/ci.yml/badge.svg)](https://github.com/Wise-Est-Systems/wise/actions/workflows/ci.yml)
+[![WASM](https://github.com/Wise-Est-Systems/wise/actions/workflows/wasm.yml/badge.svg)](https://github.com/Wise-Est-Systems/wise/actions/workflows/wasm.yml)
+[![Audit](https://github.com/Wise-Est-Systems/wise/actions/workflows/audit.yml/badge.svg)](https://github.com/Wise-Est-Systems/wise/actions/workflows/audit.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![MSRV](https://img.shields.io/badge/MSRV-1.82-orange.svg)](rust-toolchain.toml)
 
 **Files that prove themselves.**
 
-Winstack gives every file a *win tag* — a small portable record that
+Wise gives every file a *win tag* — a small portable record that
 travels with it. The win tag says who sealed the file, when, and whether
 the file is unchanged since. Receivers read it offline, without
 accounts, without trusting any server.
@@ -24,9 +24,9 @@ A file without a win tag is *untagged*: neutral, not dangerous.
 | Verifier (Rust)      | Stable. 198 tests, `#![forbid(unsafe_code)]`            |
 | Verifier (WASM)      | Stable. ≤ 1 MB compressed budget enforced in CI         |
 | `.win` container v1  | Stable. Backwards-compatibility contract in CONTRIBUTING |
-| CLI                  | `winstack` / `win` / `winopen` — Linux / macOS / Windows |
+| CLI                  | `wise` / `win` / `winopen` — Linux / macOS / Windows |
 | Desktop app          | macOS Apple Silicon shipping; Linux / Windows in CI     |
-| URL verifier         | `winstack.dev/v/<hash>` — share-anywhere static page    |
+| URL verifier         | `truth.systems/v/<hash>` — share-anywhere static page    |
 
 See [`CHANGELOG.md`](CHANGELOG.md) for what changed in each release.
 
@@ -34,7 +34,7 @@ See [`CHANGELOG.md`](CHANGELOG.md) for what changed in each release.
 
 ## How it works
 
-1. **Witness seals a file** — `winstack win report.pdf` produces
+1. **Witness seals a file** — `win win report.pdf` produces
    `report.win`, a single portable container holding the file plus its
    win tag.
 2. **The file travels** — email, Slack, Drive, S3. The win tag travels
@@ -55,11 +55,11 @@ Three states. No fourth. See [ADR 0002](docs/adr/0002-three-state-grammar.md).
 
 ## Try it
 
-**Without installing anything** — open [winstack.dev](https://winstack.dev),
+**Without installing anything** — open [truth.systems](https://truth.systems),
 drop a `.win`. Verification runs locally in the browser; nothing is
 uploaded.
 
-**Desktop app (macOS)** — [download the latest release](https://github.com/Wise-Est-Systems/winstack-network/releases/latest).
+**Desktop app (macOS)** — [download the latest release](https://github.com/Wise-Est-Systems/wise/releases/latest).
 Drop any file to seal it. Drop a `.win` to verify it.
 
 **CLI** —
@@ -67,10 +67,10 @@ Drop any file to seal it. Drop a `.win` to verify it.
 ```bash
 cargo build --release
 
-./target/release/winstack win report.pdf            # → report.win
-./target/release/winstack verify report.win          # Verified / Tampered / Invalid
-./target/release/winstack open   report.win          # → restores report.pdf
-./target/release/winstack publish report.win         # → public/v/<hash>.json
+./target/release/win win report.pdf            # → report.win
+./target/release/win verify report.win          # Verified / Tampered / Invalid
+./target/release/win open   report.win          # → restores report.pdf
+./target/release/win publish report.win         # → public/v/<hash>.json
 ```
 
 ---
@@ -90,28 +90,28 @@ The win tag is safe to share publicly.
 
 ---
 
-## How Winstack spreads
+## How Wise spreads
 
 The product is not the app. **The product is the win tag attached to
 the file.**
 
 - A witness seals a file. The file and win tag travel together.
-- Any receiver verifies using any Winstack verifier. No coordination.
+- Any receiver verifies using any Wise verifier. No coordination.
 - The app and CLI are creator tools and verifiers — not a platform.
 
 Three verification paths, same result:
 
-1. **URL** — `winstack.dev/v/<hash>` resolves to the static win tag.
+1. **URL** — `truth.systems/v/<hash>` resolves to the static win tag.
 2. **Browser** — drop a `.win` into the verifier; runs in-browser.
 3. **Desktop app** — full offline verification with name-tag creation.
-4. **CLI / library** — `winstack verify`, or call the `verifier-wasm`
+4. **CLI / library** — `win verify`, or call the `verifier-wasm`
    exports from any browser-adjacent surface.
 
 ---
 
 ## Comparison
 
-|                              | Winstack       | Traditional hash | Blockchain notary | Cloud signing |
+|                              | Wise       | Traditional hash | Blockchain notary | Cloud signing |
 |------------------------------|----------------|------------------|-------------------|---------------|
 | Works offline                | Yes            | Yes              | No                | No            |
 | Requires server trust        | No             | No               | Yes               | Yes           |
@@ -122,13 +122,13 @@ Three verification paths, same result:
 | Accounts required            | No             | No               | Yes               | Yes           |
 | External timestamps          | Optional       | No               | Built-in          | Built-in      |
 
-Winstack is not a blockchain, a certificate authority, or a cloud
+Wise is not a blockchain, a certificate authority, or a cloud
 service. It is a local proof system. Win tags are self-contained;
 verification contacts nothing.
 
 ---
 
-## What Winstack proves
+## What Wise proves
 
 - A specific file existed at a specific time (local device clock, or
   anchored via RFC 3161).
@@ -136,7 +136,7 @@ verification contacts nothing.
 - It was signed by a specific key.
 - It may be part of a verifiable lineage.
 
-## What Winstack does NOT prove
+## What Wise does NOT prove
 
 - That the file content is true or accurate.
 - The real-world identity of the witness (only key continuity).
@@ -166,7 +166,7 @@ verifier-wasm     wasm-bindgen export. Same logic, JS-callable.
 win-format        The .win container. Zero workspace dependencies.
 registry-core     10-step sealing pipeline. Fail-closed on persistence.
 window-api        Axum HTTP API used by the desktop app.
-cli               winstack + winopen binaries.
+cli               wise + winopen binaries.
 desktop           Tauri 2 frontend.
 ```
 
@@ -229,10 +229,10 @@ CI runs these on Linux, macOS, and Windows.
 
 ## Downloads
 
-[Latest release](https://github.com/Wise-Est-Systems/winstack-network/releases/latest)
+[Latest release](https://github.com/Wise-Est-Systems/wise/releases/latest)
 
-- **Winstack.dmg** — macOS Apple Silicon
-- **Winstack.zip** — macOS Apple Silicon (alternative archive)
+- **Wise.dmg** — macOS Apple Silicon
+- **Wise.zip** — macOS Apple Silicon (alternative archive)
 
 > macOS may show a developer warning on first launch (the app is not yet
 > code-signed). Right-click → Open → Open to bypass.

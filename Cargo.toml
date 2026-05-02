@@ -22,8 +22,8 @@ version = "0.2.0"
 edition = "2021"
 rust-version = "1.82"
 license = "MIT"
-repository = "https://github.com/Wise-Est-Systems/winstack-network"
-homepage = "https://winstack.dev"
+repository = "https://github.com/Wise-Est-Systems/wise"
+homepage = "https://truth.systems"
 readme = "README.md"
 
 # Enforced lints — CI treats warnings as errors. Adjust only with an
@@ -76,7 +76,7 @@ lto = "fat"
 
 [workspace.dependencies]
 canon-types = { path = "crates/canon-types" }
-winstack-crypto = { path = "crates/crypto" }
+wise-crypto = { path = "crates/crypto" }
 identity-core = { path = "crates/identity-core" }
 time-core = { path = "crates/time-core" }
 policy-core = { path = "crates/policy-core" }

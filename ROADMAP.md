@@ -9,7 +9,7 @@
 - [x] Full chain-walk verification
 - [x] Browser verifier (`public/v.html`, WASM-backed)
 - [x] WASM verifier crate (`verifier-wasm`)
-- [x] URL verifier (`winstack.dev/v/<hash>`)
+- [x] URL verifier (`truth.systems/v/<hash>`)
 - [x] Desktop app (macOS Apple Silicon)
 - [x] Cross-platform CI (Linux + macOS + Windows)
 - [x] Workspace lints, cargo-deny, weekly supply-chain audit

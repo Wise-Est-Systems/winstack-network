@@ -15,9 +15,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - WASM verifier crate `verifier-wasm`, building to a single
   `verifier_wasm_bg.wasm` artifact callable from any browser-adjacent surface
   (ADR 0005).
-- URL verifier — `winstack.dev/v/<hash>` static page that fetches a
+- URL verifier — `truth.systems/v/<hash>` static page that fetches a
   hash-indexed proof bundle and renders the four-state outcome.
-- `winstack publish` CLI subcommand that extracts a name tag and writes it
+- `win publish` CLI subcommand that extracts a name tag and writes it
   to a hash-indexed directory for static deployment.
 - CI pipeline: format + clippy + test on Linux/macOS/Windows, MSRV check at
   Rust 1.82, doc build, WASM build with size budget, weekly cargo-deny.
@@ -37,10 +37,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `!result.status.is_alive()` to reflect the four-state model.
 
 ### Changed (continued)
-- `winstack seal report.pdf` now produces `report.win` instead of
+- `win seal report.pdf` now produces `report.win` instead of
   `report.pdf.win`. Every named file is a `.win` — no extension chain.
   The container preserves the original filename internally, so
-  `winstack open report.win` still restores `report.pdf`. If
+  `win open report.win` still restores `report.pdf`. If
   `<basename>.win` already exists in the parent directory, the new
   artifact is suffixed with the first 8 hex chars of the payload hash
   (e.g. `report-9fb93974.win`) to avoid silent overwrites.
@@ -51,7 +51,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   implementation when the wedge work begins; the import pipeline is
   unscheduled.
 - `crates/cli/src/main.rs` — the `win` internal-inspection binary. Power
-  users use `winstack` (user-facing) and `winopen` (file association).
+  users use `wise` (user-facing) and `winopen` (file association).
 - `window/check.html` — superseded by `public/v.html` calling the WASM
   verifier; both surfaces previously duplicated the verification logic.
 - `window/index.html` — the engineering-inspection view; out of scope for
@@ -73,7 +73,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - Proof chaining and key delegation across full lineage.
 - RFC 3161 external timestamp anchoring.
 - Browser verifier running entirely in-browser via SubtleCrypto.
-- Public macOS release: `Winstack.dmg`, `Winstack.zip` (Apple Silicon).
+- Public macOS release: `Wise.dmg`, `Wise.zip` (Apple Silicon).
 
 ## [0.1.0] — 2026-04-04
 
@@ -83,6 +83,6 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - Core verification: SHA-256 hash check, Ed25519 signatures, identity and
   module validation, policy proofs.
 
-[Unreleased]: https://github.com/Wise-Est-Systems/winstack-network/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/Wise-Est-Systems/winstack-network/releases/tag/v0.2.0
-[0.1.0]: https://github.com/Wise-Est-Systems/winstack-network/releases/tag/v0.1.0
+[Unreleased]: https://github.com/Wise-Est-Systems/wise/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Wise-Est-Systems/wise/releases/tag/v0.2.0
+[0.1.0]: https://github.com/Wise-Est-Systems/wise/releases/tag/v0.1.0

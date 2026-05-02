@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 canon-types = { workspace = true }
-winstack-crypto = { workspace = true }
+wise-crypto = { workspace = true }
 identity-core = { workspace = true }
 time-core = { workspace = true }
 policy-core = { workspace = true }

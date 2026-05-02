@@ -17,14 +17,14 @@ overlay text added in post.
 
 | Time     | Frame                                  | What's on screen                                                                  | Overlay text                                  |
 |----------|----------------------------------------|-----------------------------------------------------------------------------------|-----------------------------------------------|
-| 0:00–0:06 | Terminal                              | `$ winstack win report.pdf` runs; outputs `Won` + share URL                    | "Win a file."                                |
+| 0:00–0:06 | Terminal                              | `$ wise win report.pdf` runs; outputs `Won` + share URL                    | "Win a file."                                |
 | 0:07–0:12 | Terminal + macOS Finder               | Show `report.win` appearing next to the original                              | "The name tag travels with the file."         |
-| 0:13–0:20 | Terminal                              | `$ winstack publish report.win` — outputs the resolvable URL                  | "Publish the name tag."                       |
+| 0:13–0:20 | Terminal                              | `$ wise publish report.win` — outputs the resolvable URL                  | "Publish the name tag."                       |
 | 0:21–0:27 | Mac Mail or Slack                     | Drag `report.pdf` into a draft, paste the URL into the message body, send         | "Share the file. Share the URL."              |
-| 0:28–0:35 | Other browser window (recipient view) | Click the URL: `winstack.dev/v/<hash>`; preview shows witness + birthday          | "Anyone can recognize it. No account."        |
+| 0:28–0:35 | Other browser window (recipient view) | Click the URL: `truth.systems/v/<hash>`; preview shows witness + birthday          | "Anyone can recognize it. No account."        |
 | 0:36–0:46 | Recipient view                        | Drag `report.pdf` into the drop zone; recognizer turns green: **Alive**           | "Alive. Witnessed by you. Born today."        |
 | 0:47–0:53 | Recipient view (second take)          | Drop a tampered copy of the file; recognizer goes blue-grey: **Wounded**          | "Change the file — it stops being alive."     |
-| 0:54–1:00 | Static end card                       | Wordmark + `winstack.dev` + `Files that prove themselves.`                         | —                                             |
+| 0:54–1:00 | Static end card                       | Wordmark + `truth.systems` + `Files that prove themselves.`                         | —                                             |
 
 ## Tone notes
 
@@ -39,7 +39,7 @@ overlay text added in post.
 
 - The AI-lab pitch deck (single embedded clip on the title slide).
 - The README "Try it now" section (auto-play loop, muted).
-- The `winstack.dev` homepage above the fold.
+- The `truth.systems` homepage above the fold.
 - Twitter/threads launch post when an anchor user goes live.
 
 ## What this video is NOT
@@ -61,6 +61,6 @@ overlay text added in post.
 ## Post
 
 - Export 1080p H.264 at 30fps, ≤ 8 MB.
-- Provide a 720p variant for embed in `winstack.dev`.
+- Provide a 720p variant for embed in `truth.systems`.
 - Caption file: `.vtt` for accessibility, even though there's no audio.
 - Upload to a CDN-backed location (not just GitHub LFS).

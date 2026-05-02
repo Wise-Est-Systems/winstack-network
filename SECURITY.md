@@ -5,8 +5,8 @@
 Do **not** open a public issue. Use one of:
 
 - **GitHub Security Advisories** — preferred. Open a private advisory at
-  <https://github.com/Wise-Est-Systems/winstack-network/security/advisories/new>.
-- **Email** — `security@winstack.dev` (PGP-encrypted preferred; see below).
+  <https://github.com/Wise-Est-Systems/wise/security/advisories/new>.
+- **Email** — `security@truth.systems` (PGP-encrypted preferred; see below).
 
 Include enough information to reproduce the issue: version or commit SHA,
 platform, a minimal `.win` or proof bundle if relevant, and a short
@@ -33,7 +33,7 @@ In scope:
 - The verifier (`crates/verifier`, `crates/verifier-wasm`)
 - The `.win` container and proof-bundle parsers (`crates/win-format`, `crates/canon-types`)
 - The cryptographic primitives (`crates/crypto`)
-- The CLI binaries (`winstack`, `win`, `winopen`)
+- The CLI binaries (`wise`, `win`, `winopen`)
 - The desktop app (`desktop`)
 - The browser verifier (`window/`, `public/v.html`)
 - The window API (`crates/window-api`) when used per documented configuration
@@ -74,5 +74,5 @@ when it lands). Files signed under deprecated algorithms enter the
 
 ## PGP key
 
-Available on request via `security@winstack.dev`. Fingerprint published in
+Available on request via `security@truth.systems`. Fingerprint published in
 release notes for each major version.

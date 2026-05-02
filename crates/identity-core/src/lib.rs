@@ -1,7 +1,7 @@
 use canon_types::*;
 use std::collections::HashMap;
 use uuid::Uuid;
-use winstack_crypto::{self as crypto, KeyPair};
+use wise_crypto::{self as crypto, KeyPair};
 
 #[derive(Debug, thiserror::Error)]
 pub enum IdentityError {

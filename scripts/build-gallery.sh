@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Generate the four-state gallery — sample .win files exercising every
 # verifier outcome. Used by the demo recording, the deploy smoke tests,
-# and `winstack.dev` documentation screenshots.
+# and `truth.systems` documentation screenshots.
 #
 # Outputs to ./gallery/ (gitignored). Regenerable.
 
@@ -10,11 +10,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-WINSTACK="${WINSTACK_BIN:-$ROOT/target/release/winstack}"
-if [[ ! -x "$WINSTACK" ]]; then
-  echo "▸ Building winstack…"
-  cargo build --release -p cli --bin winstack
-  WINSTACK="$ROOT/target/release/winstack"
+WIN="${WISE_BIN:-$ROOT/target/release/win}"
+if [[ ! -x "$WIN" ]]; then
+  echo "▸ Building win…"
+  cargo build --release -p cli --bin win
+  WIN="$ROOT/target/release/win"
 fi
 
 # Clean output dir
@@ -33,7 +33,7 @@ cat > alive.txt <<'EOF'
 This is the alive sample.
 A name tag was attached when this file existed in this exact form.
 EOF
-"$WINSTACK" seal alive.txt > /dev/null
+"$WIN" seal alive.txt > /dev/null
 echo "  alive.win            → Alive   (drop with the file as-is)"
 
 # ─── 2. WOUNDED ───────────────────────────────────────────────────────
@@ -53,13 +53,13 @@ This is the wounded sample.
 The bytes here were named once. The accompanying tampered file
 demonstrates the Wounded state for the URL flow.
 EOF
-"$WINSTACK" seal wounded-source.txt > /dev/null
+"$WIN" seal wounded-source.txt > /dev/null
 mv wounded-source.win wounded.win
 # Tampered companion — original filename inside the .win is "wounded-source.txt",
 # so the receiver should drop a file *with that content modified* at the URL.
 cat > wounded-source.txt <<'EOF'
 This file has been changed since it was named.
-Drop this file at the recipient URL — Winstack will say Wounded.
+Drop this file at the recipient URL — Wise will say Wounded.
 EOF
 mv wounded-source.txt wounded-tampered.txt
 echo "  wounded.win            → Alive on its own"
@@ -69,7 +69,7 @@ echo "  wounded-tampered.txt   → drop with /v/<hash> URL → Wounded"
 # Build a container with a mismatched proof bundle: the .win's bytes are
 # fine, but the proof inside was signed against a different file. We
 # achieve this by extracting the proof from one .win and packing it
-# around a different file's bytes. Without `winstack repack`, the
+# around a different file's bytes. Without `win repack`, the
 # simplest approximation: corrupt a single byte in the proof JSON's
 # signature so the cryptographic check fails while parsing still
 # succeeds.
@@ -77,7 +77,7 @@ cat > unrecognized.txt <<'EOF'
 This sample exercises the Unrecognized state.
 The proof JSON inside the .win has one mutated signature byte.
 EOF
-"$WINSTACK" seal unrecognized.txt > /dev/null
+"$WIN" seal unrecognized.txt > /dev/null
 # Corrupt one hex character of object_signature in the proof JSON so the
 # Ed25519 check fails while parsing still succeeds. The proof JSON is
 # pretty-printed, so we match `"object_signature": "<128 hex>"` with
@@ -112,7 +112,7 @@ cat > dying.txt <<'EOF'
 This sample exercises the Dying state.
 The container's header is corrupted; the recognizer cannot read it.
 EOF
-"$WINSTACK" seal dying.txt > /dev/null
+"$WIN" seal dying.txt > /dev/null
 # Corrupt the magic bytes so parsing fails immediately.
 python3 - <<'PY'
 p = "dying.win"
@@ -127,8 +127,8 @@ echo "  dying.win              → Dying (container header corrupted)"
 # Unrecognized lose the proof bundle.)
 echo ""
 echo "▸ Publishing the still-valid name tags to public/v/"
-"$WINSTACK" publish alive.win   --to "$ROOT/public" 2>&1 | sed 's/^/  /'
-"$WINSTACK" publish wounded.win --to "$ROOT/public" 2>&1 | sed 's/^/  /'
+"$WIN" publish alive.win   --to "$ROOT/public" 2>&1 | sed 's/^/  /'
+"$WIN" publish wounded.win --to "$ROOT/public" 2>&1 | sed 's/^/  /'
 
 echo ""
 echo "✔ Gallery ready in $GALLERY"

@@ -11,7 +11,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: "`winstack --version`, the desktop app version, or the commit SHA."
+      description: "`win --version`, the desktop app version, or the commit SHA."
       placeholder: "0.2.0 / abc123d"
     validations:
       required: true
@@ -29,7 +29,7 @@ body:
     attributes:
       label: Surface
       options:
-        - CLI (winstack / win / winopen)
+        - CLI (wise / win / winopen)
         - Desktop app
         - Browser verifier (window/check.html, public/v.html)
         - WASM verifier (verifier-wasm)

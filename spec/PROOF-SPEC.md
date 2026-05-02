@@ -1,4 +1,4 @@
-# Winstack Proof Specification
+# Wise Proof Specification
 
 **Protocol version:** V1
 **Status:** Active
@@ -233,10 +233,10 @@ At verify time:
 
 ### Configuration
 
-External time anchoring is opt-in. Use `--tsa-url <URL>` with `winstack prove`:
+External time anchoring is opt-in. Use `--tsa-url <URL>` with `wise prove`:
 
 ```bash
-winstack win document.pdf --tsa-url https://freetsa.org/tsr
+wise win document.pdf --tsa-url https://freetsa.org/tsr
 ```
 
 If the TSA is unreachable or rejects the request, sealing falls back to `Local` time with a warning.
@@ -285,10 +285,10 @@ The `proof_chain` field is optional on `SealedObject`. If absent, the proof is s
 
 ```bash
 # Create origin proof (standalone or first in chain)
-winstack prove document.pdf
+wise prove document.pdf
 
 # Create successor proof linked to a prior version
-winstack prove document-v2.pdf --from document.pdf.proof.json
+wise prove document-v2.pdf --from document.pdf.proof.json
 ```
 
 The `--from` flag extracts the predecessor's `object_id`, `payload_hash`, and `lineage_id` (or derives lineage from the predecessor's own `object_id` if it has no chain).
@@ -326,10 +326,10 @@ A `.win` file packages the original file and its proof into a single container.
 ### CLI
 
 ```bash
-winstack win document.pdf              # creates document.win
-winstack verify document.win            # Verified / Tampered / Invalid
-winstack open document.win              # restores document.pdf
-winstack verify file --proof file.proof.json  # legacy sidecar support
+wise win document.pdf              # creates document.win
+wise verify document.win            # Verified / Tampered / Invalid
+wise open document.win              # restores document.pdf
+wise verify file --proof file.proof.json  # legacy sidecar support
 ```
 
 ### Security
@@ -351,16 +351,16 @@ Read endpoints (`/verify`, `/check`, `/objects/:id`, `/objects/:id/export`) requ
 
 ## 14. Local key storage
 
-Private keys are stored in `.winstack/node.json` as hex-encoded Ed25519 secret bytes.
+Private keys are stored in `.wise/node.json` as hex-encoded Ed25519 secret bytes.
 
 ### Permissions
 
 | Path | Permissions | Contains |
 |---|---|---|
-| `.winstack/` | 0700 (owner only) | All node state |
-| `.winstack/node.json` | 0600 (owner read/write) | Private keys (creator, time authority, policy evaluator) |
-| `.winstack/graph.db` | 0600 (owner read/write) | SQLite lineage DAG — which files were sealed and when |
-| `.winstack/store_data/` | inherited from parent | Sealed object metadata and artifact copies |
+| `.wise/` | 0700 (owner only) | All node state |
+| `.wise/node.json` | 0600 (owner read/write) | Private keys (creator, time authority, policy evaluator) |
+| `.wise/graph.db` | 0600 (owner read/write) | SQLite lineage DAG — which files were sealed and when |
+| `.wise/store_data/` | inherited from parent | Sealed object metadata and artifact copies |
 
 Permissions are set on creation. On every startup, the CLI and desktop app check permissions and repair them if they have drifted (e.g. after a backup restore or manual copy). If repair fails, a warning is printed with the exact chmod command needed.
 
@@ -378,10 +378,10 @@ Permissions are set on creation. On every startup, the CLI and desktop app check
 
 ### Practical guidance
 
-- Do not share your `.winstack/` directory.
+- Do not share your `.wise/` directory.
 - Do not commit `node.json` to version control (it is gitignored by default).
 - Enable FileVault (macOS), BitLocker (Windows), or LUKS (Linux) for disk encryption — this protects keys at rest when the machine is off.
-- If you suspect key compromise, generate a new node (`rm -rf .winstack && winstack win <file>`) and re-seal important files.
+- If you suspect key compromise, generate a new node (`rm -rf .wise && wise win <file>`) and re-seal important files.
 
 ## 15. What the system proves
 
@@ -402,7 +402,7 @@ Permissions are set on creation. On every startup, the CLI and desktop app check
 
 The system proves that a specific key signed a specific file. It does not prove who controls that key.
 
-Trust is a local decision. You choose which keys you trust by adding them to your local trust list (`~/.winstack/trusted_keys.json`).
+Trust is a local decision. You choose which keys you trust by adding them to your local trust list (`~/.wise/trusted_keys.json`).
 
 ### Trust status
 
@@ -421,9 +421,9 @@ Trust is a local decision. You choose which keys you trust by adding them to you
 ### CLI commands
 
 ```bash
-winstack trust add <pubkey> --label "My main key"
-winstack trust remove <pubkey>
-winstack trust list
+wise trust add <pubkey> --label "My main key"
+wise trust remove <pubkey>
+wise trust list
 ```
 
 ### How trust is displayed

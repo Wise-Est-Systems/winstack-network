@@ -1,4 +1,4 @@
-//! WASM bindings for the Winstack verifier.
+//! WASM bindings for the Wise verifier.
 //!
 //! One artifact, many surfaces. This crate compiles to a single `.wasm` module
 //! that any browser, extension, or chat-app can call to verify a win tag.
@@ -108,7 +108,7 @@ fn unrecognizable_reading(reason: &str) -> Reading {
 
 fn build_reading(bundle: &ProofBundle, file_bytes: &[u8]) -> Reading {
     // File-vs-win-tag hash check first — the most actionable signal for the receiver.
-    let computed = winstack_crypto::sha256_hex(file_bytes);
+    let computed = wise_crypto::sha256_hex(file_bytes);
     if computed != bundle.object.payload_hash {
         return Reading {
             status: status_str(VerificationStatus::Tampered),

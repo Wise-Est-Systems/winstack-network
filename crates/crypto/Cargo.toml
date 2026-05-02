@@ -1,5 +1,5 @@
 [package]
-name = "winstack-crypto"
+name = "wise-crypto"
 version = "0.1.0"
 edition = "2021"
 

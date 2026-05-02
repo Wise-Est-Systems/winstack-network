@@ -1,5 +1,5 @@
 /target
-.winstack/
+.wise/
 *.proof.json
 *.win
 .vercel

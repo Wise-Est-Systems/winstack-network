@@ -7,8 +7,8 @@ license.workspace = true
 repository.workspace = true
 
 [[bin]]
-name = "winstack"
-path = "src/bin/winstack.rs"
+name = "win"
+path = "src/bin/win.rs"
 
 [[bin]]
 name = "winopen"
@@ -16,7 +16,7 @@ path = "src/bin/winopen.rs"
 
 [dependencies]
 canon-types = { workspace = true }
-winstack-crypto = { workspace = true }
+wise-crypto = { workspace = true }
 identity-core = { workspace = true }
 time-core = { workspace = true }
 policy-core = { workspace = true }

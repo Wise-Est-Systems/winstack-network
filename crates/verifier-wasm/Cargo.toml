@@ -2,7 +2,7 @@
 name = "verifier-wasm"
 version = "0.1.0"
 edition = "2021"
-description = "WASM bindings for the Winstack verifier — one artifact for every receiver-side surface."
+description = "WASM bindings for the Wise verifier — one artifact for every receiver-side surface."
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -10,7 +10,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 verifier = { workspace = true }
 canon-types = { workspace = true }
-winstack-crypto = { workspace = true }
+wise-crypto = { workspace = true }
 win-format = { path = "../win-format" }
 serde = { workspace = true }
 serde_json = { workspace = true }

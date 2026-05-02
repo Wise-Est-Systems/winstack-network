@@ -1,6 +1,6 @@
 {
   "identifier": "default",
-  "description": "Default capabilities for Winstack",
+  "description": "Default capabilities for Wise",
   "windows": ["main"],
   "permissions": []
 }

@@ -1,5 +1,5 @@
 use canon_types::*;
-use winstack_crypto as crypto;
+use wise_crypto as crypto;
 
 pub struct VerificationInput {
     pub object: SealedObject,
@@ -650,7 +650,7 @@ mod tests {
     #[test]
     fn empty_input_detects_failures() {
         // A minimal broken object should produce failures, not panic
-        let kp = winstack_crypto::KeyPair::generate();
+        let kp = wise_crypto::KeyPair::generate();
         let id = uuid::Uuid::new_v4();
         let obj = SealedObject {
             object_id: id,

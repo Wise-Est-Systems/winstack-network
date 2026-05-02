@@ -55,6 +55,6 @@ with pre-`.win` proofs and for surfaces that prefer separate transport.
   `public/v.html`'s `parseWin`).
 - The `.win` extension does not currently have a registered MIME type.
   We treat it as `application/octet-stream` and recommend
-  `application/vnd.winstack.win+zip` once registration is feasible.
+  `application/vnd.wise.win+zip` once registration is feasible.
 - Containers larger than 2 GB are not supported (uint32 file length).
   Larger files use the sidecar form. A future v2 of the format may extend.

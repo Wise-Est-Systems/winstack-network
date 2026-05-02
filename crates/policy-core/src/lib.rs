@@ -1,6 +1,6 @@
 use canon_types::*;
 use uuid::Uuid;
-use winstack_crypto::{self as crypto, KeyPair};
+use wise_crypto::{self as crypto, KeyPair};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PolicyError {

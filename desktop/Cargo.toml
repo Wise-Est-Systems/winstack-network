@@ -1,11 +1,11 @@
 [package]
-name = "winstack-desktop"
+name = "wise-desktop"
 version = "0.2.0"
 edition = "2021"
 
 [dependencies]
 canon-types = { path = "../crates/canon-types" }
-winstack-crypto = { path = "../crates/crypto" }
+wise-crypto = { path = "../crates/crypto" }
 identity-core = { path = "../crates/identity-core" }
 time-core = { path = "../crates/time-core" }
 policy-core = { path = "../crates/policy-core" }

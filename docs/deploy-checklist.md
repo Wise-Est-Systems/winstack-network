@@ -1,6 +1,6 @@
 # Deploy Checklist
 
-Step-by-step for taking `winstack.dev` from green-on-CI to live. Run
+Step-by-step for taking `truth.systems` from green-on-CI to live. Run
 through this once for the initial deploy; subsequent deploys are
 single-command (`vercel --prod`).
 
@@ -9,7 +9,7 @@ single-command (`vercel --prod`).
 - [ ] Vercel CLI installed: `npm i -g vercel`
 - [ ] Logged in: `vercel login`
 - [ ] Project linked: `vercel link` (creates `.vercel/`, gitignored)
-- [ ] DNS access for `winstack.dev` (or accept the `*.vercel.app`
+- [ ] DNS access for `truth.systems` (or accept the `*.vercel.app`
       subdomain for the first deploy)
 - [ ] CI green on `main`: `cargo fmt --all --check`,
       `cargo clippy --workspace --all-targets -- -D warnings`,
@@ -60,7 +60,7 @@ vercel --prod
 
 ```bash
 # In the Vercel dashboard:
-#   Settings → Domains → Add → winstack.dev
+#   Settings → Domains → Add → truth.systems
 # Add the recommended A / CNAME records at your DNS provider.
 # Wait for the green check (usually < 5 minutes).
 ```
@@ -73,8 +73,8 @@ Two paths.
 
 ```bash
 # Locally:
-winstack win demo.pdf
-winstack publish demo.win --to public
+wise win demo.pdf
+wise publish demo.win --to public
 
 # Commit the new public/v/<hash>.json and redeploy.
 git add public/v/<hash>.json
@@ -90,12 +90,12 @@ artifacts to source is wrong scaling.
 
 The right long-term path. Two options, decide before Phase 1 outreach:
 
-1. **Vercel Blob / S3** — `winstack publish` uploads directly to a
-   bucket, the bucket is served at `winstack.dev/v/`. Witness retains
+1. **Vercel Blob / S3** — `win publish` uploads directly to a
+   bucket, the bucket is served at `truth.systems/v/`. Witness retains
    the artifact; we don't.
 2. **Witness-hosted** — the witness publishes their own
-   `<witness-domain>/.well-known/winstack/notices.json` plus per-hash
-   files; `winstack.dev/v/<hash>` is just a UI shell that fetches from
+   `<witness-domain>/.well-known/win/notices.json` plus per-hash
+   files; `truth.systems/v/<hash>` is just a UI shell that fetches from
    the witness's URL (encoded in the share link).
 
 Option 2 is more aligned with P9 (witnesses bring their own keys and
@@ -106,16 +106,16 @@ anchor user lands.
 
 Run these after every production deploy. Should be a CI job eventually.
 
-- [ ] `https://winstack.dev/` loads, shows "Is it alive?", drop zone visible
+- [ ] `https://truth.systems/` loads, shows "Is it alive?", drop zone visible
 - [ ] WASM module loads (open devtools → Network → filter `wasm`; see 200, < 1.5 MB)
 - [ ] Drop a known-Alive `.win` from the gallery → renders **Alive**, witness key visible
 - [ ] Drop a known-Wounded `.win` from the gallery → renders **Wounded**, original/file hashes shown
 - [ ] Drop a known-Dying `.win` (truncated) → renders **Dying**
-- [ ] `https://winstack.dev/v/<known-hash>` resolves → shows preview, drop zone awaits the file
+- [ ] `https://truth.systems/v/<known-hash>` resolves → shows preview, drop zone awaits the file
 - [ ] Drop the matching file at the URL → renders **Alive**
 - [ ] Drop a different file at the URL → renders **Wounded**
 - [ ] CSP / security headers present:
-      `curl -sI https://winstack.dev/ | grep -iE 'x-content-type-options|x-frame-options|referrer-policy'`
+      `curl -sI https://truth.systems/ | grep -iE 'x-content-type-options|x-frame-options|referrer-policy'`
 - [ ] Mobile (Safari iOS) loads and recognizes — drop equivalent uses the file picker
 
 ## Rollback
@@ -137,5 +137,5 @@ Static deploys roll back atomically — no client-side state to migrate.
 | WASM 404                             | `public/wasm/` empty in deploy                  | Re-run `./scripts/build-wasm.sh`; commit / redeploy    |
 | WASM 200 but page errors             | wasm-bindgen JS / .wasm version mismatch        | Reinstall matching wasm-bindgen-cli; rebuild           |
 | URL flow loads, file drop hangs      | Browser missing Ed25519 in SubtleCrypto         | (Should not happen post-WASM rewrite — file a bug)     |
-| Alive renders but no preview shown   | `public/v/<hash>.json` missing                  | Run `winstack publish <file>.win` and redeploy         |
+| Alive renders but no preview shown   | `public/v/<hash>.json` missing                  | Run `win publish <file>.win` and redeploy         |
 | TLS warning on first load            | DNS not yet propagated                          | Wait 5–15 minutes; verify in dashboard                 |

@@ -1,6 +1,6 @@
 # verifier-wasm
 
-WASM bindings for the Winstack verifier. **One artifact, many surfaces.**
+WASM bindings for the Wise verifier. **One artifact, many surfaces.**
 
 This is the canonical receiver-side verifier for every browser-adjacent
 integration: the URL verifier page, browser extensions, Slack/Gmail/Discord

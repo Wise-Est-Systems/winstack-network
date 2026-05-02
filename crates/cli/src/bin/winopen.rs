@@ -37,7 +37,7 @@ fn main() {
 
     // Determine state — the file's win tag returns one of three things:
     // Verified, Tampered, or Invalid.
-    let file_hash = winstack_crypto::sha256_hex(&artifact);
+    let file_hash = wise_crypto::sha256_hex(&artifact);
     let status = if file_hash != bundle.object.payload_hash {
         canon_types::VerificationStatus::Tampered
     } else {
@@ -45,7 +45,7 @@ fn main() {
     };
 
     // Always extract and open the file
-    let tmp_dir = std::env::temp_dir().join("winstack-open");
+    let tmp_dir = std::env::temp_dir().join("wise-open");
     let _ = std::fs::create_dir_all(&tmp_dir);
     let out_path = tmp_dir.join(&name);
     if std::fs::write(&out_path, &artifact).is_err() {
@@ -90,7 +90,7 @@ fn dialog(title: &str, message: &str) {
     {
         let escaped = message.replace('\\', "\\\\").replace('"', "\\\"");
         let script = format!(
-            "display dialog \"{}\" with title \"Winstack — {}\" buttons {{\"OK\"}} default button \"OK\" with icon caution",
+            "display dialog \"{}\" with title \"Wise — {}\" buttons {{\"OK\"}} default button \"OK\" with icon caution",
             escaped, title
         );
         let _ = std::process::Command::new("osascript")
@@ -99,6 +99,6 @@ fn dialog(title: &str, message: &str) {
     }
     #[cfg(not(target_os = "macos"))]
     {
-        eprintln!("Winstack — {}: {}", title, message);
+        eprintln!("Wise — {}: {}", title, message);
     }
 }

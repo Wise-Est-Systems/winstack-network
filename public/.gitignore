@@ -1,4 +1,4 @@
 .vercel
 
-# Published name tags — written by `winstack publish`. Runtime artifacts, not source.
+# Published name tags — written by `win publish`. Runtime artifacts, not source.
 v/*.json

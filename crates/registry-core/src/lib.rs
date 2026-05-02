@@ -5,7 +5,7 @@ use object_store::ObjectStore;
 use policy_core::PolicyEvaluator;
 use time_core::TimeAuthority;
 use uuid::Uuid;
-use winstack_crypto::{self as crypto, KeyPair};
+use wise_crypto::{self as crypto, KeyPair};
 
 #[derive(Debug)]
 pub enum RegistryError {

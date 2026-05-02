@@ -9,19 +9,19 @@ A short tour for new contributors. Pair it with [`spec/grammar.md`](../spec/gram
 ┌──────────────────────────────────────────────────────────────────┐
 │                     Witness                Receiver              │
 │                       │                       │                  │
-│                  winstack win           winstack verify         │
+│                  wise win           wise verify         │
 │                       │                       │                  │
 │                       ▼                       ▼                  │
 │                  ┌────────┐              ┌────────┐              │
 │                  │ .win   │ ─ travels ─▶ │ .win   │              │
 │                  └────────┘              └────────┘              │
 │                       │                       │                  │
-│                  winstack publish        Drop into verifier      │
+│                  wise publish        Drop into verifier      │
 │                       │                       │                  │
 │                       ▼                       ▼                  │
 │            public/v/<hash>.json    Browser / Desktop / WASM      │
 │                       │                       │                  │
-│                       └─── winstack.dev/v/<hash> ◀──── share URL │
+│                       └─── truth.systems/v/<hash> ◀──── share URL │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -65,7 +65,7 @@ registry-core      ─→ The 10-step sealing pipeline. Wraps verifier on the
                        │
 window-api         ─→ Axum HTTP API consumed by the desktop app.
                        │
-cli                ─→ winstack / winopen binaries.
+cli                ─→ wise / winopen binaries.
                        │
 desktop            ─→ Tauri 2 desktop frontend.
 ```
@@ -74,11 +74,11 @@ desktop            ─→ Tauri 2 desktop frontend.
 
 | Surface             | Crate / path                       | Purpose                                                    |
 |---------------------|------------------------------------|------------------------------------------------------------|
-| `winstack` CLI      | `crates/cli/src/bin/winstack.rs`   | seal / verify / inspect / open / publish / trust           |
+| `wise` CLI      | `crates/cli/src/bin/win.rs`   | seal / verify / inspect / open / publish / trust           |
 | `winopen`           | `crates/cli/src/bin/winopen.rs`    | Double-click handler for `.win` files                      |
 | Desktop app         | `desktop/`                         | Tauri 2 macOS app (Windows/Linux planned — see ROADMAP)    |
 | Desktop verifier UI | `window/verify.html`               | The desktop app's window — talks to the embedded HTTP API  |
-| URL verifier        | `public/index.html`                | Share-anywhere — `winstack.dev/v/<hash>` — uses WASM       |
+| URL verifier        | `public/index.html`                | Share-anywhere — `truth.systems/v/<hash>` — uses WASM       |
 | WASM verifier       | `crates/verifier-wasm`             | Canonical receiver-side library (see ADR 0005)             |
 | HTTP API            | `crates/window-api`                | `/check`, `/verify`, `/seal`, `/save-and-open`             |
 
@@ -159,7 +159,7 @@ See [ADR 0002](adr/0002-three-state-grammar.md) for the rationale.
 
 | Platform         | Status                                                |
 |------------------|-------------------------------------------------------|
-| macOS (arm64)    | Released — `Winstack.dmg` builds shipping             |
+| macOS (arm64)    | Released — `Wise.dmg` builds shipping             |
 | macOS (x86_64)   | Builds pass CI; release artifacts not yet shipped     |
 | Linux (x86_64)   | Builds pass CI; release artifacts not yet shipped     |
 | Windows (x86_64) | Builds pass CI; release artifacts not yet shipped     |
