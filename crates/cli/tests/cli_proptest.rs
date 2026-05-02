@@ -46,8 +46,8 @@ proptest! {
     #[test]
     fn seal_then_open_roundtrips_exact_bytes(content in prop::collection::vec(any::<u8>(), 0..=512)) {
         let dir = tempfile::tempdir().unwrap();
-        let win_path = seal_and_get_win(&dir, "rt.bin", &content);
-        let src = dir.path().join("rt.bin");
+        let win_path = seal_and_get_win(&dir, "rt.dat", &content);
+        let src = dir.path().join("rt.dat");
         fs::remove_file(&src).unwrap();
         win(dir.path()).arg("open").arg(&win_path).assert().success();
         let restored = fs::read(&src).unwrap();
@@ -59,7 +59,7 @@ proptest! {
     #[test]
     fn dot_win_is_strictly_larger_than_source(content in prop::collection::vec(any::<u8>(), 0..=512)) {
         let dir = tempfile::tempdir().unwrap();
-        let win_path = seal_and_get_win(&dir, "sz.bin", &content);
+        let win_path = seal_and_get_win(&dir, "sz.dat", &content);
         let win_size = fs::metadata(&win_path).unwrap().len();
         prop_assert!(win_size > content.len() as u64,
             ".win ({}) must exceed source ({})", win_size, content.len());
@@ -70,7 +70,7 @@ proptest! {
     #[test]
     fn sealed_win_always_verifies(content in prop::collection::vec(any::<u8>(), 0..=512)) {
         let dir = tempfile::tempdir().unwrap();
-        let win_path = seal_and_get_win(&dir, "v.bin", &content);
+        let win_path = seal_and_get_win(&dir, "v.dat", &content);
         let out = win(dir.path()).arg("verify").arg(&win_path).output().unwrap();
         let stdout = String::from_utf8_lossy(&out.stdout);
         prop_assert!(stdout.contains("Verified"),
@@ -86,7 +86,7 @@ proptest! {
         if garbage.len() >= 4 && garbage[0] == 0x57 && garbage[1] == 0x49
             && garbage[2] == 0x4E && garbage[3] == 0x01 { return Ok(()); }
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("garbage.bin");
+        let path = dir.path().join("garbage.dat");
         fs::write(&path, &garbage).unwrap();
         let out = win(dir.path()).arg("verify").arg(&path).output().unwrap();
         let stdout = String::from_utf8_lossy(&out.stdout);
@@ -98,7 +98,7 @@ proptest! {
     #[test]
     fn inspect_reports_correct_source_size(content in prop::collection::vec(any::<u8>(), 1..=512)) {
         let dir = tempfile::tempdir().unwrap();
-        let win_path = seal_and_get_win(&dir, "i.bin", &content);
+        let win_path = seal_and_get_win(&dir, "i.dat", &content);
         let out = win(dir.path()).arg("inspect").arg(&win_path).output().unwrap();
         let stdout = String::from_utf8_lossy(&out.stdout);
         let expected = format!("{} bytes", content.len());

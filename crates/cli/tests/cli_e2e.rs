@@ -126,8 +126,8 @@ fn verify_after_seal_returns_verified() {
 
 #[test]
 fn verify_of_random_bytes_exits_nonzero() {
-    let (dir, _) = scratch_with_file("garbage.bin", &[0u8; 64]);
-    let res = win(dir.path()).arg("verify").arg(dir.path().join("garbage.bin")).assert().failure();
+    let (dir, _) = scratch_with_file("garbage.dat", &[0u8; 64]);
+    let res = win(dir.path()).arg("verify").arg(dir.path().join("garbage.dat")).assert().failure();
     let out = res.get_output();
     let stderr = String::from_utf8_lossy(&out.stderr);
     assert!(stderr.contains("ERROR") || stderr.contains("not a .win"), "{}", stderr);

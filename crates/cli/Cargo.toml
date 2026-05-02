@@ -10,10 +10,6 @@ repository.workspace = true
 name = "win"
 path = "src/bin/win.rs"
 
-[[bin]]
-name = "winopen"
-path = "src/bin/winopen.rs"
-
 [dependencies]
 canon-types = { workspace = true }
 wise-crypto = { workspace = true }

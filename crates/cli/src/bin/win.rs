@@ -42,13 +42,10 @@ enum Commands {
         #[arg(long, default_value = "https://winstack.dev")]
         base_url: String,
     },
-    /// Verify a .win file (or legacy file + proof pair)
+    /// Verify a .win file
     Verify {
-        /// A .win file, or a regular file (if --proof is given)
+        /// A .win file
         file: PathBuf,
-        /// Legacy: separate proof file (not needed for .win)
-        #[arg(long)]
-        proof: Option<PathBuf>,
         #[arg(long)]
         tsa_root: Vec<String>,
     },
@@ -60,14 +57,6 @@ enum Commands {
         /// Extract even if tampered or invalid (for inspection)
         #[arg(long)]
         force: bool,
-    },
-    /// Legacy: create a .proof.json sidecar (use 'win seal' for .win)
-    Prove {
-        file: PathBuf,
-        #[arg(long)]
-        tsa_url: Option<String>,
-        #[arg(long)]
-        from: Option<PathBuf>,
     },
     /// Publish a win tag to a hash-indexed directory (creates `<dir>/v/<hash>.json`).
     /// The directory is the deploy root — e.g. `public/` for the Vercel build.
@@ -552,12 +541,8 @@ fn main() {
             std::process::exit(0);
         },
 
-        // ── VERIFY: .win or file+proof ──
-        Commands::Verify {
-            file,
-            proof,
-            tsa_root,
-        } => {
+        // ── VERIFY: .win ──
+        Commands::Verify { file, tsa_root } => {
             if !file.exists() {
                 eprintln!("ERROR: file not found: {}", file.display());
                 std::process::exit(2);
@@ -568,47 +553,31 @@ fn main() {
                 std::process::exit(2);
             });
 
-            let is_win = file.extension().map(|e| e == "win").unwrap_or(false)
-                || win_format::is_win_file(&raw);
-
-            if is_win {
-                // .win container — unpack errors collapse into Invalid (alongside content/identity failures).
-                let (_name, artifact_bytes, proof_text) =
-                    win_format::unpack(&raw).unwrap_or_else(|e| {
-                        println!("  Invalid       {}", file.display());
-                        println!("    {}", e);
-                        std::process::exit(3);
-                    });
-                let bundle: ProofBundle = serde_json::from_str(&proof_text).unwrap_or_else(|e| {
-                    println!("  Invalid       {}", file.display());
-                    println!("    win tag's proof section is not valid JSON: {}", e);
-                    std::process::exit(3);
-                });
-                verify_bundle(
-                    &artifact_bytes,
-                    &bundle,
-                    &tsa_root,
-                    &file.display().to_string(),
-                );
-            } else if let Some(ref proof_path) = proof {
-                // Legacy: file + separate proof
-                if !proof_path.exists() {
-                    eprintln!("ERROR: proof not found: {}", proof_path.display());
-                    std::process::exit(2);
-                }
-                let proof_text = std::fs::read_to_string(proof_path).unwrap_or_else(|e| {
-                    eprintln!("ERROR: could not read proof: {}", e);
-                    std::process::exit(2);
-                });
-                let bundle: ProofBundle = serde_json::from_str(&proof_text).unwrap_or_else(|e| {
-                    eprintln!("ERROR: invalid proof: {}", e);
-                    std::process::exit(2);
-                });
-                verify_bundle(&raw, &bundle, &tsa_root, &file.display().to_string());
-            } else {
-                eprintln!("ERROR: not a .win file. Use --proof to provide a separate proof file.");
+            if !file.extension().map(|e| e == "win").unwrap_or(false)
+                && !win_format::is_win_file(&raw)
+            {
+                eprintln!("ERROR: not a .win file.");
                 std::process::exit(2);
             }
+
+            // .win container — unpack errors collapse into Invalid alongside content/identity failures.
+            let (_name, artifact_bytes, proof_text) =
+                win_format::unpack(&raw).unwrap_or_else(|e| {
+                    println!("  Invalid       {}", file.display());
+                    println!("    {}", e);
+                    std::process::exit(3);
+                });
+            let bundle: ProofBundle = serde_json::from_str(&proof_text).unwrap_or_else(|e| {
+                println!("  Invalid       {}", file.display());
+                println!("    win tag's proof section is not valid JSON: {}", e);
+                std::process::exit(3);
+            });
+            verify_bundle(
+                &artifact_bytes,
+                &bundle,
+                &tsa_root,
+                &file.display().to_string(),
+            );
         },
 
         // ── INSPECT: show what's inside a .win ──
@@ -755,24 +724,6 @@ fn main() {
             {
                 let _ = std::process::Command::new("xdg-open").arg(&name).spawn();
             }
-            std::process::exit(0);
-        },
-
-        // ── PROVE: legacy sidecar .proof.json ──
-        Commands::Prove {
-            file,
-            tsa_url,
-            from,
-        } => {
-            if !file.exists() {
-                eprintln!("ERROR: file not found: {}", file.display());
-                std::process::exit(2);
-            }
-            let (_artifact, _bundle, proof_json) = win_file(&file, &tsa_url, &from);
-            let proof_path = format!("{}.proof.json", file.display());
-            std::fs::write(&proof_path, proof_json).unwrap();
-            println!("  Sealed        {}", file.display());
-            println!("  →  {}", proof_path);
             std::process::exit(0);
         },
 

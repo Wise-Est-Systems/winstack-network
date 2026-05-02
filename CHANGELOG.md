@@ -50,8 +50,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   callers. The AI-provenance pipeline will be reintroduced as a working
   implementation when the wedge work begins; the import pipeline is
   unscheduled.
-- `crates/cli/src/main.rs` — the `win` internal-inspection binary. Power
-  users use `wise` (user-facing) and `winopen` (file association).
+- `crates/cli/src/main.rs` — the internal-inspection binary. The
+  user-facing `win` CLI replaces it. (Later removed: the redundant
+  `winopen` binary and the legacy `prove` subcommand; see top of this
+  file.)
 - `window/check.html` — superseded by `public/v.html` calling the WASM
   verifier; both surfaces previously duplicated the verification logic.
 - `window/index.html` — the engineering-inspection view; out of scope for
