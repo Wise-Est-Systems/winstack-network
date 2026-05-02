@@ -1,9 +1,9 @@
 /* @ts-self-types="./verifier_wasm.d.ts" */
 
 /**
- * Recognize a file given its bytes plus a separately-supplied proof bundle JSON.
+ * Verify a file given its bytes plus a separately-supplied proof bundle JSON.
  *
- * Use this when the name tag arrives separately from the file (legacy
+ * Use this when the win tag arrives separately from the file (legacy
  * `.proof.json` sidecar, URL-fetched proof bundle, etc).
  * @param {string} proof_json
  * @param {Uint8Array} file_bytes
@@ -30,12 +30,11 @@ export function recognize_bundle(proof_json, file_bytes) {
 }
 
 /**
- * Recognize a `.win` container in one call.
+ * Verify a `.win` container in one call.
  *
  * Returns a `Reading` whose `status` is one of "Verified", "Tampered",
- * "Invalid", "Dying". Throws if the bytes can't even be returned as a
- * valid Reading — but this should not happen because malformed containers
- * produce an Unrecognized reading rather than an exception.
+ * "Invalid". Throws only if serialization itself fails — malformed
+ * containers produce an Invalid reading, not an exception.
  * @param {Uint8Array} win_bytes
  * @returns {any}
  */

@@ -2,20 +2,19 @@
 /* eslint-disable */
 
 /**
- * Recognize a file given its bytes plus a separately-supplied proof bundle JSON.
+ * Verify a file given its bytes plus a separately-supplied proof bundle JSON.
  *
- * Use this when the name tag arrives separately from the file (legacy
+ * Use this when the win tag arrives separately from the file (legacy
  * `.proof.json` sidecar, URL-fetched proof bundle, etc).
  */
 export function recognize_bundle(proof_json: string, file_bytes: Uint8Array): any;
 
 /**
- * Recognize a `.win` container in one call.
+ * Verify a `.win` container in one call.
  *
  * Returns a `Reading` whose `status` is one of "Verified", "Tampered",
- * "Invalid", "Dying". Throws if the bytes can't even be returned as a
- * valid Reading — but this should not happen because malformed containers
- * produce an Unrecognized reading rather than an exception.
+ * "Invalid". Throws only if serialization itself fails — malformed
+ * containers produce an Invalid reading, not an exception.
  */
 export function recognize_win(win_bytes: Uint8Array): any;
 
