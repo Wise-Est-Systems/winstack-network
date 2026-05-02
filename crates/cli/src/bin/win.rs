@@ -22,7 +22,7 @@ enum Commands {
     /// Seal one or more files → produces `.win` containers and (by default)
     /// publishes their win tags so the share URLs resolve immediately.
     /// Use `--private` to skip publishing.
-    Win {
+    Seal {
         /// Files to seal. Accepts shell globs: `win seal *.pdf`.
         #[arg(num_args = 1..)]
         files: Vec<PathBuf>,
@@ -61,7 +61,7 @@ enum Commands {
         #[arg(long)]
         force: bool,
     },
-    /// Legacy: create a .proof.json sidecar (use 'win' for .win)
+    /// Legacy: create a .proof.json sidecar (use 'win seal' for .win)
     Prove {
         file: PathBuf,
         #[arg(long)]
@@ -443,7 +443,7 @@ fn main() {
 
     match cli.command {
         // ── WIN: file(s) → .win + auto-publish (default) ──
-        Commands::Win {
+        Commands::Seal {
             files,
             tsa_url,
             from,
