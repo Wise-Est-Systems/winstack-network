@@ -38,8 +38,8 @@ enum Commands {
         /// then to the nearest `public/` directory in the file tree.
         #[arg(long)]
         publish_to: Option<PathBuf>,
-        /// Base URL for the share links. Defaults to `https://truth.systems/verify`.
-        #[arg(long, default_value = "https://truth.systems/verify")]
+        /// Base URL for the share links. Defaults to `https://winstack.dev`.
+        #[arg(long, default_value = "https://winstack.dev")]
         base_url: String,
     },
     /// Verify a .win file (or legacy file + proof pair)
@@ -78,7 +78,7 @@ enum Commands {
         #[arg(long, default_value = "public")]
         to: PathBuf,
         /// Base URL where the directory will be served from.
-        #[arg(long, default_value = "https://truth.systems/verify")]
+        #[arg(long, default_value = "https://winstack.dev")]
         base_url: String,
     },
     /// Manage local trusted keys
