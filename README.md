@@ -21,12 +21,12 @@ A file without a win tag is *untagged*: neutral, not dangerous.
 
 | Surface              | Status                                                  |
 |----------------------|---------------------------------------------------------|
-| Verifier (Rust)      | Stable. 198 tests, `#![forbid(unsafe_code)]`            |
+| Verifier (Rust)      | Stable. 189 tests, `#![forbid(unsafe_code)]`            |
 | Verifier (WASM)      | Stable. ≤ 1 MB compressed budget enforced in CI         |
 | `.win` container v1  | Stable. Backwards-compatibility contract in CONTRIBUTING |
-| CLI                  | `wise` / `win` / `winopen` — Linux / macOS / Windows |
+| CLI                  | `win` / `winopen` — Linux / macOS / Windows              |
 | Desktop app          | macOS Apple Silicon shipping; Linux / Windows in CI     |
-| URL verifier         | `truth.systems/v/<hash>` — share-anywhere static page    |
+| URL verifier         | `winstack.dev/v/<hash>` — share-anywhere static page     |
 
 See [`CHANGELOG.md`](CHANGELOG.md) for what changed in each release.
 
@@ -34,7 +34,7 @@ See [`CHANGELOG.md`](CHANGELOG.md) for what changed in each release.
 
 ## How it works
 
-1. **Witness seals a file** — `win win report.pdf` produces
+1. **Witness seals a file** — `win seal report.pdf` produces
    `report.win`, a single portable container holding the file plus its
    win tag.
 2. **The file travels** — email, Slack, Drive, S3. The win tag travels
@@ -55,19 +55,20 @@ Three states. No fourth. See [ADR 0002](docs/adr/0002-three-state-grammar.md).
 
 ## Try it
 
-**Without installing anything** — open [truth.systems](https://truth.systems),
+**Without installing anything** — open [winstack.dev](https://winstack.dev/),
 drop a `.win`. Verification runs locally in the browser; nothing is
-uploaded.
+uploaded. *(Migrating to truth.systems; the verifier is the same code.)*
 
-**Desktop app (macOS)** — [download the latest release](https://github.com/Wise-Est-Systems/wise/releases/latest).
-Drop any file to seal it. Drop a `.win` to verify it.
+**Plain-English intro** — [proofs-one.vercel.app](https://proofs-one.vercel.app/)
+explains what a `.win` is, what the three results mean, and what it
+does not prove.
 
 **CLI** —
 
 ```bash
 cargo build --release
 
-./target/release/win win report.pdf            # → report.win
+./target/release/win seal   report.pdf          # → report.win
 ./target/release/win verify report.win          # Verified / Tampered / Invalid
 ./target/release/win open   report.win          # → restores report.pdf
 ./target/release/win publish report.win         # → public/v/<hash>.json

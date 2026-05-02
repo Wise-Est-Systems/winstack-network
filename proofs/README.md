@@ -1,24 +1,44 @@
-# wisestproof.com
+# proofs
 
-Front-end for Wise.Est Proof — the AI-exoneration product.
+Plain-English intro page: *what is a `.win` file*, what the three results mean, and what it does not prove.
 
-Sender side of the protocol. Free verifier lives at truth.systems.
+Static HTML, deployed as a separate Vercel project from the verifier.
+
+## Live
+
+- **Public:** https://proofs-one.vercel.app
+- **Eventual home:** `proofs.systems` (domain not yet registered)
 
 ## Deploy
 
-Separate Vercel project from the parent truth.systems deploy. From this directory:
+This directory is its own Vercel project. From the repo root:
 
 ```sh
-vercel link        # link to a new Vercel project (not the wise one)
-vercel --prod      # deploy
+cd proofs
+vercel        # preview
+vercel --prod # promote to production
 ```
 
-Then point `wisestproof.com` and `www.wisestproof.com` at the new project in the Vercel dashboard.
+## Structure
 
-## What still needs wiring before launch
+```
+proofs/
+├── public/
+│   └── index.html   ← the page (single file, no build step)
+├── vercel.json      ← Vercel config: outputDirectory + headers
+└── README.md        ← this file
+```
 
-1. **Stripe Checkout links** — replace `href="#"` on the two `<a class="cta" data-stripe="...">` buttons in `public/index.html` with real Stripe Checkout URLs.
-2. **Public sealing endpoint** — the success URL of each Stripe Checkout needs to land on a `/seal` page that takes the file drop, posts to the public `window-api` instance, and returns the `.win`. Not built yet; tracked as a separate task.
-3. **Witness key** — generate the Wise.Est Systems Ed25519 witness key, pin its public key in this site's trust section once minted, and load the private key into the sealing host's secret store.
+## What this page is
 
-Everything else (copy, layout, branding) is shipped.
+A plain-English explainer aimed at someone arriving cold. Written to be understandable in under 15 seconds. Sections in order:
+
+1. **What is a .win file?** — one paragraph
+2. **What Wise is** — the protocol in plain English
+3. **The three results** — Verified, Tampered, Invalid
+4. **What a .win does not prove** — honest disclaimers
+5. **Try it** — link to the verifier at winstack.dev
+
+## What this page is *not*
+
+Not a sales page. Not an AI-exoneration product page. Not gated behind any account. Not behind any paywall.
