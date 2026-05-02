@@ -102,7 +102,7 @@ tower-http = { version = "0.5", features = ["cors"] }
 clap = { version = "4", features = ["derive"] }
 tempfile = "3"
 base64 = "0.22"
-ureq = "2"
+ureq = "3"
 zip = { version = "0.6", default-features = false, features = ["deflate"] }
 cms = "0.2"
 x509-cert = "0.2"
