@@ -1,0 +1,41 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    groups:
+      cryptography:
+        patterns:
+          - "ed25519-dalek"
+          - "sha2"
+          - "rsa"
+          - "p256"
+          - "p384"
+          - "ecdsa"
+          - "x509-cert"
+          - "cms"
+          - "der"
+          - "spki"
+          - "const-oid"
+      tauri:
+        patterns:
+          - "tauri*"
+      patches:
+        update-types:
+          - "patch"
+    labels:
+      - "dependencies"
+      - "triage"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "ci"

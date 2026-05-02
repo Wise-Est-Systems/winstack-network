@@ -22,7 +22,7 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
     // 0. Protocol version gate
     if obj.protocol != SUPPORTED_PROTOCOL {
         return VerificationResult {
-            status: VerificationStatus::Unrecognized,
+            status: VerificationStatus::Invalid,
             object_id: obj.object_id,
             failures: vec![Failure {
                 code: FailureCode::OriginRecordMissing,
@@ -172,7 +172,7 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
                     code: FailureCode::TimePredecessorMissing,
                     reason: "non-genesis time event has no predecessor provided".into(),
                 });
-            }
+            },
             Some(pred) => {
                 if time_core::verify_time_chain(&obj.time_event, Some(pred)).is_err() {
                     failures.push(Failure {
@@ -180,7 +180,7 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
                         reason: "time chain predecessor hash does not match".into(),
                     });
                 }
-            }
+            },
         }
     }
 
@@ -192,51 +192,51 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
                     code: FailureCode::TsaTokenMissing,
                     reason: "time source is External but no RFC 3161 token present".into(),
                 });
-            }
+            },
             Some(token_b64) => {
                 // Full CMS verification with provided trust store (default: open)
                 let default_store = time_core::tsa::TrustStore::new();
                 let trust_store = input.tsa_trust_store.as_ref().unwrap_or(&default_store);
                 match time_core::tsa::verify_token_full(token_b64, &obj.payload_hash, trust_store) {
-                    Ok(_) => {} // CMS signature valid, hash matches
+                    Ok(_) => {}, // CMS signature valid, hash matches
                     Err(time_core::tsa::TsaError::HashMismatch) => {
                         failures.push(Failure {
                             code: FailureCode::TsaTokenHashMismatch,
                             reason: "RFC 3161 token hash does not match payload hash".into(),
                         });
-                    }
+                    },
                     Err(time_core::tsa::TsaError::SignatureInvalid(reason)) => {
                         failures.push(Failure {
                             code: FailureCode::TsaSignatureInvalid,
                             reason: format!("RFC 3161 CMS signature invalid: {}", reason),
                         });
-                    }
+                    },
                     Err(time_core::tsa::TsaError::CertificateChainInvalid(reason)) => {
                         failures.push(Failure {
                             code: FailureCode::TsaCertificateChainInvalid,
                             reason: format!("RFC 3161 certificate chain invalid: {}", reason),
                         });
-                    }
+                    },
                     Err(time_core::tsa::TsaError::CertificateExpired(reason)) => {
                         failures.push(Failure {
                             code: FailureCode::TsaCertificateExpired,
                             reason: format!("RFC 3161 certificate expired: {}", reason),
                         });
-                    }
+                    },
                     Err(time_core::tsa::TsaError::NotTrusted(reason)) => {
                         failures.push(Failure {
                             code: FailureCode::TsaNotTrusted,
                             reason: format!("RFC 3161 TSA not trusted: {}", reason),
                         });
-                    }
+                    },
                     Err(e) => {
                         failures.push(Failure {
                             code: FailureCode::TsaTokenMalformed,
                             reason: format!("RFC 3161 token cannot be verified: {}", e),
                         });
-                    }
+                    },
                 }
-            }
+            },
         }
     }
 
@@ -276,7 +276,7 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
                     code: FailureCode::AiGenerationRecordMissing,
                     reason: "AI-generated object has no generation record".into(),
                 });
-            }
+            },
             Some(gen) => {
                 if gen.object_id != obj.object_id {
                     failures.push(Failure {
@@ -291,7 +291,7 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
                         reason: "generation output hash does not match artifact".into(),
                     });
                 }
-            }
+            },
         }
     }
 
@@ -303,10 +303,10 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
                     code: FailureCode::ImportDeclarationMissing,
                     reason: "sealed import has no import declaration".into(),
                 });
-            }
+            },
             Some(_decl) => {
                 // Import declaration present — foreign content stays foreign
-            }
+            },
         }
     }
 
@@ -324,7 +324,7 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
                     code: FailureCode::LineageParentMissing,
                     reason: format!("parent {} not found", pid),
                 });
-            }
+            },
             Some(parent) => {
                 // Parent must be older (by timestamp string comparison)
                 if parent.time_event.timestamp >= obj.time_event.timestamp {
@@ -336,7 +336,7 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
                         ),
                     });
                 }
-            }
+            },
         }
     }
 
@@ -353,12 +353,12 @@ pub fn verify_object(input: &VerificationInput) -> VerificationResult {
                             pred_id
                         ),
                     });
-                }
+                },
                 Some(_) => {
                     // Hash is present and signed — the chain link is structurally valid.
                     // Full chain walk (loading the predecessor bundle) is the caller's
                     // responsibility; the verifier validates what's inside this proof.
-                }
+                },
             }
         }
         // Origin proof (predecessor_proof_id is None) — no chain checks needed
@@ -393,7 +393,7 @@ pub fn verify_chain(
 ) -> ChainVerificationResult {
     // 1. Verify the current proof itself
     let current = verify_from_proof_bundle(bundle, artifact_bytes);
-    if !current.status.is_alive() {
+    if !current.status.is_verified() {
         return ChainVerificationResult {
             chain_status: ChainStatus::HistoryBroken,
             depth: 1,
@@ -409,7 +409,7 @@ pub fn verify_chain(
                 depth: 1,
                 failures: vec![],
             };
-        }
+        },
         Some(c) => c,
     };
 
@@ -452,7 +452,7 @@ pub fn verify_chain(
                     reason: format!("predecessor {} declared without hash", pred_id),
                 });
                 break;
-            }
+            },
         };
 
         // Cycle detection
@@ -476,7 +476,7 @@ pub fn verify_chain(
                     reason: format!("predecessor bundle {} not supplied", pred_id),
                 });
                 break;
-            }
+            },
         };
 
         // Check predecessor payload hash matches
@@ -502,7 +502,7 @@ pub fn verify_chain(
                         reason: "key changed without delegation".into(),
                     });
                     break;
-                }
+                },
                 Some(deleg) => {
                     if !verify_delegation(
                         deleg,
@@ -516,13 +516,13 @@ pub fn verify_chain(
                         });
                         break;
                     }
-                }
+                },
             }
         }
 
         // Verify predecessor proof
         let pred_result = verify_from_proof_bundle(&pred_link.bundle, &pred_link.artifact_bytes);
-        if !pred_result.status.is_alive() {
+        if !pred_result.status.is_verified() {
             failures.push(Failure {
                 code: FailureCode::ChainPredecessorInvalid,
                 reason: format!("predecessor {} failed verification", pred_id),
@@ -731,7 +731,7 @@ mod tests {
         let result = verify_object(&input);
         // payload_hash "wrong" vs sha256("hello") triggers PayloadHashMismatch
         // → Wounded wins via from_failures, even with other identity/signature failures present.
-        assert_eq!(result.status, VerificationStatus::Wounded);
+        assert_eq!(result.status, VerificationStatus::Tampered);
         assert!(!result.failures.is_empty());
     }
 }

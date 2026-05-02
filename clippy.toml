@@ -1,0 +1,15 @@
+# Cognitive complexity ceiling. Bumped slightly above default (25) to fit the
+# verifier's structurally-deep but flat 12-step pipeline; further increases
+# require an ADR.
+cognitive-complexity-threshold = 30
+
+# Avoid drift between code and the four-state grammar (spec/grammar.md § 4).
+# Any user-surface string of these is an outage of the grammar contract.
+disallowed-types = []
+
+# We accept reasonably long error messages in CLI output.
+too-many-lines-threshold = 200
+
+# We allow `expect()` in CLI binaries and tests; library crates should not panic.
+allow-expect-in-tests = true
+allow-unwrap-in-tests = true

@@ -4,3 +4,10 @@
 *.win
 .vercel
 .DS_Store
+
+# Working-notes scratchpad. Outreach drafts, anchor-user shortlists, and other
+# pre-public material live here. Never committed.
+/private/
+
+# Sample artifacts produced by `scripts/build-gallery.sh`. Regenerable.
+/gallery/

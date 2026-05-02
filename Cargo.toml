@@ -9,14 +9,70 @@ members = [
     "crates/object-store",
     "crates/graph-index",
     "crates/verifier",
+    "crates/verifier-wasm",
     "crates/registry-core",
-    "crates/module-import",
-    "crates/module-ai",
     "crates/window-api",
     "crates/cli",
     "crates/win-format",
     "desktop",
 ]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
+rust-version = "1.82"
+license = "MIT"
+repository = "https://github.com/Wise-Est-Systems/winstack-network"
+homepage = "https://winstack.dev"
+readme = "README.md"
+
+# Enforced lints — CI treats warnings as errors. Adjust only with an
+# accompanying ADR in docs/adr/.
+#
+# Philosophy: enable the default `clippy::all` group and add targeted
+# pedantic-tier lints that catch real bugs (not stylistic preferences).
+# Blanket-enabling `clippy::pedantic` produces noise; we curate instead.
+[workspace.lints.rust]
+unsafe_code = "forbid"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+
+# Real-bug lints from the pedantic / nursery / restriction groups.
+todo = "warn"
+dbg_macro = "warn"
+mem_forget = "warn"
+unimplemented = "warn"
+filetype_is_file = "warn"
+float_cmp_const = "warn"
+get_unwrap = "warn"
+lossy_float_literal = "warn"
+mutex_atomic = "warn"
+needless_borrow = "warn"
+path_buf_push_overwrite = "warn"
+ref_option_ref = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+verbose_file_reads = "warn"
+
+# Notes on intentionally-not-enforced lints:
+#   clippy::exit            — CLI binaries call process::exit by design.
+#   clippy::print_stdout    — CLI surfaces emit to stdout per the grammar voice.
+#   clippy::unwrap_used     — allowed in tests + CLI; library crates self-police.
+#   unreachable_pub         — stylistic; drowns real signals in this codebase.
+
+# Release profile — small, fast, deterministic.
+[profile.release]
+codegen-units = 1
+lto = "thin"
+strip = "symbols"
+opt-level = 3
+panic = "abort"
+
+[profile.release-wasm]
+inherits = "release"
+opt-level = "z"
+lto = "fat"
 
 [workspace.dependencies]
 canon-types = { path = "crates/canon-types" }
@@ -28,8 +84,6 @@ object-store = { path = "crates/object-store" }
 graph-index = { path = "crates/graph-index" }
 verifier = { path = "crates/verifier" }
 registry-core = { path = "crates/registry-core" }
-module-import = { path = "crates/module-import" }
-module-ai = { path = "crates/module-ai" }
 window-api = { path = "crates/window-api" }
 
 serde = { version = "1", features = ["derive"] }

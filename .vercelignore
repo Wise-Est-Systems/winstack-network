@@ -1,0 +1,43 @@
+# Vercel deploys only the static `public/` directory.
+# Everything else — Rust source, target/, docs, scripts, gallery, private —
+# is not part of the deploy and stays out of the upload tarball.
+
+# Rust build artifacts (hundreds of MB)
+target/
+**/target/
+
+# Rust source — not built on Vercel; static deploy only
+crates/
+desktop/
+Cargo.toml
+Cargo.lock
+rust-toolchain.toml
+rustfmt.toml
+clippy.toml
+deny.toml
+
+# Docs & specs (committed to git, not part of the served site)
+docs/
+spec/
+ROADMAP.md
+CONTRIBUTING.md
+SECURITY.md
+CHANGELOG.md
+LICENSE
+README.md
+
+# Working notes & sample artifacts
+private/
+gallery/
+window/
+
+# Tooling
+scripts/
+.github/
+
+# Cache / hidden
+.git/
+.DS_Store
+.editorconfig
+.gitattributes
+.gitignore

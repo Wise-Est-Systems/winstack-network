@@ -19,13 +19,28 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Seal a file → creates a .win container
-    Seal {
-        file: PathBuf,
+    /// Seal one or more files → produces `.win` containers and (by default)
+    /// publishes their win tags so the share URLs resolve immediately.
+    /// Use `--private` to skip publishing.
+    Win {
+        /// Files to seal. Accepts shell globs: `winstack win *.pdf`.
+        #[arg(num_args = 1..)]
+        files: Vec<PathBuf>,
         #[arg(long)]
         tsa_url: Option<String>,
         #[arg(long)]
         from: Option<PathBuf>,
+        /// Skip publishing the win tag(s). The `.win` is still produced
+        /// locally; share URLs print but won't resolve.
+        #[arg(long)]
+        private: bool,
+        /// Override the publish target. Defaults to `WINSTACK_PUBLISH_DIR`,
+        /// then to the nearest `public/` directory in the file tree.
+        #[arg(long)]
+        publish_to: Option<PathBuf>,
+        /// Base URL for the share links. Defaults to `https://winstack.dev`.
+        #[arg(long, default_value = "https://winstack.dev")]
+        base_url: String,
     },
     /// Verify a .win file (or legacy file + proof pair)
     Verify {
@@ -46,7 +61,7 @@ enum Commands {
         #[arg(long)]
         force: bool,
     },
-    /// Legacy: create a .proof.json sidecar (use 'seal' for .win)
+    /// Legacy: create a .proof.json sidecar (use 'win' for .win)
     Prove {
         file: PathBuf,
         #[arg(long)]
@@ -54,7 +69,7 @@ enum Commands {
         #[arg(long)]
         from: Option<PathBuf>,
     },
-    /// Publish a name tag to a hash-indexed directory (creates `<dir>/v/<hash>.json`).
+    /// Publish a win tag to a hash-indexed directory (creates `<dir>/v/<hash>.json`).
     /// The directory is the deploy root — e.g. `public/` for the Vercel build.
     Publish {
         /// A .win file to publish
@@ -90,6 +105,74 @@ enum TrustAction {
     },
     /// List all locally trusted keys
     List,
+}
+
+/// Locate where to publish win tags. Returns the directory that should
+/// contain `v/<hash>.json` once the file is sealed.
+///
+/// Resolution order:
+/// 1. `WINSTACK_PUBLISH_DIR` env var (explicit override).
+/// 2. The nearest ancestor directory containing a `public/` subdirectory
+///    AND a `vercel.json` file — this is the "you're inside a Winstack
+///    deploy project" heuristic.
+/// 3. None — caller will skip auto-publishing.
+fn detect_publish_dir() -> Option<PathBuf> {
+    if let Ok(d) = std::env::var("WINSTACK_PUBLISH_DIR") {
+        let p = PathBuf::from(d);
+        if !p.as_os_str().is_empty() {
+            return Some(p);
+        }
+    }
+    let mut dir = std::env::current_dir().ok()?;
+    loop {
+        if dir.join("public").is_dir() && dir.join("vercel.json").is_file() {
+            return Some(dir.join("public"));
+        }
+        match dir.parent() {
+            Some(p) => dir = p.to_path_buf(),
+            None => return None,
+        }
+    }
+}
+
+/// Copy text to the OS clipboard. Returns `true` on success. Best-effort —
+/// failure is silent because clipboard isn't load-bearing.
+fn copy_to_clipboard(text: &str) -> bool {
+    use std::io::Write as _;
+    use std::process::{Command, Stdio};
+
+    let candidates: &[(&str, &[&str])] = if cfg!(target_os = "macos") {
+        &[("pbcopy", &[])]
+    } else if cfg!(target_os = "windows") {
+        &[("clip", &[])]
+    } else {
+        &[
+            ("wl-copy", &[]),
+            ("xclip", &["-selection", "clipboard"]),
+            ("xsel", &["--clipboard", "--input"]),
+        ]
+    };
+
+    for (cmd, args) in candidates {
+        let Ok(mut child) = Command::new(cmd)
+            .args(*args)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+        else {
+            continue;
+        };
+        if let Some(stdin) = child.stdin.as_mut() {
+            if stdin.write_all(text.as_bytes()).is_err() {
+                continue;
+            }
+        }
+        if child.wait().is_ok() {
+            return true;
+        }
+    }
+    false
 }
 
 fn resolve_node_dir() -> PathBuf {
@@ -183,7 +266,8 @@ fn ensure_node() -> (registry_core::Registry, PathBuf) {
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
-                let _ = std::fs::set_permissions(&graph_path, std::fs::Permissions::from_mode(0o600));
+                let _ =
+                    std::fs::set_permissions(&graph_path, std::fs::Permissions::from_mode(0o600));
             }
         }
 
@@ -227,7 +311,7 @@ fn fetch_tsa_token(
     })
 }
 
-fn seal_file(
+fn win_file(
     file: &std::path::Path,
     tsa_url: &Option<String>,
     from: &Option<PathBuf>,
@@ -248,11 +332,11 @@ fn seal_file(
             Ok(att) => {
                 eprintln!("  TSA anchored: {}", att.anchored_time);
                 Some(att)
-            }
+            },
             Err(e) => {
                 eprintln!("  TSA warning: {} (using local time)", e);
                 None
-            }
+            },
         }
     } else {
         None
@@ -306,7 +390,7 @@ fn seal_file(
 fn verify_bundle(artifact_bytes: &[u8], bundle: &ProofBundle, tsa_root: &[String], label: &str) {
     let file_hash = crypto::sha256_hex(artifact_bytes);
     if file_hash != bundle.object.payload_hash {
-        println!("  Wounded       {}", label);
+        println!("  Tampered      {}", label);
         println!("    file      sha256:{}", file_hash);
         println!("    expected  sha256:{}", bundle.object.payload_hash);
         std::process::exit(1);
@@ -318,19 +402,20 @@ fn verify_bundle(artifact_bytes: &[u8], bundle: &ProofBundle, tsa_root: &[String
         eprintln!("  TSA trust: pinned ({} roots)", tsa_root.len());
         Some(time_core::tsa::TrustStore::with_roots(tsa_root.to_vec()))
     };
-    let result = verifier::verify_from_proof_bundle_with_trust(bundle, artifact_bytes, tsa_trust_store);
+    let result =
+        verifier::verify_from_proof_bundle_with_trust(bundle, artifact_bytes, tsa_trust_store);
     match result.status {
-        VerificationStatus::Alive => {
+        VerificationStatus::Verified => {
             println!(
-                "  Alive         sha256:{}  {}",
+                "  Verified      sha256:{}  {}",
                 &bundle.object.payload_hash[..12],
                 label
             );
             std::process::exit(0);
-        }
-        VerificationStatus::Wounded => {
+        },
+        VerificationStatus::Tampered => {
             println!(
-                "  Wounded       sha256:{}  {}",
+                "  Tampered      sha256:{}  {}",
                 &bundle.object.payload_hash[..12],
                 label
             );
@@ -338,10 +423,10 @@ fn verify_bundle(artifact_bytes: &[u8], bundle: &ProofBundle, tsa_root: &[String
                 println!("    [{}] {:?} — {}", i, f.code, f.reason);
             }
             std::process::exit(1);
-        }
-        VerificationStatus::Unrecognized => {
+        },
+        VerificationStatus::Invalid => {
             println!(
-                "  Unrecognized  sha256:{}  {}",
+                "  Invalid       sha256:{}  {}",
                 &bundle.object.payload_hash[..12],
                 label
             );
@@ -349,13 +434,7 @@ fn verify_bundle(artifact_bytes: &[u8], bundle: &ProofBundle, tsa_root: &[String
                 println!("    [{}] {:?} — {}", i, f.code, f.reason);
             }
             std::process::exit(1);
-        }
-        VerificationStatus::Dying => {
-            // Verifier proper does not return Dying — the container has already parsed.
-            // Reach this branch only via a future code path that propagates Dying through.
-            println!("  Dying         {}", label);
-            std::process::exit(1);
-        }
+        },
     }
 }
 
@@ -363,35 +442,115 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        // ── SEAL: file → .win ──
-        Commands::Seal {
-            file,
+        // ── WIN: file(s) → .win + auto-publish (default) ──
+        Commands::Win {
+            files,
             tsa_url,
             from,
+            private,
+            publish_to,
+            base_url,
         } => {
-            if !file.exists() {
-                eprintln!("ERROR: file not found: {}", file.display());
+            if files.is_empty() {
+                eprintln!("ERROR: at least one file required");
                 std::process::exit(2);
             }
-            let (artifact_bytes, bundle, proof_json) = seal_file(&file, &tsa_url, &from);
-            let filename = file
-                .file_name()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_string();
-            let win_bytes = win_format::pack(&filename, &artifact_bytes, &proof_json);
-            let win_path = format!("{}.win", file.display());
-            std::fs::write(&win_path, win_bytes).unwrap_or_else(|e| {
-                eprintln!("ERROR: could not write .win file: {}", e);
-                std::process::exit(2);
-            });
-            let hash = &bundle.object.payload_hash;
-            println!("  Named         {}", file.display());
-            println!("  →  {}", win_path);
-            println!("  Share URL     https://winstack.dev/v/{}", hash);
-            println!("  (run `winstack publish {}` to make the URL resolve)", win_path);
+            // Resolve the publish destination once, before sealing. Skipped
+            // entirely when --private is set.
+            let publish_dir = if private {
+                None
+            } else {
+                publish_to.clone().or_else(detect_publish_dir)
+            };
+
+            let mut share_urls: Vec<String> = Vec::new();
+            let base = base_url.trim_end_matches('/').to_string();
+
+            for file in &files {
+                if !file.exists() {
+                    eprintln!("ERROR: file not found: {}", file.display());
+                    std::process::exit(2);
+                }
+                let (artifact_bytes, bundle, proof_json) = win_file(file, &tsa_url, &from);
+
+                // The container's internal filename keeps the full original
+                // name (with extension) so `winstack open` restores `report.pdf`.
+                // The filesystem name is just `<basename>.win`.
+                let internal_filename = file
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_string();
+                let win_bytes = win_format::pack(&internal_filename, &artifact_bytes, &proof_json);
+                let stem = file
+                    .file_stem()
+                    .unwrap_or_else(|| std::ffi::OsStr::new("file"))
+                    .to_string_lossy();
+                let parent = file.parent().unwrap_or_else(|| std::path::Path::new("."));
+                let mut candidate = parent.join(format!("{stem}.win"));
+                if candidate.exists() && candidate != *file {
+                    let short = &bundle.object.payload_hash[..8];
+                    candidate = parent.join(format!("{stem}-{short}.win"));
+                }
+                std::fs::write(&candidate, win_bytes).unwrap_or_else(|e| {
+                    eprintln!("ERROR: could not write .win file: {}", e);
+                    std::process::exit(2);
+                });
+
+                let hash = bundle.object.payload_hash.clone();
+                let url = format!("{}/v/{}", base, hash);
+                println!("  Sealed        {}", file.display());
+                println!("  →             {}", candidate.display());
+
+                // Auto-publish unless private.
+                if let Some(ref dir) = publish_dir {
+                    let v_dir = dir.join("v");
+                    if let Err(e) = std::fs::create_dir_all(&v_dir) {
+                        eprintln!(
+                            "  WARN          could not create {}: {}",
+                            v_dir.display(),
+                            e
+                        );
+                    } else {
+                        let p = v_dir.join(format!("{}.json", hash));
+                        match std::fs::write(&p, &proof_json) {
+                            Ok(_) => println!("  Published     {}", p.display()),
+                            Err(e) => eprintln!(
+                                "  WARN          could not publish to {}: {}",
+                                p.display(),
+                                e
+                            ),
+                        }
+                    }
+                }
+
+                println!("  Share URL     {}", url);
+                share_urls.push(url);
+                println!();
+            }
+
+            // Copy share URL(s) to the clipboard.
+            let clipboard_text = share_urls.join("\n");
+            if copy_to_clipboard(&clipboard_text) {
+                let label = if share_urls.len() == 1 {
+                    "URL copied to clipboard".to_string()
+                } else {
+                    format!("{} URLs copied to clipboard", share_urls.len())
+                };
+                println!("  ({label})");
+            }
+
+            // Helpful nudge if the user's seal can't actually resolve yet.
+            if publish_dir.is_none() && !private {
+                println!();
+                println!("  (Set WINSTACK_PUBLISH_DIR or run inside a project with a `public/`");
+                println!(
+                    "   directory to make share URLs resolve. Use --private to silence this.)"
+                );
+            }
+
             std::process::exit(0);
-        }
+        },
 
         // ── VERIFY: .win or file+proof ──
         Commands::Verify {
@@ -413,16 +572,16 @@ fn main() {
                 || win_format::is_win_file(&raw);
 
             if is_win {
-                // .win container — unpack and distinguish Dying (container) from Wounded/Unrecognized (content/identity)
+                // .win container — unpack errors collapse into Invalid (alongside content/identity failures).
                 let (_name, artifact_bytes, proof_text) =
                     win_format::unpack(&raw).unwrap_or_else(|e| {
-                        println!("  Dying         {}", file.display());
+                        println!("  Invalid       {}", file.display());
                         println!("    {}", e);
                         std::process::exit(3);
                     });
                 let bundle: ProofBundle = serde_json::from_str(&proof_text).unwrap_or_else(|e| {
-                    println!("  Dying         {}", file.display());
-                    println!("    name tag's proof section is not valid JSON: {}", e);
+                    println!("  Invalid       {}", file.display());
+                    println!("    win tag's proof section is not valid JSON: {}", e);
                     std::process::exit(3);
                 });
                 verify_bundle(
@@ -450,7 +609,7 @@ fn main() {
                 eprintln!("ERROR: not a .win file. Use --proof to provide a separate proof file.");
                 std::process::exit(2);
             }
-        }
+        },
 
         // ── INSPECT: show what's inside a .win ──
         Commands::Inspect { file } => {
@@ -463,28 +622,28 @@ fn main() {
                 std::process::exit(2);
             });
             let (name, artifact_bytes, proof_json) = win_format::unpack(&raw).unwrap_or_else(|e| {
-                println!("  Dying         {}", file.display());
+                println!("  Invalid       {}", file.display());
                 println!("    {}", e);
                 std::process::exit(3);
             });
-            let bundle: canon_types::ProofBundle = serde_json::from_str(&proof_json).unwrap_or_else(|e| {
-                println!("  Dying         {}", file.display());
-                println!("    name tag's proof section is not valid JSON: {}", e);
-                std::process::exit(3);
-            });
+            let bundle: canon_types::ProofBundle = serde_json::from_str(&proof_json)
+                .unwrap_or_else(|e| {
+                    println!("  Invalid       {}", file.display());
+                    println!("    win tag's proof section is not valid JSON: {}", e);
+                    std::process::exit(3);
+                });
 
             // Verify
             let file_hash = crypto::sha256_hex(&artifact_bytes);
             let status = if file_hash != bundle.object.payload_hash {
-                VerificationStatus::Wounded
+                VerificationStatus::Tampered
             } else {
                 verifier::verify_from_proof_bundle(&bundle, &artifact_bytes).status
             };
             let status_label = match status {
-                VerificationStatus::Alive => "Alive       ",
-                VerificationStatus::Wounded => "Wounded     ",
-                VerificationStatus::Unrecognized => "Unrecognized",
-                VerificationStatus::Dying => "Dying       ",
+                VerificationStatus::Verified => "Verified",
+                VerificationStatus::Tampered => "Tampered",
+                VerificationStatus::Invalid => "Invalid ",
             };
 
             // Trust
@@ -492,7 +651,10 @@ fn main() {
             let key_trust = trust::TrustStore::load(&node_dir);
             let creator_key = &bundle.creator_identity.public_key_hex;
             let trust_label = if key_trust.is_trusted(creator_key) {
-                key_trust.label_for(creator_key).unwrap_or("Trusted key").to_string()
+                key_trust
+                    .label_for(creator_key)
+                    .unwrap_or("Trusted key")
+                    .to_string()
             } else {
                 "Untrusted key".to_string()
             };
@@ -506,18 +668,22 @@ fn main() {
             println!();
             println!("  File        {}", name);
             println!("  Size        {} bytes", artifact_bytes.len());
-            println!("  Hash        sha256:{}", bundle.object.payload_hash);
-            println!("  Born        {}", bundle.object.origin.created_at);
+            println!("  Fingerprint sha256:{}", bundle.object.payload_hash);
+            println!("  Created     {}", bundle.object.origin.created_at);
             println!("  Time        {}", time_label);
-            println!("  Witness     {}...{}", &creator_key[..8], &creator_key[56..]);
+            println!(
+                "  Witness     {}...{}",
+                &creator_key[..8],
+                &creator_key[56..]
+            );
             println!("  Trust       {}", trust_label);
 
-            if status.is_alive() {
+            if status.is_verified() {
                 std::process::exit(0);
             } else {
                 std::process::exit(1);
             }
-        }
+        },
 
         // ── OPEN: .win → extract original file ──
         Commands::Open { file, force } => {
@@ -530,24 +696,25 @@ fn main() {
                 std::process::exit(2);
             });
             let (name, artifact_bytes, proof_json) = win_format::unpack(&raw).unwrap_or_else(|e| {
-                println!("  Dying         {}", file.display());
+                println!("  Invalid       {}", file.display());
                 println!("    {}", e);
                 std::process::exit(3);
             });
-            let bundle: canon_types::ProofBundle = serde_json::from_str(&proof_json).unwrap_or_else(|e| {
-                println!("  Dying         {}", file.display());
-                println!("    name tag's proof section is not valid JSON: {}", e);
-                std::process::exit(3);
-            });
+            let bundle: canon_types::ProofBundle = serde_json::from_str(&proof_json)
+                .unwrap_or_else(|e| {
+                    println!("  Invalid       {}", file.display());
+                    println!("    win tag's proof section is not valid JSON: {}", e);
+                    std::process::exit(3);
+                });
             let vr = verifier::verify_from_proof_bundle(&bundle, &artifact_bytes);
             match vr.status {
-                canon_types::VerificationStatus::Alive => {
-                    println!("  Alive");
-                }
-                canon_types::VerificationStatus::Wounded => {
+                canon_types::VerificationStatus::Verified => {
+                    println!("  Verified");
+                },
+                canon_types::VerificationStatus::Tampered => {
                     let file_hash = winstack_crypto::sha256_hex(&artifact_bytes);
                     let expected = &bundle.object.payload_hash;
-                    println!("  Wounded       {}", file.display());
+                    println!("  Tampered      {}", file.display());
                     println!("    file      sha256:{}", file_hash);
                     println!("    expected  sha256:{}", expected);
                     if !force {
@@ -555,9 +722,9 @@ fn main() {
                         std::process::exit(1);
                     }
                     println!("  Extracting anyway (--force).");
-                }
-                canon_types::VerificationStatus::Unrecognized => {
-                    println!("  Unrecognized  {}", file.display());
+                },
+                canon_types::VerificationStatus::Invalid => {
+                    println!("  Invalid       {}", file.display());
                     for f in &vr.failures {
                         println!("    {:?}: {}", f.code, f.reason);
                     }
@@ -566,15 +733,7 @@ fn main() {
                         std::process::exit(1);
                     }
                     println!("  Extracting anyway (--force).");
-                }
-                canon_types::VerificationStatus::Dying => {
-                    println!("  Dying         {}", file.display());
-                    if !force {
-                        println!("  Use --force to extract anyway.");
-                        std::process::exit(1);
-                    }
-                    println!("  Extracting anyway (--force).");
-                }
+                },
             }
             std::fs::write(&name, &artifact_bytes).unwrap_or_else(|e| {
                 eprintln!("ERROR: could not write file: {}", e);
@@ -583,13 +742,21 @@ fn main() {
             println!("  Opened        {}", name);
             // Open with system default app
             #[cfg(target_os = "macos")]
-            { let _ = std::process::Command::new("open").arg(&name).spawn(); }
+            {
+                let _ = std::process::Command::new("open").arg(&name).spawn();
+            }
             #[cfg(target_os = "windows")]
-            { let _ = std::process::Command::new("cmd").args(["/C", "start", "", &name]).spawn(); }
+            {
+                let _ = std::process::Command::new("cmd")
+                    .args(["/C", "start", "", &name])
+                    .spawn();
+            }
             #[cfg(target_os = "linux")]
-            { let _ = std::process::Command::new("xdg-open").arg(&name).spawn(); }
+            {
+                let _ = std::process::Command::new("xdg-open").arg(&name).spawn();
+            }
             std::process::exit(0);
-        }
+        },
 
         // ── PROVE: legacy sidecar .proof.json ──
         Commands::Prove {
@@ -601,20 +768,16 @@ fn main() {
                 eprintln!("ERROR: file not found: {}", file.display());
                 std::process::exit(2);
             }
-            let (_artifact, _bundle, proof_json) = seal_file(&file, &tsa_url, &from);
+            let (_artifact, _bundle, proof_json) = win_file(&file, &tsa_url, &from);
             let proof_path = format!("{}.proof.json", file.display());
             std::fs::write(&proof_path, proof_json).unwrap();
-            println!("  Named         {}", file.display());
+            println!("  Sealed        {}", file.display());
             println!("  →  {}", proof_path);
             std::process::exit(0);
-        }
+        },
 
-        // ── PUBLISH: extract a name tag and write it to a hash-indexed directory ──
-        Commands::Publish {
-            file,
-            to,
-            base_url,
-        } => {
+        // ── PUBLISH: extract a win tag and write it to a hash-indexed directory ──
+        Commands::Publish { file, to, base_url } => {
             if !file.exists() {
                 eprintln!("ERROR: file not found: {}", file.display());
                 std::process::exit(2);
@@ -624,18 +787,18 @@ fn main() {
                 std::process::exit(2);
             });
             let (_name, _artifact, proof_text) = win_format::unpack(&raw).unwrap_or_else(|e| {
-                println!("  Dying         {}", file.display());
+                println!("  Invalid       {}", file.display());
                 println!("    {}", e);
                 std::process::exit(3);
             });
             let bundle: ProofBundle = serde_json::from_str(&proof_text).unwrap_or_else(|e| {
-                println!("  Dying         {}", file.display());
-                println!("    name tag's proof section is not valid JSON: {}", e);
+                println!("  Invalid       {}", file.display());
+                println!("    proof section is not valid JSON: {}", e);
                 std::process::exit(3);
             });
             let hash = bundle.object.payload_hash.clone();
             if !hash.chars().all(|c| c.is_ascii_hexdigit()) || hash.len() < 32 {
-                eprintln!("ERROR: name tag's payload hash is malformed");
+                eprintln!("ERROR: win tag's payload hash is malformed");
                 std::process::exit(2);
             }
             let v_dir = to.join("v");
@@ -652,7 +815,7 @@ fn main() {
             println!("  Published     {}", out_path.display());
             println!("  →  {}", url);
             std::process::exit(0);
-        }
+        },
 
         // ── TRUST: manage local trusted keys ──
         Commands::Trust { action } => {
@@ -669,7 +832,9 @@ fn main() {
             match action {
                 TrustAction::Add { key, label } => {
                     if key.len() != 64 || hex::decode(&key).is_err() {
-                        eprintln!("ERROR: key must be a 64-character hex string (Ed25519 public key)");
+                        eprintln!(
+                            "ERROR: key must be a 64-character hex string (Ed25519 public key)"
+                        );
                         std::process::exit(2);
                     }
                     if store.add(key.clone(), label.clone()) {
@@ -684,7 +849,7 @@ fn main() {
                     } else {
                         println!("  Already trusted: {}...{}", &key[..8], &key[56..]);
                     }
-                }
+                },
                 TrustAction::Remove { key } => {
                     if store.remove(&key) {
                         store.save(&node_dir).unwrap_or_else(|e| {
@@ -695,7 +860,7 @@ fn main() {
                     } else {
                         println!("  Not found: {}...{}", &key[..8], &key[56..]);
                     }
-                }
+                },
                 TrustAction::List => {
                     if store.keys.is_empty() {
                         println!("  No trusted keys.");
@@ -705,8 +870,8 @@ fn main() {
                             println!("  {}  {}", k.key, label);
                         }
                     }
-                }
+                },
             }
-        }
+        },
     }
 }

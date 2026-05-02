@@ -26,7 +26,7 @@ fn valid_native_object() {
 
     // Re-verify from store
     let result = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }
 
 // ---------------------------------------------------------------------------
@@ -55,7 +55,7 @@ fn valid_ai_object() {
     assert_eq!(obj.origin.object_class, ObjectClass::AiGenerated);
 
     let result = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }
 
 // ---------------------------------------------------------------------------
@@ -95,10 +95,10 @@ fn valid_sealed_import() {
 
     assert_eq!(obj.object_class, ObjectClass::SealedImport);
     assert!(obj.import_declaration.is_some());
-    assert_eq!(obj.object_class.trust_class(), TrustClass::Foreign);
+    assert_eq!(obj.object_class.trust_class(), TrustClass::NonNative);
 
     let result = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }
 
 // ---------------------------------------------------------------------------
@@ -136,7 +136,7 @@ fn valid_lineage_chain() {
     assert_eq!(child.parent_ids, vec![parent.object_id]);
 
     let result = reg.verify_object(&child.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }
 
 // ---------------------------------------------------------------------------
@@ -174,7 +174,7 @@ fn valid_non_genesis_time_chain() {
     assert!(second.time_event.predecessor_event_id.is_some());
 
     let result = reg.verify_object(&second.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }
 
 // ---------------------------------------------------------------------------
@@ -330,7 +330,7 @@ fn missing_parent_fails() {
     match result {
         Err(registry_core::RegistryError::Rejected(r)) => {
             assert_eq!(r.code, RejectCode::LineageParentMissing);
-        }
+        },
         other => panic!("expected LineageParentMissing, got {:?}", other),
     }
 }
@@ -716,7 +716,7 @@ fn proof_bundle_self_contained() {
 
     // Verify from bundle alone (offline)
     let result = verifier::verify_from_proof_bundle(&bundle, artifact);
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }
 
 // ---------------------------------------------------------------------------
@@ -741,7 +741,7 @@ fn session_cannot_create_native() {
     match result {
         Err(registry_core::RegistryError::Rejected(r)) => {
             assert_eq!(r.code, RejectCode::SessionCannotCreateNative);
-        }
+        },
         other => panic!("expected SessionCannotCreateNative, got {:?}", other),
     }
 }
@@ -773,7 +773,7 @@ fn proof_bundle_verifies_without_node_state() {
 
     // Verify using ONLY the proof bundle and the file bytes — no registry, no store
     let result = verifier::verify_from_proof_bundle(&received, &artifact);
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
     assert!(result.failures.is_empty());
 }
 
@@ -862,7 +862,7 @@ fn synthetic_tsa_token_rejected_by_full_verification() {
     match result {
         Err(registry_core::RegistryError::Rejected(r)) => {
             assert_eq!(r.code, RejectCode::VerificationFailed);
-        }
+        },
         other => panic!("expected VerificationFailed, got {:?}", other),
     }
 }
@@ -921,7 +921,7 @@ fn external_timestamp_wrong_hash_fails() {
     match result {
         Err(registry_core::RegistryError::Rejected(r)) => {
             assert_eq!(r.code, RejectCode::VerificationFailed);
-        }
+        },
         other => panic!("expected VerificationFailed, got {:?}", other),
     }
 }
@@ -989,7 +989,7 @@ fn malformed_tsa_token_fails() {
     match result {
         Err(registry_core::RegistryError::Rejected(r)) => {
             assert_eq!(r.code, RejectCode::VerificationFailed);
-        }
+        },
         other => panic!("expected VerificationFailed, got {:?}", other),
     }
 }
@@ -1040,7 +1040,7 @@ fn local_time_backward_compat() {
     assert!(old_bundle.object.time_event.rfc3161_token.is_none());
 
     let result = verifier::verify_from_proof_bundle(&old_bundle, &artifact);
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }
 
 // ---------------------------------------------------------------------------
@@ -1200,7 +1200,7 @@ fn chain_origin_proof() {
     assert!(chain.predecessor_proof_id.is_none());
 
     let result = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }
 
 // ---------------------------------------------------------------------------
@@ -1256,7 +1256,7 @@ fn chain_successor_proof() {
     );
 
     let result = reg.verify_object(&succ_obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }
 
 // ---------------------------------------------------------------------------
@@ -1317,12 +1317,12 @@ fn chain_standalone_backward_compat() {
     assert!(obj.proof_chain.is_none());
 
     let result = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 
     // Also verify from bundle
     let bundle = reg.build_proof_bundle(&obj.object_id).unwrap();
     let result = verifier::verify_from_proof_bundle(&bundle, &artifact);
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }
 
 // ---------------------------------------------------------------------------
@@ -1351,7 +1351,7 @@ fn chain_missing_predecessor_hash_rejected_at_seal() {
     match result {
         Err(registry_core::RegistryError::Rejected(r)) => {
             assert_eq!(r.code, RejectCode::VerificationFailed);
-        }
+        },
         other => panic!("expected VerificationFailed, got {:?}", other),
     }
 }
@@ -1388,7 +1388,7 @@ fn chain_old_proof_format_compat() {
     assert!(old_bundle.object.proof_chain.is_none());
 
     let result = verifier::verify_from_proof_bundle(&old_bundle, &artifact);
-    assert_eq!(result.status, VerificationStatus::Alive);
+    assert_eq!(result.status, VerificationStatus::Verified);
 }
 
 // ===========================================================================
@@ -1714,7 +1714,7 @@ fn empty_file_seals_and_verifies() {
         })
         .unwrap();
     let r = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(r.status, VerificationStatus::Alive);
+    assert_eq!(r.status, VerificationStatus::Verified);
 }
 
 #[test]
@@ -1732,7 +1732,7 @@ fn single_byte_file() {
         .unwrap();
     let b = reg.build_proof_bundle(&obj.object_id).unwrap();
     let r = verifier::verify_from_proof_bundle(&b, &[0x42]);
-    assert_eq!(r.status, VerificationStatus::Alive);
+    assert_eq!(r.status, VerificationStatus::Verified);
 }
 
 #[test]
@@ -1855,11 +1855,11 @@ fn multiple_identities_independent() {
     assert_ne!(o1.origin.creator_identity_id, o2.origin.creator_identity_id);
     assert_eq!(
         reg.verify_object(&o1.object_id).unwrap().status,
-        VerificationStatus::Alive
+        VerificationStatus::Verified
     );
     assert_eq!(
         reg.verify_object(&o2.object_id).unwrap().status,
-        VerificationStatus::Alive
+        VerificationStatus::Verified
     );
 }
 
@@ -1924,7 +1924,7 @@ fn proof_bundle_roundtrip_json() {
     assert_eq!(decoded.object.object_id, obj.object_id);
     assert_eq!(decoded.object.payload_hash, obj.payload_hash);
     let r = verifier::verify_from_proof_bundle(&decoded, b"roundtrip");
-    assert_eq!(r.status, VerificationStatus::Alive);
+    assert_eq!(r.status, VerificationStatus::Verified);
 }
 
 #[test]
@@ -2333,7 +2333,7 @@ fn parent_child_lineage_valid() {
     assert_eq!(child.parent_ids, vec![parent.object_id]);
     assert_eq!(
         reg.verify_object(&child.object_id).unwrap().status,
-        VerificationStatus::Alive
+        VerificationStatus::Verified
     );
 }
 
@@ -2374,7 +2374,7 @@ fn multi_parent_lineage() {
     assert_eq!(child.parent_ids.len(), 2);
     assert_eq!(
         reg.verify_object(&child.object_id).unwrap().status,
-        VerificationStatus::Alive
+        VerificationStatus::Verified
     );
 }
 
@@ -2645,7 +2645,7 @@ fn seal_ten_objects_all_verify() {
     for id in &ids {
         assert_eq!(
             reg.verify_object(id).unwrap().status,
-            VerificationStatus::Alive
+            VerificationStatus::Verified
         );
     }
 }
@@ -2678,11 +2678,11 @@ fn same_content_different_proofs() {
     assert_eq!(o1.payload_hash, o2.payload_hash);
     assert_eq!(
         reg.verify_object(&o1.object_id).unwrap().status,
-        VerificationStatus::Alive
+        VerificationStatus::Verified
     );
     assert_eq!(
         reg.verify_object(&o2.object_id).unwrap().status,
-        VerificationStatus::Alive
+        VerificationStatus::Verified
     );
 }
 
@@ -2720,7 +2720,7 @@ fn old_proof_without_chain_or_tsa_verifies() {
     assert!(old.object.proof_chain.is_none());
     assert_eq!(old.object.time_event.time_source, TimeSource::Local);
     let r = verifier::verify_from_proof_bundle(&old, b"old style");
-    assert_eq!(r.status, VerificationStatus::Alive);
+    assert_eq!(r.status, VerificationStatus::Verified);
 }
 
 // ── AI + IMPORT ──
@@ -2777,7 +2777,7 @@ fn sealed_import_is_foreign() {
         })
         .unwrap();
     assert_eq!(obj.object_class, ObjectClass::SealedImport);
-    assert_eq!(obj.object_class.trust_class(), TrustClass::Foreign);
+    assert_eq!(obj.object_class.trust_class(), TrustClass::NonNative);
 }
 
 // ── VERIFIER RESULT INTEGRITY ──
@@ -2796,7 +2796,7 @@ fn verified_has_zero_failures() {
         })
         .unwrap();
     let r = reg.verify_object(&obj.object_id).unwrap();
-    assert_eq!(r.status, VerificationStatus::Alive);
+    assert_eq!(r.status, VerificationStatus::Verified);
     assert!(r.failures.is_empty());
 }
 
@@ -2850,13 +2850,22 @@ fn native_is_native_trust() {
 }
 
 #[test]
-fn ai_is_native_trust() {
-    assert_eq!(ObjectClass::AiGenerated.trust_class(), TrustClass::Native);
+fn ai_is_non_native_trust() {
+    // AI outputs are signed by the witness but were not made by the witness's
+    // own hand. From the receiver's perspective they are non-native — the
+    // witness is attesting, not creating.
+    assert_eq!(
+        ObjectClass::AiGenerated.trust_class(),
+        TrustClass::NonNative
+    );
 }
 
 #[test]
-fn import_is_foreign_trust() {
-    assert_eq!(ObjectClass::SealedImport.trust_class(), TrustClass::Foreign);
+fn import_is_non_native_trust() {
+    assert_eq!(
+        ObjectClass::SealedImport.trust_class(),
+        TrustClass::NonNative
+    );
 }
 
 // ── CHAIN WALK EDGE CASES ──
@@ -3048,7 +3057,7 @@ fn binary_data_seals_correctly() {
         .unwrap();
     let b = reg.build_proof_bundle(&obj.object_id).unwrap();
     let r = verifier::verify_from_proof_bundle(&b, &data);
-    assert_eq!(r.status, VerificationStatus::Alive);
+    assert_eq!(r.status, VerificationStatus::Verified);
 }
 
 #[test]
@@ -3067,7 +3076,7 @@ fn null_bytes_in_file() {
         .unwrap();
     let b = reg.build_proof_bundle(&obj.object_id).unwrap();
     let r = verifier::verify_from_proof_bundle(&b, &data);
-    assert_eq!(r.status, VerificationStatus::Alive);
+    assert_eq!(r.status, VerificationStatus::Verified);
 }
 
 #[test]
@@ -3292,6 +3301,12 @@ fn time_source_deserializes_from_string() {
 fn time_source_display_values_match_spec() {
     // The serialized values must be exactly "Local" and "External"
     // as referenced by all UI code and PROOF-SPEC.md
-    assert_eq!(serde_json::to_string(&TimeSource::Local).unwrap(), "\"Local\"");
-    assert_eq!(serde_json::to_string(&TimeSource::External).unwrap(), "\"External\"");
+    assert_eq!(
+        serde_json::to_string(&TimeSource::Local).unwrap(),
+        "\"Local\""
+    );
+    assert_eq!(
+        serde_json::to_string(&TimeSource::External).unwrap(),
+        "\"External\""
+    );
 }

@@ -83,7 +83,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
 <div class="app">
   <div id="input-state">
     <h1>Drop a file</h1>
-    <p class="sub">Drop any file to seal it. Drop a .win file to check it.</p>
+    <p class="sub">Drop any file to seal it. Drop a .win file to verify it.</p>
     <div class="drop" id="the-drop">
       <input type="file" id="the-input">
       <div class="drop-label" id="the-label">Drop a file here</div>
@@ -107,7 +107,6 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
       <div class="mm-sep"></div>
       <div class="mm-label b">The one that was named</div><div class="mm-val b" id="r-mm-b"></div>
     </div>
-    <button class="save-btn hidden" id="r-save">Save file</button>
     <button class="details-toggle" id="r-dtoggle">View details</button>
     <div class="details-panel" id="r-dpanel"></div>
     <button class="again" id="r-again">Start over</button>
@@ -187,7 +186,7 @@ function handleFile(f) {
   dropLabel.textContent = trunc(f.name);
 
   if (f.name.endsWith('.win')) {
-    $('proc-label').textContent = 'Recognizing';
+    $('proc-label').textContent = 'Verifying';
     show('proc');
     // Read the file once, use for both local parsing and API upload
     f.arrayBuffer().then(function(buf) {
@@ -206,7 +205,7 @@ function handleFile(f) {
       .then(function(d) { show('result'); renderVerify(d, f.name); })
       .catch(function(e) { show('result'); showErr(e.message || 'Cannot connect.'); });
   } else {
-    $('proc-label').textContent = 'Naming';
+    $('proc-label').textContent = 'Sealing';
     show('proc');
     var form = new FormData();
     form.append('file', f);
@@ -226,45 +225,50 @@ function renderVerify(d, fname) {
   $('r-err').classList.add('hidden');
   $('r-mm').classList.add('hidden');
   $('r-meta').classList.add('hidden');
-  $('r-save').classList.add('hidden');
   $('r-dpanel').classList.remove('open');
   $('r-dtoggle').textContent = 'View details';
   var v = $('r-verdict'); v.style.display = 'block';
   var r = d.result;
-  if (r === 'Alive') {
+  if (r === 'Verified') {
     v.className = 'verdict enter ok';
-    $('r-status').textContent = 'Alive';
-    var explain = 'This file is alive. Unchanged since it was named.';
+    $('r-status').textContent = 'Verified';
+    var explain = 'Verified. This file matches the original — it hasn't been changed.';
     if (d.chain_status === 'successor') explain += ' Part of a lineage.';
     else if (d.chain_status === 'origin') explain += ' First in its lineage.';
     $('r-explain').textContent = explain;
     var m = $('r-meta'); m.classList.remove('hidden');
-    var metaText = 'Witness recognized';
-    if (d.time_source === 'External') metaText += ' \u2022 Anchored birthday';
-    else metaText += ' \u2022 Local birthday only';
+    var metaText = 'Verified';
+    if (d.time_source === 'External') metaText += ' \u2022 Anchored creation date';
+    else metaText += ' \u2022 Local creation date only';
     m.textContent = metaText;
-    // Show save button if we extracted the file
+    // P11 — drop is the only ritual. Auto-extract; no save button.
     if (extractedFile && extractedName) {
-      var sb = $('r-save');
-      sb.classList.remove('hidden');
-      sb.textContent = 'Save ' + extractedName;
+      var form = new FormData();
+      form.append('filename', extractedName);
+      form.append('file', new Blob([extractedFile]), extractedName);
+      fetch(getAPI() + '/save-and-open', { method: 'POST', body: form, headers: authHeaders() })
+        .catch(function() {
+          var blob = new Blob([extractedFile]);
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url; a.download = extractedName;
+          document.body.appendChild(a); a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
     }
-  } else if (r === 'Wounded') {
+  } else if (r === 'Tampered') {
     v.className = 'verdict enter bad';
-    $('r-status').textContent = 'Wounded';
-    $('r-explain').textContent = 'This file was alive once. It has been changed since it was named. The original is gone.';
+    $('r-status').textContent = 'Tampered';
+    $('r-explain').textContent = 'Tampered. This file was changed after it was sealed.';
     $('r-mm').classList.remove('hidden');
     $('r-mm-a').textContent = d.file_hash;
     $('r-mm-b').textContent = d.expected_hash;
-  } else if (r === 'Dying') {
-    v.className = 'verdict enter damaged';
-    $('r-status').textContent = 'Dying';
-    $('r-explain').textContent = d.message || 'This name tag is decomposing. The file underneath may still be alive \u2014 its name tag is just unreadable.';
   } else {
-    // Unrecognized \u2014 and any unhandled result
+    // Invalid \u2014 covers all "we can't tell you about this file" cases.
     v.className = 'verdict enter warn';
-    $('r-status').textContent = 'Unrecognized';
-    var reason = "I can't read this name tag. The file may still be fine, but I can't tell you who named it.";
+    $('r-status').textContent = 'Invalid';
+    var reason = "Invalid. We can't verify this win tag.";
     if (d.failures && d.failures.length > 0) reason += ' ' + d.failures[0].reason + '.';
     $('r-explain').textContent = reason;
   }
@@ -274,11 +278,11 @@ function renderVerify(d, fname) {
     : 'Local \u2014 from the witness\u2019s device clock';
   $('r-dpanel').innerHTML = [
     dt('File', fname),
-    dt('Born', d.created_at),
-    dt('Hash', d.payload_hash),
+    dt('Created', d.created_at),
+    dt('Fingerprint', d.payload_hash),
     dt('Time', ts),
     dt('Witness', d.creator_key ? d.creator_key.slice(0,8) + '\u2026' + d.creator_key.slice(56) : 'unknown'),
-    dt('Recognized by', 'Desktop app'),
+    dt('Verified by', 'Desktop app'),
   ].join('');
 }
 
@@ -291,32 +295,14 @@ function renderSeal(orig, winName) {
   var v = $('r-verdict'); v.style.display = 'block';
   v.className = 'verdict enter sealed';
   requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
-  $('r-status').textContent = 'Named';
-  $('r-explain').textContent = winName + ' saved to your Downloads folder. Send it to anyone \u2014 they can recognize it by dropping it here or at winstack.dev.';
-  var m = $('r-meta'); m.classList.remove('hidden'); m.textContent = 'File + name tag in one package';
+  $('r-status').textContent = 'Sealed';
+  $('r-explain').textContent = winName + ' saved to your Downloads folder. Send it to anyone \u2014 they can verify it by dropping it here or at winstack.dev.';
+  var m = $('r-meta'); m.classList.remove('hidden'); m.textContent = 'File + win tag in one package';
 }
 
 $('r-dtoggle').addEventListener('click', function() {
   var o = $('r-dpanel').classList.toggle('open');
   $('r-dtoggle').textContent = o ? 'Hide details' : 'View details';
-});
-$('r-save').addEventListener('click', function() {
-  if (!extractedFile || !extractedName) return;
-  // Send the file to the server to save and open
-  var form = new FormData();
-  form.append('filename', extractedName);
-  form.append('file', new Blob([extractedFile]), extractedName);
-  fetch(getAPI() + '/save-and-open', { method: 'POST', body: form, headers: authHeaders() })
-    .catch(function() {
-      // Fallback: blob download
-      var blob = new Blob([extractedFile]);
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url; a.download = extractedName;
-      document.body.appendChild(a); a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
 });
 $('r-again').addEventListener('click', function() {
   extractedFile = null; extractedName = null;

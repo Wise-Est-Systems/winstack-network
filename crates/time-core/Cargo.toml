@@ -23,3 +23,6 @@ sha2 = { workspace = true }
 der = "0.7"
 spki = "0.7"
 const-oid = "0.9"
+
+[lints]
+workspace = true

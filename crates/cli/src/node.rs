@@ -79,9 +79,21 @@ pub fn check_and_repair_permissions(node_dir: &Path) {
         };
 
         check(node_dir, 0o700, "node directory");
-        check(&node_dir.join("node.json"), 0o600, "node.json (contains private keys)");
-        check(&node_dir.join("graph.db"), 0o600, "graph.db (contains seal history)");
-        check(&node_dir.join("trusted_keys.json"), 0o600, "trusted_keys.json (local trust list)");
+        check(
+            &node_dir.join("node.json"),
+            0o600,
+            "node.json (contains private keys)",
+        );
+        check(
+            &node_dir.join("graph.db"),
+            0o600,
+            "graph.db (contains seal history)",
+        );
+        check(
+            &node_dir.join("trusted_keys.json"),
+            0o600,
+            "trusted_keys.json (local trust list)",
+        );
     }
 }
 
@@ -244,19 +256,42 @@ mod tests {
     fn correct_permissions_unchanged() {
         let dir = make_temp_node();
         std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700)).unwrap();
-        std::fs::set_permissions(dir.join("node.json"), std::fs::Permissions::from_mode(0o600)).unwrap();
-        std::fs::set_permissions(dir.join("graph.db"), std::fs::Permissions::from_mode(0o600)).unwrap();
+        std::fs::set_permissions(
+            dir.join("node.json"),
+            std::fs::Permissions::from_mode(0o600),
+        )
+        .unwrap();
+        std::fs::set_permissions(dir.join("graph.db"), std::fs::Permissions::from_mode(0o600))
+            .unwrap();
         // Should not change anything
         check_and_repair_permissions(&dir);
-        assert_eq!(std::fs::metadata(&dir).unwrap().permissions().mode() & 0o777, 0o700);
-        assert_eq!(std::fs::metadata(dir.join("node.json")).unwrap().permissions().mode() & 0o777, 0o600);
-        assert_eq!(std::fs::metadata(dir.join("graph.db")).unwrap().permissions().mode() & 0o777, 0o600);
+        assert_eq!(
+            std::fs::metadata(&dir).unwrap().permissions().mode() & 0o777,
+            0o700
+        );
+        assert_eq!(
+            std::fs::metadata(dir.join("node.json"))
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            0o600
+        );
+        assert_eq!(
+            std::fs::metadata(dir.join("graph.db"))
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            0o600
+        );
         std::fs::remove_dir_all(&dir).ok();
     }
 
     #[test]
     fn missing_files_do_not_crash() {
-        let dir = std::env::temp_dir().join(format!("winstack-test-empty-{}", uuid::Uuid::new_v4()));
+        let dir =
+            std::env::temp_dir().join(format!("winstack-test-empty-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         // No node.json or graph.db — should not panic
         check_and_repair_permissions(&dir);

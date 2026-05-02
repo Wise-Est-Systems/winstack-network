@@ -25,10 +25,7 @@ impl WinError {
     /// True if this error means the .win container is structurally damaged
     /// (as opposed to a content/proof issue that can only be detected after unpacking).
     pub fn is_container_damage(&self) -> bool {
-        match self {
-            WinError::Io(_) => false,
-            _ => true,
-        }
+        !matches!(self, WinError::Io(_))
     }
 }
 
@@ -36,11 +33,17 @@ impl std::fmt::Display for WinError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             WinError::NotAWinFile => write!(f, "not a .win file — missing WIN\\x01 header"),
-            WinError::TooShort => write!(f, "container too short — file is incomplete or truncated"),
-            WinError::BadMagic => write!(f, "invalid header — expected WIN\\x01, got something else"),
+            WinError::TooShort => {
+                write!(f, "container too short — file is incomplete or truncated")
+            },
+            WinError::BadMagic => {
+                write!(f, "invalid header — expected WIN\\x01, got something else")
+            },
             WinError::BadFilename => write!(f, "invalid or unsafe filename in container"),
             WinError::Truncated => write!(f, "container truncated — data ends before expected"),
-            WinError::MissingProof => write!(f, "container has no proof section — file data ends at EOF"),
+            WinError::MissingProof => {
+                write!(f, "container has no proof section — file data ends at EOF")
+            },
             WinError::Io(e) => write!(f, "io error: {}", e),
         }
     }
@@ -380,7 +383,7 @@ mod tests {
         let mut packed = pack("f.txt", b"original", r#"{"payload_hash":"abc"}"#);
         let idx = packed.windows(8).position(|w| w == b"original").unwrap();
         packed[idx] = b'X'; // change one byte of content
-        // Container is still structurally valid — unpack succeeds
+                            // Container is still structurally valid — unpack succeeds
         let result = unpack(&packed);
         assert!(result.is_ok());
     }

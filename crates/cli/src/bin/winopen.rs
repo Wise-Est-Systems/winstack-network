@@ -1,7 +1,7 @@
 //! winopen — double-click a .win, see the file inside
 //!
-//! Always opens the file. Shows a notice if the file is wounded, unrecognized,
-//! or its name tag is dying. No window. No server. No UI beyond the file itself.
+//! Always opens the file. Shows a notice if the file is tampered or invalid.
+//! No window. No server. No UI beyond the file itself.
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -22,30 +22,24 @@ fn main() {
     let (name, artifact, proof_json) = match win_format::unpack(&raw) {
         Ok(v) => v,
         Err(e) => {
-            dialog(
-                "Dying",
-                &format!("This name tag is decomposing and cannot be read.\n\n{}", e),
-            );
+            dialog("Invalid", &format!("I can't read this win tag.\n\n{}", e));
             std::process::exit(3);
-        }
+        },
     };
 
     let bundle: canon_types::ProofBundle = match serde_json::from_str(&proof_json) {
         Ok(b) => b,
         Err(e) => {
-            dialog(
-                "Dying",
-                &format!("This name tag is decomposing.\n\n{}", e),
-            );
+            dialog("Invalid", &format!("I can't read this win tag.\n\n{}", e));
             std::process::exit(3);
-        }
+        },
     };
 
-    // Determine state — the file's name tag might say one of three things
-    // about the file itself: Alive, Wounded, or Unrecognized.
+    // Determine state — the file's win tag returns one of three things:
+    // Verified, Tampered, or Invalid.
     let file_hash = winstack_crypto::sha256_hex(&artifact);
     let status = if file_hash != bundle.object.payload_hash {
-        canon_types::VerificationStatus::Wounded
+        canon_types::VerificationStatus::Tampered
     } else {
         verifier::verify_from_proof_bundle(&bundle, &artifact).status
     };
@@ -71,31 +65,23 @@ fn main() {
     }
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     {
-        let _ = std::process::Command::new("xdg-open").arg(&out_path).status();
+        let _ = std::process::Command::new("xdg-open")
+            .arg(&out_path)
+            .status();
     }
 
-    // Then show a notice if the file isn't alive
+    // Then show a notice if the file isn't verified
     match status {
-        canon_types::VerificationStatus::Alive => {}
-        canon_types::VerificationStatus::Wounded => {
+        canon_types::VerificationStatus::Verified => {},
+        canon_types::VerificationStatus::Tampered => {
             dialog(
-                "Wounded",
-                "This file was alive once. It has been changed since it was named.\nThe original is gone.",
+                "Tampered",
+                "This file was sealed once. It has been changed since.\nThe original is gone.",
             );
-        }
-        canon_types::VerificationStatus::Unrecognized => {
-            dialog(
-                "Unrecognized",
-                "I can't read this name tag. The file may still be fine, but I can't tell you who named it.",
-            );
-        }
-        canon_types::VerificationStatus::Dying => {
-            // Reachable only if upstream code path propagates Dying through.
-            dialog(
-                "Dying",
-                "This name tag is decomposing. The file underneath may still be alive.",
-            );
-        }
+        },
+        canon_types::VerificationStatus::Invalid => {
+            dialog("Invalid", "Invalid. We can't verify this file.");
+        },
     }
 }
 

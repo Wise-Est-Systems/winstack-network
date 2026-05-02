@@ -46,7 +46,7 @@ SealedObject {
 | Field | Meaning |
 |---|---|
 | `object_id` | Unique identifier for this sealed object |
-| `object_class` | How this object was born: natively, by AI, or imported |
+| `object_class` | How this object was created: natively, by AI, or imported |
 | `payload_hash` | SHA-256 of the exact artifact bytes at seal time |
 | `artifact_size_bytes` | Byte count of the original artifact |
 | `parent_ids` | Objects this object was derived from |
@@ -129,21 +129,21 @@ Signed by the policy evaluator key:
 
 Given: artifact bytes + proof bundle JSON
 
-1. **Payload hash** — Compute `SHA-256(artifact_bytes)`. Must match `object.payload_hash`. If not: Wounded.
+1. **Payload hash** — Compute `SHA-256(artifact_bytes)`. Must match `object.payload_hash`. If not: Tampered.
 
-1b. **Artifact size** — `artifact_bytes.len()` must match `object.artifact_size_bytes`. If not: Unrecognized.
+1b. **Artifact size** — `artifact_bytes.len()` must match `object.artifact_size_bytes`. If not: Invalid.
 
-2. **Object signature** — Verify `object.object_signature` against the creator identity public key using the object signature payload. If invalid: Unrecognized.
+2. **Object signature** — Verify `object.object_signature` against the creator identity public key using the object signature payload. If invalid: Invalid.
 
 3. **Creator identity** — `creator_identity.status` must be `Active`. Creator `identity_id` must match `origin.creator_identity_id`. Session identities cannot create Native or AiGenerated objects.
 
 4. **Module registration** — `module_registration.module_id` must match `origin.module_identity_id`. Module kind must match object class (Import for SealedImport, AiGeneration for AiGenerated).
 
-5. **Time signature** — Verify `time_event.signature` against the time authority identity public key using the time event signature payload. If invalid: Unrecognized.
+5. **Time signature** — Verify `time_event.signature` against the time authority identity public key using the time event signature payload. If invalid: Invalid.
 
-6. **Time chain** — If non-genesis: `predecessor_time_event` must be present. Its `time_event_id` must match `time_event.predecessor_event_id`. The SHA-256 of its canonical JSON must match `time_event.predecessor_hash`. If missing or mismatched: Unrecognized.
+6. **Time chain** — If non-genesis: `predecessor_time_event` must be present. Its `time_event_id` must match `time_event.predecessor_event_id`. The SHA-256 of its canonical JSON must match `time_event.predecessor_hash`. If missing or mismatched: Invalid.
 
-7. **Policy proof** — `policy_proof.decision` must be `Permit`. Verify `policy_proof.signature` against the policy evaluator identity public key. If not Permit or signature invalid: INVALID.
+7. **Policy proof** — `policy_proof.decision` must be `Permit`. Verify `policy_proof.signature` against the policy evaluator identity public key. If not Permit or signature invalid: Invalid.
 
 8. **Origin consistency** — `origin.object_id` must match `object.object_id`. Creator, module, and time authority IDs in origin must match the corresponding records in the bundle.
 
@@ -157,18 +157,17 @@ Given: artifact bytes + proof bundle JSON
 
 | State | Meaning |
 |---|---|
-| `Alive` | Unchanged since it was named. The witness's signature is intact. The name tag matches the file. |
-| `Wounded` | Was named once, but has been changed since. The original is gone. |
-| `Unrecognized` | The name tag doesn't belong to this file, or the witness's signature can't be read. |
-| `Dying` | The name tag itself is decomposing — container broken, truncated, malformed. The file underneath may still be alive; the name tag is just unreadable. |
+| `Verified` | Unchanged since it was sealed. The witness's signature is intact. The win tag matches the file. |
+| `Tampered` | Was sealed once, but has been changed since. The original is gone. |
+| `Invalid` | The win tag doesn't belong to this file, the signature can't be read, or the `.win` container itself is malformed. We can't tell you who sealed it. |
 
-**Wounded vs Dying:** Wounded means the .win container opened correctly but the file inside does not match its name tag. Dying means the container itself could not be opened — the file may have been corrupted in transit, partially downloaded, or the .win format is invalid. A dying file cannot be recognized at all.
+**Tampered vs Invalid:** *Tampered* means the `.win` container opened correctly but the file inside does not match its win tag — actionable: the file you hold has been altered. *Invalid* covers everything else: signature won't verify, container can't be parsed, identity record is wrong, time chain doesn't link. The receiver gets no actionable distinction among Invalid causes; engineers can inspect the typed `FailureCode` underneath.
 
 ## 8. Trust classes
 
 | Object class | Trust class | Meaning |
 |---|---|---|
-| `Native` | NATIVE | Born on this node through the sealing pipeline |
+| `Native` | NATIVE | Created on this node through the sealing pipeline |
 | `AiGenerated` | NATIVE | AI output sealed through the generation pipeline |
 | `SealedImport` | FOREIGN | External artifact imported under a signed declaration. Never becomes native. |
 
@@ -237,7 +236,7 @@ At verify time:
 External time anchoring is opt-in. Use `--tsa-url <URL>` with `winstack prove`:
 
 ```bash
-winstack seal document.pdf --tsa-url https://freetsa.org/tsr
+winstack win document.pdf --tsa-url https://freetsa.org/tsr
 ```
 
 If the TSA is unreachable or rejects the request, sealing falls back to `Local` time with a warning.
@@ -277,8 +276,8 @@ The `proof_chain` field is optional on `SealedObject`. If absent, the proof is s
 
 ### Verification rules
 
-- If `predecessor_proof_id` is present but `predecessor_payload_hash` is absent: `ChainPredecessorMissing` → Unrecognized
-- Tampering with any chain field (lineage_id, predecessor_proof_id, predecessor_payload_hash) invalidates the object signature → Unrecognized
+- If `predecessor_proof_id` is present but `predecessor_payload_hash` is absent: `ChainPredecessorMissing` → Invalid
+- Tampering with any chain field (lineage_id, predecessor_proof_id, predecessor_payload_hash) invalidates the object signature → Invalid
 - Standalone proofs with no `proof_chain` field remain valid (backward compatible)
 - The verifier validates chain structure within a single proof. Full chain walk (loading and verifying predecessor bundles) is the caller's responsibility.
 
@@ -327,9 +326,9 @@ A `.win` file packages the original file and its proof into a single container.
 ### CLI
 
 ```bash
-winstack seal document.pdf              # creates document.pdf.win
-winstack verify document.pdf.win        # Alive / Wounded / Unrecognized
-winstack open document.pdf.win          # extracts document.pdf
+winstack win document.pdf              # creates document.win
+winstack verify document.win            # Verified / Tampered / Invalid
+winstack open document.win              # restores document.pdf
 winstack verify file --proof file.proof.json  # legacy sidecar support
 ```
 
@@ -382,7 +381,7 @@ Permissions are set on creation. On every startup, the CLI and desktop app check
 - Do not share your `.winstack/` directory.
 - Do not commit `node.json` to version control (it is gitignored by default).
 - Enable FileVault (macOS), BitLocker (Windows), or LUKS (Linux) for disk encryption — this protects keys at rest when the machine is off.
-- If you suspect key compromise, generate a new node (`rm -rf .winstack && winstack seal <file>`) and re-seal important files.
+- If you suspect key compromise, generate a new node (`rm -rf .winstack && winstack win <file>`) and re-seal important files.
 
 ## 15. What the system proves
 
@@ -414,7 +413,7 @@ Trust is a local decision. You choose which keys you trust by adding them to you
 
 ### What trust does NOT mean
 
-- **Trusted key does not mean the file content is true.** It means you recognize the signer.
+- **Trusted key does not mean the file content is true.** It means you accept the signer.
 - **Untrusted key does not mean the proof is invalid.** The proof is cryptographically valid regardless of trust.
 - **Trust is local only.** Your trust list is yours. It does not affect anyone else's verification.
 - **Removing a key from your trust list does not invalidate past proofs.** It only changes how they are labeled on your machine.
@@ -431,4 +430,4 @@ winstack trust list
 
 - CLI: `trust     Trusted key (label)` or `trust     Untrusted key`
 - Desktop/browser details panel: Key shown as truncated hex
-- Trust status shown only when a proof is Alive — Wounded/Unrecognized/Dying results do not show trust because the name tag itself is not valid
+- Trust status shown only when a result is Verified — Tampered/Invalid results do not show trust because the win tag itself is not valid

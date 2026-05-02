@@ -1,0 +1,25 @@
+# Code ownership.
+# Reviews are required for the listed paths before merge.
+# Update with concrete GitHub team or user handles once they exist.
+
+# Catch-all
+*                                           @Wise-Est-Systems/maintainers
+
+# Cryptographic surface — heightened review.
+crates/crypto/                              @Wise-Est-Systems/maintainers
+crates/canon-types/                         @Wise-Est-Systems/maintainers
+crates/verifier/                            @Wise-Est-Systems/maintainers
+crates/verifier-wasm/                       @Wise-Est-Systems/maintainers
+crates/win-format/                          @Wise-Est-Systems/maintainers
+crates/time-core/                           @Wise-Est-Systems/maintainers
+spec/                                       @Wise-Est-Systems/maintainers
+docs/adr/                                   @Wise-Est-Systems/maintainers
+
+# CI / build / release infrastructure.
+.github/                                    @Wise-Est-Systems/maintainers
+Cargo.toml                                  @Wise-Est-Systems/maintainers
+deny.toml                                   @Wise-Est-Systems/maintainers
+rustfmt.toml                                @Wise-Est-Systems/maintainers
+clippy.toml                                 @Wise-Est-Systems/maintainers
+rust-toolchain.toml                         @Wise-Est-Systems/maintainers
+scripts/                                    @Wise-Est-Systems/maintainers

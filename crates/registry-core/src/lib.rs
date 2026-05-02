@@ -121,7 +121,7 @@ impl Registry {
                         code: RejectCode::SessionCannotCreateNative,
                         reason: "session identity cannot create native objects".into(),
                     })
-                }
+                },
                 other => RegistryError::Rejected(Rejection {
                     code: RejectCode::CreatorInvalid,
                     reason: other.to_string(),
@@ -271,7 +271,7 @@ impl Registry {
         };
 
         let result = verifier::verify_object(&verification_input);
-        if !result.status.is_alive() {
+        if !result.status.is_verified() {
             return Err(RegistryError::Rejected(Rejection {
                 code: RejectCode::VerificationFailed,
                 reason: format!("pre-write verification failed: {:?}", result.failures),
@@ -462,7 +462,7 @@ impl Registry {
         };
 
         let result = verifier::verify_object(&verification_input);
-        if !result.status.is_alive() {
+        if !result.status.is_verified() {
             return Err(RegistryError::Rejected(Rejection {
                 code: RejectCode::VerificationFailed,
                 reason: format!("pre-write verification failed: {:?}", result.failures),
@@ -654,7 +654,7 @@ impl Registry {
         };
 
         let result = verifier::verify_object(&verification_input);
-        if !result.status.is_alive() {
+        if !result.status.is_verified() {
             return Err(RegistryError::Rejected(Rejection {
                 code: RejectCode::VerificationFailed,
                 reason: format!("pre-write verification failed: {:?}", result.failures),

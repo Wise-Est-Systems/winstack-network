@@ -8,3 +8,6 @@ canon-types = { workspace = true }
 uuid = { workspace = true }
 rusqlite = { workspace = true }
 thiserror = { workspace = true }
+
+[lints]
+workspace = true

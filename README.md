@@ -1,138 +1,229 @@
 # Winstack
 
+[![CI](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/ci.yml/badge.svg)](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/ci.yml)
+[![WASM](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/wasm.yml/badge.svg)](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/wasm.yml)
+[![Audit](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/audit.yml/badge.svg)](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/audit.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![MSRV](https://img.shields.io/badge/MSRV-1.82-orange.svg)](rust-toolchain.toml)
+
 **Files that prove themselves.**
 
-Create a cryptographic proof for any file. Share the file and its proof together. Anyone can verify the file has not changed — offline, without accounts, without trusting a server.
+Winstack gives every file a *win tag* — a small portable record that
+travels with it. The win tag says who sealed the file, when, and whether
+the file is unchanged since. Receivers read it offline, without
+accounts, without trusting any server.
+
+A file without a win tag is *untagged*: neutral, not dangerous.
+
+---
+
+## Status
+
+| Surface              | Status                                                  |
+|----------------------|---------------------------------------------------------|
+| Verifier (Rust)      | Stable. 198 tests, `#![forbid(unsafe_code)]`            |
+| Verifier (WASM)      | Stable. ≤ 1 MB compressed budget enforced in CI         |
+| `.win` container v1  | Stable. Backwards-compatibility contract in CONTRIBUTING |
+| CLI                  | `winstack` / `win` / `winopen` — Linux / macOS / Windows |
+| Desktop app          | macOS Apple Silicon shipping; Linux / Windows in CI     |
+| URL verifier         | `winstack.dev/v/<hash>` — share-anywhere static page    |
+
+See [`CHANGELOG.md`](CHANGELOG.md) for what changed in each release.
 
 ---
 
 ## How it works
 
-1. **Create a proof** — drop a file into Winstack. A `.proof.json` file is saved next to it.
-2. **Share both** — send the file and its proof together.
-3. **Check anywhere** — drop the .win into any Winstack verifier. Get one of four answers:
+1. **Witness seals a file** — `winstack win report.pdf` produces
+   `report.win`, a single portable container holding the file plus its
+   win tag.
+2. **The file travels** — email, Slack, Drive, S3. The win tag travels
+   inside the container; nothing strips it.
+3. **Receiver verifies it** — drops the `.win` into any verifier
+   (browser, desktop, CLI, WASM). The verifier returns one of three
+   states.
 
-| Result | Meaning |
-|---|---|
-| **Alive** | Unchanged since it was named. The witness's signature is intact. |
-| **Wounded** | Was named once, but has been changed since. The original is gone. |
-| **Unrecognized** | The name tag doesn't belong to this file, or the witness's signature can't be read. |
-| **Dying** | The name tag itself is decomposing — container broken, truncated, malformed. |
+| State        | Meaning                                                                              |
+|--------------|--------------------------------------------------------------------------------------|
+| **Verified** | The win tag matches the file. Unchanged since it was sealed.                         |
+| **Tampered** | Was sealed once. Has been changed since. The original is gone.                       |
+| **Invalid**  | We can't verify this win tag. Wrong tag, unreadable signature, or malformed container. |
 
-Four states. No ambiguity.
+Three states. No fourth. See [ADR 0002](docs/adr/0002-three-state-grammar.md).
 
 ---
 
-## Try it now
+## Try it
 
-**Verify without installing anything:**
-Open [winstack.dev](https://wise-est-systems.github.io/winstack-network/) in your browser. Drop a `.win` file. Everything runs locally — nothing is uploaded.
+**Without installing anything** — open [winstack.dev](https://winstack.dev),
+drop a `.win`. Verification runs locally in the browser; nothing is
+uploaded.
 
-**Desktop app (macOS):**
-[Download the latest release](https://github.com/Wise-Est-Systems/winstack-network/releases/latest) — open the app, drop a file to seal it, drop a `.win` to verify it.
+**Desktop app (macOS)** — [download the latest release](https://github.com/Wise-Est-Systems/winstack-network/releases/latest).
+Drop any file to seal it. Drop a `.win` to verify it.
 
-**CLI:**
+**CLI** —
+
 ```bash
 cargo build --release
-./target/release/winstack seal document.pdf        # creates document.pdf.win
-./target/release/winstack verify document.pdf.win  # Alive / Wounded / Unrecognized
-./target/release/winstack open document.pdf.win    # extracts original file
+
+./target/release/winstack win report.pdf            # → report.win
+./target/release/winstack verify report.win          # Verified / Tampered / Invalid
+./target/release/winstack open   report.win          # → restores report.pdf
+./target/release/winstack publish report.win         # → public/v/<hash>.json
 ```
 
 ---
 
-## What the proof contains
+## What the win tag contains
 
-- SHA-256 hash of the file (not the file itself)
-- Ed25519 digital signatures
-- Timestamps (local from device clock, or anchored via RFC 3161 — see "What time means" in PROOF-SPEC)
-- Creator public key
-- Chain/history metadata (if part of a version chain)
+- SHA-256 of the file (not the file)
+- Ed25519 signature over the canonical object payload
+- Witness public key
+- Creation date — local clock, or RFC 3161 anchored
+- Lineage metadata (parents, generation, optional delegation chain)
 - Protocol version (`V1`)
 
-## What the proof does NOT contain
-
-- File contents
-- File paths
-- Usernames or account information
-- Machine identifiers
-- Any data that identifies your computer or location
-
-The proof is safe to share publicly.
+It does **not** contain the file contents, file paths, account info,
+machine identifiers, or anything that identifies the witness's location.
+The win tag is safe to share publicly.
 
 ---
 
 ## How Winstack spreads
 
-The product is not the app. The product is the proof attached to the file.
+The product is not the app. **The product is the win tag attached to
+the file.**
 
-- You create a proof for a file
-- The file and proof travel together
-- Anyone verifies using any Winstack verifier
-- The app is a creator tool and a verifier — not a platform
+- A witness seals a file. The file and win tag travel together.
+- Any receiver verifies using any Winstack verifier. No coordination.
+- The app and CLI are creator tools and verifiers — not a platform.
 
 Three verification paths, same result:
-1. **Browser** — `check.html`, zero install, runs in-browser
-2. **Desktop app** — full offline verification with proof creation
-3. **CLI** — `winstack verify file proof.json`
+
+1. **URL** — `winstack.dev/v/<hash>` resolves to the static win tag.
+2. **Browser** — drop a `.win` into the verifier; runs in-browser.
+3. **Desktop app** — full offline verification with name-tag creation.
+4. **CLI / library** — `winstack verify`, or call the `verifier-wasm`
+   exports from any browser-adjacent surface.
 
 ---
 
 ## Comparison
 
-| | Winstack | Traditional hash | Blockchain notary | Cloud signing |
-|---|---|---|---|---|
-| Works offline | Yes | Yes | No | No |
-| Requires server trust | No | No | Yes | Yes |
-| Any file type | Yes | Yes | Varies | Varies |
-| Proof travels with file | Yes | Manual | No | No |
-| Version history | Yes (chains) | No | Varies | Varies |
-| Key rotation | Yes (delegation) | No | Varies | Varies |
-| Accounts required | No | No | Yes | Yes |
-| External timestamps | Optional | No | Built-in | Built-in |
+|                              | Winstack       | Traditional hash | Blockchain notary | Cloud signing |
+|------------------------------|----------------|------------------|-------------------|---------------|
+| Works offline                | Yes            | Yes              | No                | No            |
+| Requires server trust        | No             | No               | Yes               | Yes           |
+| Any file type                | Yes            | Yes              | Varies            | Varies        |
+| Win tag travels with file    | Yes            | Manual           | No                | No            |
+| Version history (lineage)    | Yes            | No               | Varies            | Varies        |
+| Key rotation (delegation)    | Yes            | No               | Varies            | Varies        |
+| Accounts required            | No             | No               | Yes               | Yes           |
+| External timestamps          | Optional       | No               | Built-in          | Built-in      |
 
-Winstack is not a blockchain, a certificate authority, or a cloud service. It is a local proof system. Proofs are self-contained. Verification contacts nothing.
+Winstack is not a blockchain, a certificate authority, or a cloud
+service. It is a local proof system. Win tags are self-contained;
+verification contacts nothing.
 
 ---
 
 ## What Winstack proves
 
-- A specific file existed at a specific time (local device clock or anchored via RFC 3161)
-- It has not been modified since
-- It was signed by a specific key
-- It may be part of a verifiable version chain
+- A specific file existed at a specific time (local device clock, or
+  anchored via RFC 3161).
+- It has not been modified since.
+- It was signed by a specific key.
+- It may be part of a verifiable lineage.
 
 ## What Winstack does NOT prove
 
-- That the file content is true or accurate
-- The real-world identity of the signer (only key continuity)
-- That this is the first copy in the world (only first in this lineage)
-- That local timestamps are globally authoritative (local time is from the device clock — it can be wrong or backdated; only anchored timestamps are independently verifiable)
+- That the file content is true or accurate.
+- The real-world identity of the witness (only key continuity).
+- That this is the first copy in the world (only first in this lineage).
+- That a local timestamp is globally authoritative — only anchored
+  timestamps are independently verifiable.
 
 ---
 
 ## Architecture
 
-14 crates. 198 tests. Fail-closed everywhere.
+12 Rust crates plus a Tauri desktop app and zero-dep browser verifier.
+The `verifier-wasm` crate compiles to a single `.wasm` artifact that
+powers every browser-adjacent receiver surface (URL verifier, planned
+extensions, planned chat-app integrations).
 
 ```
-canon-types       domain primitives
-crypto            Ed25519 + SHA-256
-identity-core     identity + module registry
-time-core         time chain + RFC 3161 TSA
-policy-core       policy evaluation
-object-store      immutable store
-graph-index       SQLite lineage DAG
-verifier          deterministic verifier + chain walker
-registry-core     10-step sealing pipeline
-module-import     import assembly
-module-ai         AI generation assembly
-win-format        .win container (zero dependencies)
-window-api        Axum API
-cli               win + winstack + winopen binaries
+canon-types       Domain primitives. The three-state grammar lives here.
+crypto            SHA-256 + Ed25519. Constant-time guarantees inherited.
+identity-core     Identities, key delegation, module registry.
+time-core         Time chain + RFC 3161 TSA validation.
+policy-core       Permit/Deny decisions and proofs.
+object-store      Content-addressed object storage (SQLite).
+graph-index       Lineage DAG.
+verifier          Pure-function verifier. No I/O. 12-step pipeline.
+verifier-wasm     wasm-bindgen export. Same logic, JS-callable.
+win-format        The .win container. Zero workspace dependencies.
+registry-core     10-step sealing pipeline. Fail-closed on persistence.
+window-api        Axum HTTP API used by the desktop app.
+cli               winstack + winopen binaries.
+desktop           Tauri 2 frontend.
 ```
 
-Desktop app built with Tauri 2. Browser verifier uses SubtleCrypto (SHA-256 + Ed25519).
+Read [`docs/architecture.md`](docs/architecture.md) for the long form,
+and [`docs/adr/`](docs/adr/) for the rationales behind the
+non-obvious decisions.
+
+The cultural and product constitution lives in
+[`spec/grammar.md`](spec/grammar.md). Read it before proposing
+features.
+
+---
+
+## Build from source
+
+```bash
+# Prereqs
+rustup toolchain install stable
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli --version 0.2.117
+
+# CLI
+cargo build --workspace --release
+
+# WASM verifier
+./scripts/build-wasm.sh           # → public/wasm/
+
+# Desktop app
+cargo install tauri-cli --version "^2"
+cd desktop && cargo tauri build
+```
+
+The four checks every PR must pass:
+
+```bash
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+./scripts/build-wasm.sh           # if WASM-touching changes
+```
+
+CI runs these on Linux, macOS, and Windows.
+
+---
+
+## Project documents
+
+| Document                                                | Purpose                                          |
+|---------------------------------------------------------|--------------------------------------------------|
+| [`spec/grammar.md`](spec/grammar.md)                     | Cultural and product constitution                |
+| [`spec/PROOF-SPEC.md`](spec/PROOF-SPEC.md)               | Wire format and verification rules               |
+| [`docs/architecture.md`](docs/architecture.md)           | Crate layout, pipelines, surfaces                |
+| [`docs/adr/`](docs/adr/)                                 | Architecture Decision Records                    |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                     | How to contribute                                |
+| [`SECURITY.md`](SECURITY.md)                             | Vulnerability disclosure                         |
+| [`CHANGELOG.md`](CHANGELOG.md)                           | What changed in each release                     |
+| [`ROADMAP.md`](ROADMAP.md)                               | Where the project is heading                     |
 
 ---
 
@@ -141,25 +232,13 @@ Desktop app built with Tauri 2. Browser verifier uses SubtleCrypto (SHA-256 + Ed
 [Latest release](https://github.com/Wise-Est-Systems/winstack-network/releases/latest)
 
 - **Winstack.dmg** — macOS Apple Silicon
-- **Winstack.zip** — macOS Apple Silicon (alternative)
+- **Winstack.zip** — macOS Apple Silicon (alternative archive)
 
-> macOS may show a developer warning on first launch (the app is not yet code-signed). Right-click → Open → Open to bypass.
+> macOS may show a developer warning on first launch (the app is not yet
+> code-signed). Right-click → Open → Open to bypass.
 
----
-
-## Build from source
-
-```bash
-# CLI tools
-cargo build --release
-./target/release/winstack seal document.pdf        # creates document.pdf.win
-./target/release/winstack verify document.pdf.win  # Alive / Wounded / Unrecognized
-./target/release/winstack open document.pdf.win    # extracts original file
-
-# Desktop app
-cargo install tauri-cli --version "^2"
-cd desktop && cargo tauri build
-```
+Linux and Windows release artifacts are produced by CI; promotion to
+shipped releases is tracked in [`ROADMAP.md`](ROADMAP.md).
 
 ---
 

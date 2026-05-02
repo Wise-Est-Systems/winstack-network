@@ -1,0 +1,65 @@
+name: WASM
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'crates/verifier-wasm/**'
+      - 'crates/verifier/**'
+      - 'crates/canon-types/**'
+      - 'crates/crypto/**'
+      - 'crates/win-format/**'
+      - 'crates/time-core/**'
+      - 'crates/identity-core/**'
+      - 'crates/policy-core/**'
+      - 'scripts/build-wasm.sh'
+      - '.github/workflows/wasm.yml'
+  pull_request:
+    branches: [main]
+  merge_group:
+
+concurrency:
+  group: wasm-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  build:
+    name: WASM build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: wasm
+      - name: Install wasm-bindgen-cli
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen-cli@0.2.117
+      - name: Install wasm-opt (binaryen)
+        run: |
+          set -euo pipefail
+          curl -sSL https://github.com/WebAssembly/binaryen/releases/download/version_119/binaryen-version_119-x86_64-linux.tar.gz \
+            | tar xz -C /tmp
+          echo "/tmp/binaryen-version_119/bin" >> "$GITHUB_PATH"
+      - name: Build
+        run: ./scripts/build-wasm.sh
+      - name: Size budget (≤ 1 MB compressed)
+        run: |
+          set -euo pipefail
+          size=$(wc -c < public/wasm/verifier_wasm_bg.wasm)
+          gz=$(gzip -c public/wasm/verifier_wasm_bg.wasm | wc -c)
+          echo "wasm: $size bytes; gzipped: $gz bytes"
+          test "$gz" -le 1048576 || { echo "ERROR: gzipped wasm exceeds 1 MB budget"; exit 1; }
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: verifier-wasm
+          path: public/wasm/
+          retention-days: 14

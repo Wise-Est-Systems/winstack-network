@@ -165,10 +165,10 @@ async fn inspect_object(
     let (status, failures) = match verification {
         Some(result) => {
             let s = match result.status {
-                VerificationStatus::Alive => "Alive",
-                VerificationStatus::Wounded => "Wounded",
-                VerificationStatus::Unrecognized => "Unrecognized",
-                VerificationStatus::Dying => "Dying",
+                VerificationStatus::Verified => "Verified",
+                VerificationStatus::Tampered => "Tampered",
+                VerificationStatus::Invalid => "Invalid",
+                // (Dying merged into Unrecognized),
             };
             let fs: Vec<FailureInfo> = result
                 .failures
@@ -179,9 +179,9 @@ async fn inspect_object(
                 })
                 .collect();
             (s.to_string(), fs)
-        }
+        },
         None => (
-            "Unrecognized".to_string(),
+            "Invalid".to_string(),
             vec![FailureInfo {
                 code: "MISSING_DATA".into(),
                 reason: "could not load all verification inputs".into(),
@@ -190,8 +190,8 @@ async fn inspect_object(
     };
 
     let trust_class = match obj.object_class.trust_class() {
-        TrustClass::Native => "NATIVE",
-        TrustClass::Foreign => "FOREIGN",
+        TrustClass::Native => "Native",
+        TrustClass::NonNative => "Non-native",
     };
 
     // Creator summary
@@ -291,7 +291,7 @@ async fn inspect_object(
                 if hash_ok { "MATCH" } else { "MISMATCH" },
                 if sig_ok { "VALID" } else { "INVALID" },
             )
-        }
+        },
         None => ("MISMATCH", "UNVERIFIABLE"),
     };
 
@@ -306,14 +306,14 @@ async fn inspect_object(
     let policy = PolicyInfo {
         decision: Some(format!("{:?}", obj.policy_proof.decision)),
         policy_version: Some(obj.policy_proof.policy_version),
-        proof_status: if status == "Alive" {
-            "Alive".to_string()
+        proof_status: if status == "Verified" {
+            "Verified".to_string()
         } else {
             let has_policy_failure = failures.iter().any(|f| f.code.starts_with("Policy"));
             if has_policy_failure {
                 "Failed".to_string()
             } else {
-                "Alive".to_string()
+                "Verified".to_string()
             }
         },
         evaluated_at: Some(obj.policy_proof.evaluated_at.clone()),
@@ -506,11 +506,14 @@ async fn verify_upload(
                     StatusCode::BAD_REQUEST,
                     Json(ErrorResponse {
                         error: ErrorDetail {
-                            message: format!("unexpected field '{}': expected 'file' or 'proof'", name),
+                            message: format!(
+                                "unexpected field '{}': expected 'file' or 'proof'",
+                                name
+                            ),
                         },
                     }),
                 ));
-            }
+            },
         }
     }
 
@@ -571,9 +574,9 @@ async fn verify_upload(
     // Check tamper first — file content vs name tag's recorded hash
     if file_hash != expected_hash {
         return Ok(Json(VerifyResponse {
-            result: "Wounded".into(),
+            result: "Tampered".into(),
             object_id,
-            message: "This file was alive once. It has been changed since it was named. The original is gone.".into(),
+            message: "Tampered. This file was changed after it was sealed.".into(),
             file_hash,
             expected_hash,
             failures: vec![],
@@ -593,24 +596,17 @@ async fn verify_upload(
     // Run full verification from proof bundle
     let vr = verifier::verify_from_proof_bundle(&bundle, &file_bytes);
     let (result_str, message) = match vr.status {
-        VerificationStatus::Alive => (
-            "Alive",
-            "This file is alive. Unchanged since it was named.",
+        VerificationStatus::Verified => (
+            "Verified",
+            "Verified. This file matches the original — it hasn't been changed.",
         ),
-        VerificationStatus::Wounded => (
-            "Wounded",
-            "This file was alive. It has been changed since it was named. The original is gone.",
+        VerificationStatus::Tampered => (
+            "Tampered",
+            "Tampered. This file was changed after it was sealed.",
         ),
-        VerificationStatus::Unrecognized => (
-            "Unrecognized",
-            "I can't read this name tag. The file may still be fine, but I can't tell you who named it.",
-        ),
-        VerificationStatus::Dying => (
-            "Dying",
-            "This name tag is decomposing.",
-        ),
+        VerificationStatus::Invalid => ("Invalid", "Invalid. We can't verify this file."),
     };
-    let failures: Vec<FailureInfo> = if vr.status.is_alive() {
+    let failures: Vec<FailureInfo> = if vr.status.is_verified() {
         vec![]
     } else {
         vr.failures
@@ -696,7 +692,8 @@ async fn prove_upload(
                 StatusCode::BAD_REQUEST,
                 Json(ErrorResponse {
                     error: ErrorDetail {
-                        message: "too many fields: expected 'file' and optional 'predecessor'".into(),
+                        message: "too many fields: expected 'file' and optional 'predecessor'"
+                            .into(),
                     },
                 }),
             ));
@@ -723,7 +720,10 @@ async fn prove_upload(
                 StatusCode::BAD_REQUEST,
                 Json(ErrorResponse {
                     error: ErrorDetail {
-                        message: format!("unexpected field '{}': expected 'file' or 'predecessor'", name),
+                        message: format!(
+                            "unexpected field '{}': expected 'file' or 'predecessor'",
+                            name
+                        ),
                     },
                 }),
             ));
@@ -1096,9 +1096,9 @@ async fn check_bundle(
         Ok(v) => v,
         Err(e) => {
             return Ok(Json(VerifyResponse {
-                result: "Dying".into(),
+                result: "Invalid".into(),
                 object_id: String::new(),
-                message: format!("This name tag is decomposing. {}", e),
+                message: format!("I can't read this name tag. {}", e),
                 file_hash: String::new(),
                 expected_hash: String::new(),
                 failures: vec![],
@@ -1113,16 +1113,19 @@ async fn check_bundle(
                 chain_depth: 0,
                 creator_key: String::new(),
             }));
-        }
+        },
     };
 
     let bundle: ProofBundle = match serde_json::from_str(&proof_text) {
         Ok(b) => b,
         Err(e) => {
             return Ok(Json(VerifyResponse {
-                result: "Dying".into(),
+                result: "Invalid".into(),
                 object_id: String::new(),
-                message: format!("This name tag is decomposing. Proof section is not valid: {}", e),
+                message: format!(
+                    "I can't read this name tag. Proof section is not valid: {}",
+                    e
+                ),
                 file_hash: String::new(),
                 expected_hash: String::new(),
                 failures: vec![],
@@ -1137,7 +1140,7 @@ async fn check_bundle(
                 chain_depth: 0,
                 creator_key: String::new(),
             }));
-        }
+        },
     };
 
     let file_hash = winstack_crypto::sha256_hex(&file_bytes);
@@ -1158,9 +1161,9 @@ async fn check_bundle(
 
     if file_hash != expected_hash {
         return Ok(Json(VerifyResponse {
-            result: "Wounded".into(),
+            result: "Tampered".into(),
             object_id,
-            message: "This file was alive. It has been changed since it was named. The original is gone.".into(),
+            message: "Tampered. This file was changed after it was sealed.".into(),
             file_hash,
             expected_hash,
             failures: vec![],
@@ -1179,24 +1182,18 @@ async fn check_bundle(
 
     let vr = verifier::verify_from_proof_bundle(&bundle, &file_bytes);
     let (result_str, message) = match vr.status {
-        VerificationStatus::Alive => (
-            "Alive",
-            "This file is alive. Unchanged since it was named.",
+        VerificationStatus::Verified => (
+            "Verified",
+            "Verified. This file matches the original — it hasn't been changed.",
         ),
-        VerificationStatus::Wounded => (
-            "Wounded",
-            "This file was alive. It has been changed since it was named. The original is gone.",
+        VerificationStatus::Tampered => (
+            "Tampered",
+            "Tampered. This file was changed after it was sealed.",
         ),
-        VerificationStatus::Unrecognized => (
-            "Unrecognized",
-            "I can't read this name tag.",
-        ),
-        VerificationStatus::Dying => (
-            "Dying",
-            "This name tag is decomposing.",
-        ),
+        VerificationStatus::Invalid => ("Invalid", "I can't read this name tag."),
+        // (Dying merged into Unrecognized.)
     };
-    let failures: Vec<FailureInfo> = if vr.status.is_alive() {
+    let failures: Vec<FailureInfo> = if vr.status.is_verified() {
         vec![]
     } else {
         vr.failures
@@ -1277,7 +1274,11 @@ async fn save_and_open(
             )
         })?;
         if name == "file" {
-            file_name = Some(if fname.is_empty() { "file".into() } else { fname });
+            file_name = Some(if fname.is_empty() {
+                "file".into()
+            } else {
+                fname
+            });
             file_bytes = Some(data.to_vec());
         }
     }

@@ -1,11 +1,10 @@
 [package]
 name = "cli"
-version = "0.1.0"
-edition = "2021"
-
-[[bin]]
-name = "win"
-path = "src/main.rs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [[bin]]
 name = "winstack"
@@ -25,16 +24,15 @@ object-store = { workspace = true }
 graph-index = { workspace = true }
 verifier = { workspace = true }
 registry-core = { workspace = true }
-module-import = { workspace = true }
-module-ai = { workspace = true }
-window-api = { workspace = true }
+win-format = { path = "../win-format" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 hex = { workspace = true }
-win-format = { path = "../win-format" }
 clap = { workspace = true }
-tokio = { workspace = true }
 base64 = { workspace = true }
 ureq = { workspace = true }
+
+[lints]
+workspace = true

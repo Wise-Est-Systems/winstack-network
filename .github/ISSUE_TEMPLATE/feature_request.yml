@@ -1,0 +1,44 @@
+name: Feature request
+description: A new capability, surface, or integration.
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening: read [`spec/grammar.md`](../spec/grammar.md) — proposals
+        that conflict with the constitution (no accounts, four states only,
+        receivers verify offline, etc.) will be closed in favor of an ADR
+        amending the spec first.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What's missing, wrong, or painful today? Concrete examples.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed direction
+      description: A sketch — not a final design. Trade-offs welcome.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: alignment
+    attributes:
+      label: Spec alignment
+      description: Which part of `spec/grammar.md` does this map to?
+      options:
+        - Existing — fits within § 1–11 as-is
+        - Amendment — needs a new ADR amending the spec
+        - Out of scope — explicit non-goal in § 11
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

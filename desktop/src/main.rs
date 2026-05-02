@@ -130,12 +130,18 @@ fn check_and_repair_permissions(node_path: &std::path::Path) {
     {
         use std::os::unix::fs::PermissionsExt;
         let check = |path: &std::path::Path, expected: u32, label: &str| {
-            if !path.exists() { return; }
+            if !path.exists() {
+                return;
+            }
             if let Ok(meta) = std::fs::metadata(path) {
                 let current = meta.permissions().mode() & 0o777;
                 if current != expected {
-                    eprintln!("  WARNING: {} has permissions {:04o}, expected {:04o} — repairing", label, current, expected);
-                    let _ = std::fs::set_permissions(path, std::fs::Permissions::from_mode(expected));
+                    eprintln!(
+                        "  WARNING: {} has permissions {:04o}, expected {:04o} — repairing",
+                        label, current, expected
+                    );
+                    let _ =
+                        std::fs::set_permissions(path, std::fs::Permissions::from_mode(expected));
                 }
             }
         };
@@ -314,7 +320,7 @@ fn main() {
     let app = tauri::Builder::default()
         .on_page_load(move |webview, payload| {
             use tauri::webview::PageLoadEvent;
-            if let PageLoadEvent::Finished { .. } = payload.event() {
+            if let PageLoadEvent::Finished = payload.event() {
                 webview.eval(&inject_js).ok();
             }
         })
@@ -337,24 +343,23 @@ fn main() {
                             Ok(v) => v,
                             Err(_) => continue,
                         };
-                        let bundle: canon_types::ProofBundle = match serde_json::from_str(&proof_json) {
-                            Ok(b) => b,
-                            Err(_) => continue,
-                        };
+                        let bundle: canon_types::ProofBundle =
+                            match serde_json::from_str(&proof_json) {
+                                Ok(b) => b,
+                                Err(_) => continue,
+                            };
                         let vr = verifier::verify_from_proof_bundle(&bundle, &artifact);
-                        if vr.status.is_alive() {
+                        if vr.status.is_verified() {
                             if let Ok(home) = std::env::var("HOME") {
-                                let save_path = std::path::Path::new(&home)
-                                    .join("Downloads")
-                                    .join(&name);
+                                let save_path =
+                                    std::path::Path::new(&home).join("Downloads").join(&name);
                                 if std::fs::write(&save_path, &artifact).is_ok() {
                                     // Wait a beat, then open — so the file viewer lands on top
                                     let sp = save_path.clone();
                                     std::thread::spawn(move || {
                                         std::thread::sleep(std::time::Duration::from_millis(300));
-                                        let _ = std::process::Command::new("open")
-                                            .arg(&sp)
-                                            .status();
+                                        let _ =
+                                            std::process::Command::new("open").arg(&sp).status();
                                     });
                                 }
                             }

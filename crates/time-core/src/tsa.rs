@@ -364,7 +364,7 @@ pub fn verify_token_full(
             return Err(TsaError::SignatureInvalid(
                 "unsupported signer identifier type".into(),
             ));
-        }
+        },
     };
 
     // 9. Determine the digest algorithm from signer info
@@ -649,7 +649,7 @@ fn verify_certificate_chain(
         None => {
             // Self-signed or issuer not in chain — accept if self-signed
             verify_cert_signature(signer_cert, signer_cert)
-        }
+        },
     }
 }
 

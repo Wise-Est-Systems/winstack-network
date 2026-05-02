@@ -1,0 +1,29 @@
+[package]
+name = "verifier-wasm"
+version = "0.1.0"
+edition = "2021"
+description = "WASM bindings for the Winstack verifier — one artifact for every receiver-side surface."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+verifier = { workspace = true }
+canon-types = { workspace = true }
+winstack-crypto = { workspace = true }
+win-format = { path = "../win-format" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+wasm-bindgen = "0.2"
+serde-wasm-bindgen = "0.6"
+
+# WASM-compatible randomness — `js` enables browser crypto.getRandomValues
+# for both getrandom (transitive) and uuid::Uuid::new_v4() (transitive).
+getrandom = { version = "0.2", features = ["js"] }
+uuid = { workspace = true, features = ["js"] }
+
+# Browser-friendly chrono.
+chrono = { workspace = true, features = ["wasmbind"] }
+
+[lints]
+workspace = true

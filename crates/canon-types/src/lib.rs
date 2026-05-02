@@ -129,17 +129,23 @@ pub enum ObjectClass {
     SealedImport,
 }
 
+/// Two trust classes — that's all anyone needs to know.
+///
+/// **Native**: the witness made the file themselves.
+/// **NonNative**: the witness is attesting to a file they didn't make
+/// (an import, an AI generation, anything where the witness is vouching
+/// for content from elsewhere).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum TrustClass {
     Native,
-    Foreign,
+    NonNative,
 }
 
 impl ObjectClass {
     pub fn trust_class(&self) -> TrustClass {
         match self {
-            ObjectClass::Native | ObjectClass::AiGenerated => TrustClass::Native,
-            ObjectClass::SealedImport => TrustClass::Foreign,
+            ObjectClass::Native => TrustClass::Native,
+            ObjectClass::AiGenerated | ObjectClass::SealedImport => TrustClass::NonNative,
         }
     }
 }
@@ -311,51 +317,47 @@ pub struct Failure {
     pub reason: String,
 }
 
-/// The four states of a named file. See `spec/grammar.md` § 3.
+/// The three states of a verified file. See `spec/grammar.md` § 3.
 ///
-/// - `Alive`        — unchanged since its naming; signature intact; name tag matches.
-/// - `Wounded`      — was named once, but the file has been changed since.
-/// - `Unrecognized` — name tag and file don't fit together; signature won't read.
-/// - `Dying`        — the name tag itself is decomposing (container malformed).
-///
-/// Internal verification (`verifier::verify_object`) only ever returns
-/// `Alive | Wounded | Unrecognized` — by the time it runs, the container has
-/// parsed. `Dying` is set by callers (CLI, API, browser verifier) when the
-/// `.win` container can't be parsed at all.
+/// - `Verified` — unchanged since its sealing; signature intact; win tag matches.
+/// - `Tampered` — was sealed once, but the file has been changed since.
+/// - `Invalid` — we can't verify this win tag. Either the file doesn't match
+///   it, the signature won't read, or the container itself is malformed. The
+///   receiver does not benefit from distinguishing those — they all mean the
+///   same thing operationally: *we can't verify this file.*
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum VerificationStatus {
-    Alive,
-    Wounded,
-    Unrecognized,
-    Dying,
+    Verified,
+    Tampered,
+    Invalid,
 }
 
 impl VerificationStatus {
     /// Derive the user-facing state from a list of failures.
     ///
     /// `PayloadHashMismatch` is the only failure that means *the file you hold
-    /// is not the file the name tag named.* Everything else means *we can't
-    /// recognize who named this.* If both kinds of failure are present,
-    /// `Wounded` wins — it's the more actionable signal for the receiver.
+    /// is not the file the win tag sealed.* Everything else means *we can't
+    /// verify who sealed this.* If both kinds of failure are present,
+    /// `Tampered` wins — it's the more actionable signal for the receiver.
     pub fn from_failures(failures: &[Failure]) -> Self {
         if failures.is_empty() {
-            VerificationStatus::Alive
+            VerificationStatus::Verified
         } else if failures
             .iter()
             .any(|f| matches!(f.code, FailureCode::PayloadHashMismatch))
         {
-            VerificationStatus::Wounded
+            VerificationStatus::Tampered
         } else {
-            VerificationStatus::Unrecognized
+            VerificationStatus::Invalid
         }
     }
 
-    pub fn is_alive(&self) -> bool {
-        matches!(self, VerificationStatus::Alive)
+    pub fn is_verified(&self) -> bool {
+        matches!(self, VerificationStatus::Verified)
     }
 
     pub fn is_failed(&self) -> bool {
-        !self.is_alive()
+        !self.is_verified()
     }
 }
 

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security disclosure
+    url: https://github.com/Wise-Est-Systems/winstack-network/security/advisories/new
+    about: Privately report a vulnerability. Do not file public issues for security.
+  - name: Specification (grammar)
+    url: https://github.com/Wise-Est-Systems/winstack-network/blob/main/spec/grammar.md
+    about: The cultural and product constitution. Read before proposing features.

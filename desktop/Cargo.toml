@@ -27,3 +27,6 @@ ureq = { workspace = true }
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
+
+[lints]
+workspace = true
