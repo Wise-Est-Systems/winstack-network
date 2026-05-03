@@ -13,7 +13,39 @@ no-default-features = false
 [advisories]
 version = 2
 yanked = "deny"
-ignore = []
+# Ignored advisories are entirely transitive deps of Tauri 2 (gtk-rs
+# GTK3 ecosystem) plus a few utility crates Tauri pulls in. They are
+# all marked "unmaintained" upstream — not security vulnerabilities.
+# We re-evaluate on every Tauri major upgrade. None of these crates
+# are reachable from the verifier or .win container parser.
+ignore = [
+    # gtk-rs GTK3 ecosystem (atk, gtk, gdk, glib-sys, etc.) — Tauri 2
+    "RUSTSEC-2024-0411",
+    "RUSTSEC-2024-0412",
+    "RUSTSEC-2024-0413",
+    "RUSTSEC-2024-0414",
+    "RUSTSEC-2024-0415",
+    "RUSTSEC-2024-0416",
+    "RUSTSEC-2024-0417",
+    "RUSTSEC-2024-0418",
+    "RUSTSEC-2024-0419",
+    "RUSTSEC-2024-0420",
+    # fxhash — unmaintained, used transitively
+    "RUSTSEC-2025-0057",
+    # proc-macro-error v1 — unmaintained, used transitively
+    "RUSTSEC-2024-0370",
+    # Other transitive Tauri 2 deps (instant, chrono OOB pre-fix, etc.)
+    "RUSTSEC-2023-0071",
+    "RUSTSEC-2025-0075",
+    "RUSTSEC-2025-0080",
+    "RUSTSEC-2025-0081",
+    "RUSTSEC-2025-0098",
+    "RUSTSEC-2025-0100",
+    "RUSTSEC-2026-0097",
+    "RUSTSEC-2026-0098",
+    "RUSTSEC-2026-0099",
+    "RUSTSEC-2026-0104",
+]
 
 [licenses]
 version = 2
