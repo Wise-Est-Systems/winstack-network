@@ -48,6 +48,16 @@ h1{font-size:clamp(32px,5vw,48px);font-weight:200;color:var(--ink);line-height:1
 .verdict-explain{font-size:13px;color:var(--ink-soft);margin-top:16px;line-height:1.7;max-width:380px;margin-left:auto;margin-right:auto}
 .verdict-meta{display:inline-block;font-size:9px;color:var(--muted);margin-top:20px;letter-spacing:0.1em;text-transform:uppercase;border-top:1px solid var(--rule);padding-top:10px}.verdict-meta.match{color:var(--gold)}
 .url-note{display:block;margin-top:14px;font-size:11px;color:var(--muted);line-height:1.5}.url-note a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-dim)}.url-note a:hover{background:var(--gold);color:var(--bg)}
+.trust-block{margin-top:18px;padding:14px 18px;border-top:1px solid var(--rule);text-align:left}
+.trust-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.trust-badge{display:inline-block;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;padding:3px 9px;border:1px solid var(--rule);font-weight:500}
+.trust-badge.official{color:var(--gold);border-color:var(--gold-dim);background:rgba(201,168,76,0.08)}
+.trust-badge.named{color:var(--ink);border-color:var(--subtle)}
+.trust-badge.local{color:var(--muted);border-color:var(--rule);background:var(--bg)}
+.trust-badge.unknown{color:var(--amber);border-color:#5a4a30;background:rgba(160,136,96,0.08)}
+.trust-label{font-size:11px;color:var(--ink-soft);font-weight:400;letter-spacing:0.02em}
+.trust-explainer{font-size:11px;color:var(--muted);line-height:1.6;margin-top:4px}
+.trust-not-equal{font-size:10px;color:var(--amber);margin-top:6px;font-style:italic}
 .body-over{outline:1px solid var(--gold-dim);outline-offset:-8px}
 .batch{display:none;width:100%;text-align:left}.batch.show{display:block}
 .batch-head{text-align:center;margin-bottom:20px}.batch-title{font-size:28px;font-weight:200;color:var(--ink);margin-bottom:6px}.batch-progress{font-family:var(--mono);font-size:10px;color:var(--muted)}
@@ -129,7 +139,7 @@ footer{position:relative;z-index:2;padding:20px 28px;text-align:center;color:var
   </div>
   <div id="proc-state" class="processing"><div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div class="proc-label">Verifying</div></div>
   <div id="result-state" class="outcome">
-    <div class="verdict" id="verdict"><div class="verdict-icon" id="r-icon"></div><div class="verdict-status" id="r-status"></div><div class="verdict-explain" id="r-explain"></div><div class="verdict-meta hidden" id="r-meta"></div></div>
+    <div class="verdict" id="verdict"><div class="verdict-icon" id="r-icon"></div><div class="verdict-status" id="r-status"></div><div class="verdict-explain" id="r-explain"></div><div class="trust-block hidden" id="r-trust"></div><div class="verdict-meta hidden" id="r-meta"></div></div>
     <div id="details-panel" class="details-panel hidden"></div>
     <button class="again" id="r-again">Try another file</button>
   </div>
@@ -166,8 +176,40 @@ $('seal-go').addEventListener('click',runSeal);
 $('seal-again').addEventListener('click',()=>{pendingSealFile=null;$('file-input').value='';setMode('seal');show('input-state');});
 function wireDrop(){const input=$('file-input');const zone=$('drop');input.setAttribute('multiple','');input.addEventListener('change',()=>{if(input.files?.length)dispatch(input.files);});zone.addEventListener('dragover',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.add('over');});zone.addEventListener('dragleave',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over');});zone.addEventListener('drop',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over');document.body.classList.remove('body-over');dispatch(e.dataTransfer?.files);});document.body.addEventListener('dragover',(e)=>{e.preventDefault();document.body.classList.add('body-over');});document.body.addEventListener('dragleave',(e)=>{if(!e.relatedTarget)document.body.classList.remove('body-over');});document.body.addEventListener('drop',(e)=>{e.preventDefault();document.body.classList.remove('body-over');dispatch(e.dataTransfer?.files);});}
 async function handleFile(file){show('proc-state');const buf=new Uint8Array(await file.arrayBuffer());if(isWin(buf)){let r;try{r=rWin(buf);}catch(e){fatal('Error',String(e?.message||e));return;}if(mode==='urlflow'&&r.payload_hash){const u=urlHash();if(r.payload_hash.toLowerCase()===u)r._url_match=true;else{r._url_match=false;r._url_other=r.payload_hash.toLowerCase();}}renderResult(r,file.name);return;}if(mode==='urlflow'){let r;try{r=rBundle(fetchedBundleJson,buf);}catch(e){fatal('Error',String(e?.message||e));return;}renderResult(r,file.name);return;}await renderNaked(file,buf);}
-function renderResult(r,fname){const v=$('verdict');$('details-panel').classList.add('hidden');$('r-meta').classList.add('hidden');$('r-meta').classList.remove('match');const s=r.status;v.className=`verdict ${s.toLowerCase()}`;$('r-icon').innerHTML=iconSvg(s);$('r-status').textContent=s;let html=esc(r.message);if(s==='Verified'){const m=$('r-meta');m.classList.remove('hidden');let t='Verified';t+=r.anchored?' \u2022 Anchored creation date':' \u2022 Local creation date only';if(r.lineage==='Successor')t+=' \u2022 Lineage successor';else if(r.lineage==='Origin')t+=' \u2022 First in lineage';if(r._url_match===true){t+=' \u2022 Matches this URL';m.classList.add('match');}m.textContent=t;}if(r._url_match===false&&r._url_other){html+=`<span class="url-note">Different win tag. <a href="/v/${esc(r._url_other)}">See it \u2192</a></span>`;}$('r-explain').innerHTML=html;const dt=(k,v)=>`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`;if(r.witness||r.born||r.payload_hash){const w=r.witness?.public_key_hex?`${r.witness.public_key_hex.slice(0,8)}\u2026${r.witness.public_key_hex.slice(56)}`:'unknown';const tm=r.anchored?'Anchored \u2014 RFC 3161':'Local \u2014 witness device clock';$('details-panel').innerHTML=[dt('File',fname),dt('Created',r.born||'unknown'),dt('Fingerprint',r.payload_hash||'unknown'),dt('Size',r.size_bytes!=null?`${r.size_bytes} bytes`:'unknown'),dt('Time',tm),dt('Witness',w),dt('Lineage',r.lineage||'Unknown'),dt('Verified by','WebAssembly verifier')].join('');$('details-panel').classList.remove('hidden');}show('result-state');requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));}
-async function renderNaked(file,buf){const v=$('verdict');v.className='verdict naked';$('r-icon').innerHTML='';$('r-status').textContent='No win tag';$('r-explain').innerHTML="This file has no win tag. There's nothing to verify yet.";$('r-meta').classList.add('hidden');$('r-meta').classList.remove('match');const h=await sha256hex(buf.buffer);const dt=(k,v)=>`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`;$('details-panel').innerHTML=[dt('File',file.name),dt('Size',`${file.size} bytes`),dt('Fingerprint',h)].join('');$('details-panel').classList.remove('hidden');show('result-state');requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));}
+// Trust class display: a Verified file with an Unknown signer is NOT
+// the same as a Verified file from an Official key. Never let one
+// read as the other in the UI.
+const TRUST_LABEL={Official:'Official',Named:'Named',Local:'Local',Unknown:'Unknown'};
+const TRUST_LINE={
+  Official:'Signed by an official trusted key you recognize.',
+  Named:   'Signed by a named key you saved.',
+  Local:   "Signed by this device's local key.",
+  Unknown: 'Signed by a key not currently trusted or named.'
+};
+function classifyTrust(r){
+  // Default to Unknown if the WASM didn't surface identity_class.
+  // Never auto-promote to Official; that requires an explicit
+  // trusted-list match elsewhere in the protocol.
+  const c=r&&r.identity_class;
+  if(c==='Official'||c==='Named'||c==='Local'||c==='Unknown')return c;
+  return 'Unknown';
+}
+function renderTrustBlock(r){
+  const el=$('r-trust');
+  if(!r||!r.witness){el.classList.add('hidden');el.innerHTML='';return;}
+  const cls=classifyTrust(r);
+  const line=TRUST_LINE[cls];
+  const expl=r.identity_explainer||'';
+  const fp=r.witness?.public_key_hex?`${r.witness.public_key_hex.slice(0,8)}\u2026${r.witness.public_key_hex.slice(56)}`:'';
+  const verifiedUnknown=(r.status==='Verified')&&(cls==='Unknown');
+  let html=`<div class="trust-row"><span class="trust-badge ${cls.toLowerCase()}">${esc(TRUST_LABEL[cls])}</span><span class="trust-label">${esc(line)}</span></div>`;
+  if(expl)html+=`<div class="trust-explainer">${esc(expl)}</div>`;
+  if(fp)html+=`<div class="trust-explainer">Key: <span style="font-family:var(--mono);color:var(--muted)">${esc(fp)}</span></div>`;
+  if(verifiedUnknown)html+=`<div class="trust-not-equal">The bytes match. The signer is not trusted by you yet.</div>`;
+  el.innerHTML=html;el.classList.remove('hidden');
+}
+function renderResult(r,fname){const v=$('verdict');$('details-panel').classList.add('hidden');$('r-meta').classList.add('hidden');$('r-meta').classList.remove('match');const s=r.status;v.className=`verdict ${s.toLowerCase()}`;$('r-icon').innerHTML=iconSvg(s);$('r-status').textContent=s;let html=esc(r.message);if(s==='Verified'){const m=$('r-meta');m.classList.remove('hidden');let t='Verified';t+=r.anchored?' \u2022 Anchored creation date':' \u2022 Local creation date only';if(r.lineage==='Successor')t+=' \u2022 Lineage successor';else if(r.lineage==='Origin')t+=' \u2022 First in lineage';if(r._url_match===true){t+=' \u2022 Matches this URL';m.classList.add('match');}m.textContent=t;}if(r._url_match===false&&r._url_other){html+=`<span class="url-note">Different win tag. <a href="/v/${esc(r._url_other)}">See it \u2192</a></span>`;}$('r-explain').innerHTML=html;renderTrustBlock(r);const dt=(k,v)=>`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`;if(r.witness||r.born||r.payload_hash){const w=r.witness?.public_key_hex?`${r.witness.public_key_hex.slice(0,8)}\u2026${r.witness.public_key_hex.slice(56)}`:'unknown';const tm=r.anchored?'Anchored \u2014 RFC 3161':'Local \u2014 witness device clock';$('details-panel').innerHTML=[dt('File',fname),dt('Created',r.born||'unknown'),dt('Fingerprint',r.payload_hash||'unknown'),dt('Size',r.size_bytes!=null?`${r.size_bytes} bytes`:'unknown'),dt('Time',tm),dt('Signer',w),dt('Trust class',classifyTrust(r)),dt('Lineage',r.lineage||'Unknown'),dt('Verified by','WebAssembly verifier')].join('');$('details-panel').classList.remove('hidden');}show('result-state');requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));}
+async function renderNaked(file,buf){const v=$('verdict');v.className='verdict naked';$('r-icon').innerHTML='';$('r-status').textContent='No win tag';$('r-explain').innerHTML="This file has no win tag. There's nothing to verify yet.";$('r-meta').classList.add('hidden');$('r-meta').classList.remove('match');$('r-trust').classList.add('hidden');$('r-trust').innerHTML='';const h=await sha256hex(buf.buffer);const dt=(k,v)=>`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`;$('details-panel').innerHTML=[dt('File',file.name),dt('Size',`${file.size} bytes`),dt('Fingerprint',h)].join('');$('details-panel').classList.remove('hidden');show('result-state');requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));}
 $('r-again').addEventListener('click',()=>{$('file-input').value='';show('input-state');});
 const STATE_ORDER=['Verified','Tampered','Invalid','Untagged'];
 async function handleBatch(files){show('batch-state');const counts={Verified:0,Tampered:0,Invalid:0,Untagged:0};$('batch-list').innerHTML='';$('batch-progress').textContent=`0 of ${files.length}`;$('batch-counts').innerHTML=renderCountsHtml(counts,null);wireBF(null);for(let i=0;i<files.length;i++){let r;try{r=await processOne(files[i]);}catch(e){r={state:'Invalid',name:files[i].name,size:files[i].size};}counts[r.state]=(counts[r.state]||0)+1;$('batch-list').insertAdjacentHTML('beforeend',renderRow(r));$('batch-progress').textContent=`${i+1} of ${files.length}`;$('batch-counts').innerHTML=renderCountsHtml(counts,cbf);wireBF(cbf);if((i+1)%8===0)await new Promise(r=>setTimeout(r,0));}applyBF(cbf);}

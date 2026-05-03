@@ -119,3 +119,125 @@ fn proofs_explainer_actually_includes_the_corrective_disclaimer() {
         needles
     );
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Trust-class UI regression — the verifier surfaces in public/index.html
+// and window/verify.html must render trust class clearly so that
+// Verified+Unknown can never be mistaken for Verified+Official.
+// ─────────────────────────────────────────────────────────────────────
+
+#[test]
+fn browser_verifier_surfaces_all_four_trust_classes() {
+    let content = fs::read_to_string(workspace_root().join("public/index.html"))
+        .expect("public/index.html exists");
+    for class in ["Official", "Named", "Local", "Unknown"] {
+        assert!(
+            content.contains(class),
+            "public/index.html must surface the {:?} trust class label",
+            class
+        );
+    }
+    // Plain-language line for each class must be present.
+    let lines = [
+        "Signed by an official trusted key you recognize.",
+        "Signed by a named key you saved.",
+        "Signed by this device's local key.",
+        "Signed by a key not currently trusted or named.",
+    ];
+    for line in lines {
+        assert!(
+            content.contains(line),
+            "public/index.html missing trust-class line: {:?}",
+            line
+        );
+    }
+}
+
+#[test]
+fn desktop_verifier_surfaces_all_four_trust_classes() {
+    let content = fs::read_to_string(workspace_root().join("window/verify.html"))
+        .expect("window/verify.html exists");
+    for class in ["Official", "Named", "Local", "Unknown"] {
+        assert!(
+            content.contains(class),
+            "window/verify.html must surface the {:?} trust class label",
+            class
+        );
+    }
+}
+
+#[test]
+fn verifier_surfaces_warn_when_verified_is_paired_with_unknown_signer() {
+    // The crucial UX rule: Verified + Unknown must never read as
+    // Verified + Official. There must be a string warning the user
+    // that bytes-match-but-signer-not-trusted.
+    let pages = [
+        ("public/index.html", "browser verifier"),
+        ("window/verify.html", "desktop verifier"),
+    ];
+    for (rel, label) in pages {
+        let content = fs::read_to_string(workspace_root().join(rel))
+            .expect(rel);
+        // We accept any of these phrasings.
+        let candidates = [
+            "The bytes match. The signer is not trusted by you yet.",
+            "not trusted by you yet",
+            "verifiedUnknown",
+        ];
+        let found = candidates.iter().any(|s| content.contains(s));
+        assert!(
+            found,
+            "{} ({}): missing the Verified+Unknown disambiguation message; \
+             tried: {:?}",
+            label, rel, candidates
+        );
+    }
+}
+
+#[test]
+fn verifier_does_not_promote_unknown_to_official() {
+    // Sanity: no JS path that maps Unknown → Official by default.
+    // The only way to elevate to Official is an explicit fingerprint
+    // match against the local trusted-key list. We grep for any
+    // suspicious automatic mapping.
+    let pages = ["public/index.html", "window/verify.html"];
+    let forbidden = [
+        // Auto-promotion patterns that would silently grant Official
+        "identity_class:'Official'",
+        "identity_class: 'Official'",
+        "identity_class=\"Official\"",
+        "default = 'Official'",
+        "|| 'Official'",
+        "|| \"Official\"",
+    ];
+    for rel in pages {
+        let content = fs::read_to_string(workspace_root().join(rel)).expect(rel);
+        for f in forbidden {
+            assert!(
+                !content.contains(f),
+                "{}: contains suspicious auto-promotion pattern {:?}",
+                rel,
+                f
+            );
+        }
+    }
+}
+
+#[test]
+fn verifier_response_struct_carries_identity_class() {
+    // Sanity that the wire format actually includes the field. If
+    // someone removes it from window-api the desktop UI would silently
+    // fall back to Unknown — caught here at compile-time-of-test.
+    let content = fs::read_to_string(
+        workspace_root().join("crates/window-api/src/lib.rs"),
+    )
+    .expect("window-api lib");
+    assert!(
+        content.contains("pub identity_class: String,"),
+        "VerifyResponse must carry identity_class field"
+    );
+    assert!(
+        content.contains("pub identity_explainer: String,"),
+        "VerifyResponse must carry identity_explainer field"
+    );
+}

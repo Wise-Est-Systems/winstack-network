@@ -75,6 +75,16 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
 .hidden{display:none!important}
 @keyframes enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .enter{animation:enter .3s ease-out both}
+.trust-block{margin-top:18px;padding:14px 18px;border-top:1px solid var(--border);text-align:left}
+.trust-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.trust-badge{display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border:1px solid var(--border-h);font-weight:600;border-radius:var(--radius-sm)}
+.trust-badge.official{color:var(--green);border-color:var(--green-border);background:var(--green-soft)}
+.trust-badge.named{color:var(--bright);border-color:var(--border-h)}
+.trust-badge.local{color:var(--subtle);border-color:var(--border)}
+.trust-badge.unknown{color:var(--amber);border-color:var(--amber-border);background:var(--amber-soft)}
+.trust-label{font-size:13px;color:var(--text);font-weight:500}
+.trust-explainer{font-size:12px;color:var(--muted);line-height:1.6;margin-top:4px}
+.trust-not-equal{font-size:11px;color:var(--amber);margin-top:6px;font-style:italic}
 </style>
 </head>
 <body>
@@ -100,6 +110,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
     <div class="verdict" id="r-verdict">
       <div class="verdict-status" id="r-status"></div>
       <div class="verdict-explain" id="r-explain"></div>
+      <div class="trust-block hidden" id="r-trust"></div>
       <div class="verdict-meta hidden" id="r-meta"></div>
     </div>
     <div class="mismatch hidden" id="r-mm">
@@ -221,10 +232,53 @@ function handleFile(f) {
 
 function showErr(m) { $('r-verdict').style.display = 'none'; $('r-err').classList.remove('hidden'); $('r-err').textContent = m; }
 
+// Trust class display: a Verified file with an Unknown signer is NOT
+// the same as a Verified file from an Official key. Never let one
+// read as the other.
+var TRUST_LINE = {
+  Official: 'Signed by an official trusted key you recognize.',
+  Named:    'Signed by a named key you saved.',
+  Local:    "Signed by this device's local key.",
+  Unknown:  'Signed by a key not currently trusted or named.'
+};
+function classifyTrust(d) {
+  var c = d && d.identity_class;
+  if (c === 'Official' || c === 'Named' || c === 'Local' || c === 'Unknown') return c;
+  return 'Unknown';
+}
+function renderTrustBlock(d) {
+  var el = $('r-trust');
+  if (!d || !d.creator_key) {
+    el.classList.add('hidden');
+    el.innerHTML = '';
+    return;
+  }
+  var cls = classifyTrust(d);
+  var line = TRUST_LINE[cls];
+  var expl = d.identity_explainer || '';
+  var fp = d.creator_key
+    ? d.creator_key.slice(0,8) + '…' + d.creator_key.slice(56)
+    : '';
+  var verifiedUnknown = (d.result === 'Verified') && (cls === 'Unknown');
+  var html = ''
+    + '<div class="trust-row">'
+    +   '<span class="trust-badge ' + cls.toLowerCase() + '">' + cls + '</span>'
+    +   '<span class="trust-label">' + line + '</span>'
+    + '</div>';
+  if (expl) html += '<div class="trust-explainer">' + expl + '</div>';
+  if (fp) html += '<div class="trust-explainer">Key: <span style="font-family:var(--mono);color:var(--subtle)">' + fp + '</span></div>';
+  if (verifiedUnknown) {
+    html += '<div class="trust-not-equal">The bytes match. The signer is not trusted by you yet.</div>';
+  }
+  el.innerHTML = html;
+  el.classList.remove('hidden');
+}
 function renderVerify(d, fname) {
   $('r-err').classList.add('hidden');
   $('r-mm').classList.add('hidden');
   $('r-meta').classList.add('hidden');
+  $('r-trust').classList.add('hidden');
+  $('r-trust').innerHTML = '';
   $('r-dpanel').classList.remove('open');
   $('r-dtoggle').textContent = 'View details';
   var v = $('r-verdict'); v.style.display = 'block';
@@ -232,7 +286,7 @@ function renderVerify(d, fname) {
   if (r === 'Verified') {
     v.className = 'verdict enter ok';
     $('r-status').textContent = 'Verified';
-    var explain = 'Verified. This file matches the original — it hasn't been changed.';
+    var explain = 'The file matches the proof inside this .win container. No byte changes detected.';
     if (d.chain_status === 'successor') explain += ' Part of a lineage.';
     else if (d.chain_status === 'origin') explain += ' First in its lineage.';
     $('r-explain').textContent = explain;
@@ -260,7 +314,7 @@ function renderVerify(d, fname) {
   } else if (r === 'Tampered') {
     v.className = 'verdict enter bad';
     $('r-status').textContent = 'Tampered';
-    $('r-explain').textContent = 'Tampered. This file was changed after it was sealed.';
+    $('r-explain').textContent = 'The file no longer matches the proof inside this .win container. At least one byte changed.';
     $('r-mm').classList.remove('hidden');
     $('r-mm-a').textContent = d.file_hash;
     $('r-mm-b').textContent = d.expected_hash;
@@ -268,10 +322,11 @@ function renderVerify(d, fname) {
     // Invalid \u2014 covers all "we can't tell you about this file" cases.
     v.className = 'verdict enter warn';
     $('r-status').textContent = 'Invalid';
-    var reason = "Invalid. We can't verify this win tag.";
+    var reason = 'This .win container is not valid or cannot be verified.';
     if (d.failures && d.failures.length > 0) reason += ' ' + d.failures[0].reason + '.';
     $('r-explain').textContent = reason;
   }
+  renderTrustBlock(d);
   requestAnimationFrame(function() { requestAnimationFrame(function() { v.classList.add('show'); }); });
   var ts = d.time_source === 'External'
     ? 'Anchored \u2014 externally timestamped (RFC 3161)'
@@ -281,7 +336,8 @@ function renderVerify(d, fname) {
     dt('Created', d.created_at),
     dt('Fingerprint', d.payload_hash),
     dt('Time', ts),
-    dt('Witness', d.creator_key ? d.creator_key.slice(0,8) + '\u2026' + d.creator_key.slice(56) : 'unknown'),
+    dt('Signer', d.creator_key ? d.creator_key.slice(0,8) + '\u2026' + d.creator_key.slice(56) : 'unknown'),
+    dt('Trust class', classifyTrust(d)),
     dt('Verified by', 'Desktop app'),
   ].join('');
 }

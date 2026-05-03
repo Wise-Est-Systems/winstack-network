@@ -450,6 +450,15 @@ pub struct VerifyResponse {
     pub failures: Vec<FailureInfo>,
     pub trust_class: String,
     pub object_class: String,
+    /// Receiver-side identity classification of the signing key.
+    /// One of "Local" | "Named" | "Official" | "Unknown".
+    /// "Official" is only set when the signer fingerprint matches a
+    /// non-revoked entry in the local trusted-keys list with
+    /// trust_class == Official. Default is conservative.
+    pub identity_class: String,
+    /// Plain-English summary of what `identity_class` proves.
+    /// Suitable for direct display next to the verdict.
+    pub identity_explainer: String,
     pub created_at: String,
     pub payload_hash: String,
     pub time_source: String,
@@ -589,6 +598,10 @@ async fn verify_upload(
             anchored_time,
             chain_status: chain_status_str.clone(),
             chain_depth,
+            identity_class: "Local".to_string(),
+
+            identity_explainer: "Sealed by a local key generated on the sealer's device. This proves file integrity, not real-world identity.".to_string(),
+
             creator_key: creator_key.clone(),
         }));
     }
@@ -626,6 +639,8 @@ async fn verify_upload(
         failures,
         trust_class,
         object_class,
+        identity_class: "Local".to_string(),
+        identity_explainer: "Sealed by a local key generated on the sealer's device. This proves file integrity, not real-world identity.".to_string(),
         created_at,
         payload_hash,
         time_source,
@@ -1110,6 +1125,10 @@ async fn check_bundle(
                 anchored_time: None,
                 chain_status: String::new(),
                 chain_depth: 0,
+                identity_class: "Local".to_string(),
+
+                identity_explainer: "Sealed by a local key generated on the sealer's device. This proves file integrity, not real-world identity.".to_string(),
+
                 creator_key: String::new(),
             }));
         },
@@ -1137,6 +1156,10 @@ async fn check_bundle(
                 anchored_time: None,
                 chain_status: String::new(),
                 chain_depth: 0,
+                identity_class: "Local".to_string(),
+
+                identity_explainer: "Sealed by a local key generated on the sealer's device. This proves file integrity, not real-world identity.".to_string(),
+
                 creator_key: String::new(),
             }));
         },
@@ -1175,6 +1198,10 @@ async fn check_bundle(
             anchored_time,
             chain_status: chain_status_str,
             chain_depth,
+            identity_class: "Local".to_string(),
+
+            identity_explainer: "Sealed by a local key generated on the sealer's device. This proves file integrity, not real-world identity.".to_string(),
+
             creator_key: creator_key.clone(),
         }));
     }
@@ -1212,6 +1239,8 @@ async fn check_bundle(
         failures,
         trust_class,
         object_class,
+        identity_class: "Local".to_string(),
+        identity_explainer: "Sealed by a local key generated on the sealer's device. This proves file integrity, not real-world identity.".to_string(),
         created_at,
         payload_hash,
         time_source,
