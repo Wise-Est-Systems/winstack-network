@@ -1,0 +1,21 @@
+--- crates/win-format/src/lib.rs
++++ replace <impl From<std::io::Error> for WinError>::from -> Self with Default::default()
+@@ -48,17 +48,17 @@
+         }
+     }
+ }
+ 
+ impl std::error::Error for WinError {}
+ 
+ impl From<std::io::Error> for WinError {
+     fn from(e: std::io::Error) -> Self {
+-        WinError::Io(e)
++        Default::default() /* ~ changed by cargo-mutants ~ */
+     }
+ }
+ 
+ /// Pack a file and its proof JSON into a .win container.
+ pub fn pack(filename: &str, file_bytes: &[u8], proof_json: &str) -> Vec<u8> {
+     let name_bytes = sanitize_filename(filename).into_bytes();
+     let name_len = name_bytes.len() as u32;
+     let file_len = file_bytes.len() as u64;

@@ -1,0 +1,90 @@
+
+*** crates/win-format/src/lib.rs:67:23: replace + with - in pack
+
+*** mutation diff:
+--- crates/win-format/src/lib.rs
++++ replace + with - in pack
+@@ -59,17 +59,17 @@
+ 
+ /// Pack a file and its proof JSON into a .win container.
+ pub fn pack(filename: &str, file_bytes: &[u8], proof_json: &str) -> Vec<u8> {
+     let name_bytes = sanitize_filename(filename).into_bytes();
+     let name_len = name_bytes.len() as u32;
+     let file_len = file_bytes.len() as u64;
+     let proof_bytes = proof_json.as_bytes();
+ 
+-    let total = 4 + 4 + name_bytes.len() + 8 + file_bytes.len() + proof_bytes.len();
++    let total = 4 + 4 - /* ~ changed by cargo-mutants ~ */ name_bytes.len() + 8 + file_bytes.len() + proof_bytes.len();
+     let mut out = Vec::with_capacity(total);
+ 
+     out.extend_from_slice(MAGIC);
+     out.extend_from_slice(&name_len.to_le_bytes());
+     out.extend_from_slice(&name_bytes);
+     out.extend_from_slice(&file_len.to_le_bytes());
+     out.extend_from_slice(file_bytes);
+     out.extend_from_slice(proof_bytes);
+
+
+*** /Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo test --no-run --verbose --package=win-format@0.1.0
+       Dirty win-format v0.1.0 (/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/crates/win-format): the file `crates/win-format/src/lib.rs` has changed (1777839537.710102140s, 1s after last build at 1777839536.583888805s)
+   Compiling win-format v0.1.0 (/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/crates/win-format)
+     Running `/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name win_format --edition=2021 crates/win-format/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=rust_2018_idioms '--warn=clippy::all' '--warn=clippy::verbose_file_reads' --forbid=unsafe_code '--warn=clippy::unimplemented' '--warn=clippy::todo' '--warn=clippy::rest_pat_in_fully_bound_structs' '--warn=clippy::ref_option_ref' '--warn=clippy::path_buf_push_overwrite' '--warn=clippy::needless_borrow' '--warn=clippy::mutex_atomic' '--warn=clippy::mem_forget' '--warn=clippy::lossy_float_literal' '--warn=clippy::get_unwrap' '--warn=clippy::float_cmp_const' '--warn=clippy::filetype_is_file' '--warn=clippy::dbg_macro' --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=83c514c16b68c3d4 -C extra-filename=-5529ccc54efa790b --out-dir /private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps -C incremental=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/incremental -L dependency=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps`
+     Running `/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name win_format --edition=2021 crates/win-format/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=rust_2018_idioms '--warn=clippy::all' '--warn=clippy::verbose_file_reads' --forbid=unsafe_code '--warn=clippy::unimplemented' '--warn=clippy::todo' '--warn=clippy::rest_pat_in_fully_bound_structs' '--warn=clippy::ref_option_ref' '--warn=clippy::path_buf_push_overwrite' '--warn=clippy::needless_borrow' '--warn=clippy::mutex_atomic' '--warn=clippy::mem_forget' '--warn=clippy::lossy_float_literal' '--warn=clippy::get_unwrap' '--warn=clippy::float_cmp_const' '--warn=clippy::filetype_is_file' '--warn=clippy::dbg_macro' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=f02034940a548b83 -C extra-filename=-0b2a13ed6987f58a --out-dir /private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps -C incremental=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/incremental -L dependency=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps`
+     Running `/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name adversarial_corpus --edition=2021 crates/win-format/tests/adversarial_corpus.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=rust_2018_idioms '--warn=clippy::all' '--warn=clippy::verbose_file_reads' --forbid=unsafe_code '--warn=clippy::unimplemented' '--warn=clippy::todo' '--warn=clippy::rest_pat_in_fully_bound_structs' '--warn=clippy::ref_option_ref' '--warn=clippy::path_buf_push_overwrite' '--warn=clippy::needless_borrow' '--warn=clippy::mutex_atomic' '--warn=clippy::mem_forget' '--warn=clippy::lossy_float_literal' '--warn=clippy::get_unwrap' '--warn=clippy::float_cmp_const' '--warn=clippy::filetype_is_file' '--warn=clippy::dbg_macro' --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=b0da027d6d9f86e6 -C extra-filename=-34466c797aec78b9 --out-dir /private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps -C incremental=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/incremental -L dependency=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps --extern win_format=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps/libwin_format-0b2a13ed6987f58a.rlib`
+     Running `/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name tamper_grid --edition=2021 crates/win-format/tests/tamper_grid.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=rust_2018_idioms '--warn=clippy::all' '--warn=clippy::verbose_file_reads' --forbid=unsafe_code '--warn=clippy::unimplemented' '--warn=clippy::todo' '--warn=clippy::rest_pat_in_fully_bound_structs' '--warn=clippy::ref_option_ref' '--warn=clippy::path_buf_push_overwrite' '--warn=clippy::needless_borrow' '--warn=clippy::mutex_atomic' '--warn=clippy::mem_forget' '--warn=clippy::lossy_float_literal' '--warn=clippy::get_unwrap' '--warn=clippy::float_cmp_const' '--warn=clippy::filetype_is_file' '--warn=clippy::dbg_macro' --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=84f4ab88c10230c6 -C extra-filename=-4e5d5ddf6f091ecd --out-dir /private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps -C incremental=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/incremental -L dependency=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps --extern win_format=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps/libwin_format-0b2a13ed6987f58a.rlib`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.23s
+  Executable `/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps/win_format-5529ccc54efa790b`
+  Executable `/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps/adversarial_corpus-34466c797aec78b9`
+  Executable `/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps/tamper_grid-4e5d5ddf6f091ecd`
+
+*** result: Success
+
+*** /Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo test --verbose --package=win-format@0.1.0
+       Fresh win-format v0.1.0 (/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/crates/win-format)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running `/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-MFlWx3.tmp/target/debug/deps/win_format-5529ccc54efa790b`
+
+running 25 tests
+test tests::bad_magic_is_container_damage ... ok
+test tests::bad_magic_rejected ... ok
+test tests::binary_content_preserved ... ok
+test tests::content_change_is_not_container_damage ... ok
+test tests::empty_data_rejected ... ok
+test tests::error_messages_are_descriptive ... ok
+test tests::impossible_file_length_is_container_damage ... ok
+test tests::integer_overflow_file_len ... ok
+test tests::empty_file_works ... FAILED
+test tests::is_win_detects_correctly ... ok
+test tests::missing_proof_section_is_container_damage ... ok
+test tests::null_bytes_in_filename_rejected ... ok
+test tests::null_filename_is_container_damage ... ok
+test tests::pack_unpack_roundtrip ... ok
+test tests::path_separators_stripped ... ok
+test tests::path_traversal_filename_sanitized_not_damaged ... ok
+test tests::path_traversal_stripped ... ok
+test tests::truncated_file_region_rejected ... ok
+test tests::truncated_filename_is_container_damage ... ok
+test tests::truncated_header_is_container_damage ... ok
+test tests::large_file ... ok
+test tests::truncated_payload_is_container_damage ... ok
+test tests::unpack_then_repack_identical ... ok
+test tests::windows_path_traversal_stripped ... ok
+test tests::filename_length_capped ... ok
+
+failures:
+
+---- tests::empty_file_works stdout ----
+
+thread 'tests::empty_file_works' (9109678) panicked at crates/win-format/src/lib.rs:67:17:
+attempt to subtract with overflow
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    tests::empty_file_works
+
+test result: FAILED. 24 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p win-format --lib`
+
+*** result: Failure(101)

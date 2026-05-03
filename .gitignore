@@ -11,3 +11,8 @@
 
 # Sample artifacts produced by `scripts/build-gallery.sh`. Regenerable.
 /gallery/
+
+# cargo-fuzz: corpus and crash artifacts (regenerable)
+/fuzz/corpus/
+/fuzz/artifacts/
+/fuzz/target/

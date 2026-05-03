@@ -1,0 +1,1 @@
+crates/win-format/src/lib.rs:56:9: replace <impl From<std::io::Error> for WinError>::from -> Self with Default::default()

@@ -1,0 +1,21 @@
+--- crates/win-format/src/lib.rs
++++ replace > with == in unpack
+@@ -88,17 +88,17 @@
+ 
+     // Magic
+     if &data[0..4] != MAGIC {
+         return Err(WinError::BadMagic);
+     }
+ 
+     // Filename length (cap at 4096 to prevent DoS)
+     let name_len = u32::from_le_bytes([data[4], data[5], data[6], data[7]]) as usize;
+-    if name_len > 4096 {
++    if name_len == /* ~ changed by cargo-mutants ~ */ 4096 {
+         return Err(WinError::BadFilename);
+     }
+     let name_end = 8usize.checked_add(name_len).ok_or(WinError::Truncated)?;
+     if data.len() < name_end + 8 {
+         return Err(WinError::Truncated);
+     }
+ 
+     // Filename — sanitize: strip paths, reject null bytes

@@ -1,0 +1,5599 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.9259535,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.657402709,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:28:9: replace WinError::is_container_damage -> bool with true",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "WinError::is_container_damage",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 25,
+                "column": 5
+              },
+              "end": {
+                "line": 29,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 28,
+              "column": 9
+            },
+            "end": {
+              "line": 28,
+              "column": 41
+            }
+          },
+          "replacement": "true",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_28_col_9.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_28_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.271039042,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.871441625,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:28:9: replace WinError::is_container_damage -> bool with false",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "WinError::is_container_damage",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 25,
+                "column": 5
+              },
+              "end": {
+                "line": 29,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 28,
+              "column": 9
+            },
+            "end": {
+              "line": 28,
+              "column": 41
+            }
+          },
+          "replacement": "false",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_28_col_9_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_28_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.272481041,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.275523167,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:28:9: delete ! in WinError::is_container_damage",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "WinError::is_container_damage",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 25,
+                "column": 5
+              },
+              "end": {
+                "line": 29,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 28,
+              "column": 9
+            },
+            "end": {
+              "line": 28,
+              "column": 10
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_28_col_9_002.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_28_col_9_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.273967459,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.2743385,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:34:9: replace <impl std::fmt::Display for WinError>::fmt -> std::fmt::Result with Ok(Default::default())",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "<impl std::fmt::Display for WinError>::fmt",
+            "return_type": "-> std::fmt::Result",
+            "span": {
+              "start": {
+                "line": 33,
+                "column": 5
+              },
+              "end": {
+                "line": 49,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 34,
+              "column": 9
+            },
+            "end": {
+              "line": 48,
+              "column": 10
+            }
+          },
+          "replacement": "Ok(Default::default())",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_34_col_9.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_34_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.327803666,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276237833,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:56:9: replace <impl From<std::io::Error> for WinError>::from -> Self with Default::default()",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "<impl From<std::io::Error> for WinError>::from",
+            "return_type": "-> Self",
+            "span": {
+              "start": {
+                "line": 55,
+                "column": 5
+              },
+              "end": {
+                "line": 57,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 56,
+              "column": 9
+            },
+            "end": {
+              "line": 56,
+              "column": 24
+            }
+          },
+          "replacement": "Default::default()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/crates__win-format__src__lib.rs_line_56_col_9.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_56_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.166633459,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:62:5: replace pack -> Vec<u8> with vec![]",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 62,
+              "column": 5
+            },
+            "end": {
+              "line": 77,
+              "column": 8
+            }
+          },
+          "replacement": "vec![]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_62_col_5.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_62_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.321715625,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.275707334,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:62:5: replace pack -> Vec<u8> with vec![0]",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 62,
+              "column": 5
+            },
+            "end": {
+              "line": 77,
+              "column": 8
+            }
+          },
+          "replacement": "vec![0]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_62_col_5_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_62_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.326247083,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.275189917,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:62:5: replace pack -> Vec<u8> with vec![1]",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 62,
+              "column": 5
+            },
+            "end": {
+              "line": 77,
+              "column": 8
+            }
+          },
+          "replacement": "vec![1]",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_62_col_5_002.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_62_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.274734916,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.321913084,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:67:65: replace + with - in pack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 67,
+              "column": 65
+            },
+            "end": {
+              "line": 67,
+              "column": 66
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_67_col_65.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_67_col_65.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.330765542,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.434384709,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:67:65: replace + with * in pack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 67,
+              "column": 65
+            },
+            "end": {
+              "line": 67,
+              "column": 66
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_67_col_65_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_67_col_65_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.332072834,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.597811042,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:67:46: replace + with - in pack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 67,
+              "column": 46
+            },
+            "end": {
+              "line": 67,
+              "column": 47
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_67_col_46.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_67_col_46.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.276884583,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276285167,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:67:46: replace + with * in pack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 67,
+              "column": 46
+            },
+            "end": {
+              "line": 67,
+              "column": 47
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_67_col_46_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_67_col_46_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.272473875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.598827458,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:67:42: replace + with - in pack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 67,
+              "column": 42
+            },
+            "end": {
+              "line": 67,
+              "column": 43
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_67_col_42.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_67_col_42.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.274710958,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.600398875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:67:42: replace + with * in pack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 67,
+              "column": 42
+            },
+            "end": {
+              "line": 67,
+              "column": 43
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_67_col_42_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_67_col_42_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.271933417,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.54867875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:67:23: replace + with - in pack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 67,
+              "column": 23
+            },
+            "end": {
+              "line": 67,
+              "column": 24
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_67_col_23.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_67_col_23.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.270096917,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.27619625,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:67:23: replace + with * in pack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 67,
+              "column": 23
+            },
+            "end": {
+              "line": 67,
+              "column": 24
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_67_col_23_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_67_col_23_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.276464625,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.592976959,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:67:19: replace + with - in pack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 67,
+              "column": 19
+            },
+            "end": {
+              "line": 67,
+              "column": 20
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_67_col_19.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_67_col_19.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.272539792,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.549738083,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:67:19: replace + with * in pack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "pack",
+            "return_type": "-> Vec<u8>",
+            "span": {
+              "start": {
+                "line": 60,
+                "column": 1
+              },
+              "end": {
+                "line": 78,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 67,
+              "column": 19
+            },
+            "end": {
+              "line": 67,
+              "column": 20
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_67_col_19_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_67_col_19_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.270254333,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.545257125,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![], String::new()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((String::new(), vec![], String::new()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.331781541,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.27616325,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![], \"xyzzy\".into()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((String::new(), vec![], \"xyzzy\".into()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.276861083,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276117625,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![0], String::new()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((String::new(), vec![0], String::new()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5_002.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.27675425,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.329364666,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![0], \"xyzzy\".into()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((String::new(), vec![0], \"xyzzy\".into()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5_003.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5_003.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.26719025,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276095333,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![1], String::new()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((String::new(), vec![1], String::new()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5_004.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5_004.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.328268875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.271624416,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![1], \"xyzzy\".into()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((String::new(), vec![1], \"xyzzy\".into()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5_005.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5_005.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.276870625,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276070792,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((\"xyzzy\".into(), vec![], String::new()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((\"xyzzy\".into(), vec![], String::new()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5_006.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5_006.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.272654625,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.267227,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((\"xyzzy\".into(), vec![], \"xyzzy\".into()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((\"xyzzy\".into(), vec![], \"xyzzy\".into()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5_007.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5_007.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.273590709,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.27622775,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((\"xyzzy\".into(), vec![0], String::new()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((\"xyzzy\".into(), vec![0], String::new()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5_008.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5_008.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.331563125,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.326560167,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((\"xyzzy\".into(), vec![0], \"xyzzy\".into()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((\"xyzzy\".into(), vec![0], \"xyzzy\".into()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5_009.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5_009.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.275512042,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.272426125,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((\"xyzzy\".into(), vec![1], String::new()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((\"xyzzy\".into(), vec![1], String::new()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5_010.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5_010.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.267410666,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.268108459,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((\"xyzzy\".into(), vec![1], \"xyzzy\".into()))",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 5
+            },
+            "end": {
+              "line": 156,
+              "column": 55
+            }
+          },
+          "replacement": "Ok((\"xyzzy\".into(), vec![1], \"xyzzy\".into()))",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_5_011.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_5_011.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.270591167,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.273199125,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:19: replace < with == in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 19
+            },
+            "end": {
+              "line": 85,
+              "column": 20
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_19.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_19.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.332005542,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276011792,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:19: replace < with > in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 19
+            },
+            "end": {
+              "line": 85,
+              "column": 20
+            }
+          },
+          "replacement": ">",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_19_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_19_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.272785458,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.27615,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:85:19: replace < with <= in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 85,
+              "column": 19
+            },
+            "end": {
+              "line": 85,
+              "column": 20
+            }
+          },
+          "replacement": "<=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_85_col_19_002.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_85_col_19_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.276214833,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.5917845,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:90:20: replace != with == in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 90,
+              "column": 20
+            },
+            "end": {
+              "line": 90,
+              "column": 22
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_90_col_20.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_90_col_20.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.276548625,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276206375,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:96:17: replace > with == in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 96,
+              "column": 17
+            },
+            "end": {
+              "line": 96,
+              "column": 18
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_96_col_17.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_96_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.276967458,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.331170875,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:96:17: replace > with < in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 96,
+              "column": 17
+            },
+            "end": {
+              "line": 96,
+              "column": 18
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_96_col_17_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_96_col_17_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.27637575,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.330683708,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:96:17: replace > with >= in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 96,
+              "column": 17
+            },
+            "end": {
+              "line": 96,
+              "column": 18
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_96_col_17_002.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_96_col_17_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.273382875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.435226125,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:100:19: replace < with == in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 100,
+              "column": 19
+            },
+            "end": {
+              "line": 100,
+              "column": 20
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_100_col_19.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_100_col_19.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.272751458,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.272581208,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:100:19: replace < with > in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 100,
+              "column": 19
+            },
+            "end": {
+              "line": 100,
+              "column": 20
+            }
+          },
+          "replacement": ">",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_100_col_19_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_100_col_19_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.272475292,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.271771541,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:100:19: replace < with <= in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 100,
+              "column": 19
+            },
+            "end": {
+              "line": 100,
+              "column": 20
+            }
+          },
+          "replacement": "<=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_100_col_19_002.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_100_col_19_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.323431875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.597782083,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:100:30: replace + with - in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 100,
+              "column": 30
+            },
+            "end": {
+              "line": 100,
+              "column": 31
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_100_col_30.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_100_col_30.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.276323958,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276136,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:100:30: replace + with * in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 100,
+              "column": 30
+            },
+            "end": {
+              "line": 100,
+              "column": 31
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_100_col_30_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_100_col_30_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.277393,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276168792,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:118:29: replace + with - in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 118,
+              "column": 29
+            },
+            "end": {
+              "line": 118,
+              "column": 30
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_118_col_29.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_118_col_29.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.325658916,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276363209,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:118:29: replace + with * in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 118,
+              "column": 29
+            },
+            "end": {
+              "line": 118,
+              "column": 30
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_118_col_29_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_118_col_29_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.327433792,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.275000125,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:119:29: replace + with - in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 119,
+              "column": 29
+            },
+            "end": {
+              "line": 119,
+              "column": 30
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_119_col_29.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_119_col_29.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.272354792,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276162625,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:119:29: replace + with * in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 119,
+              "column": 29
+            },
+            "end": {
+              "line": 119,
+              "column": 30
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_119_col_29_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_119_col_29_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.327371375,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.272508083,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:120:29: replace + with - in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 120,
+              "column": 29
+            },
+            "end": {
+              "line": 120,
+              "column": 30
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_120_col_29.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_120_col_29.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.326497875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.27287575,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:120:29: replace + with * in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 120,
+              "column": 29
+            },
+            "end": {
+              "line": 120,
+              "column": 30
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_120_col_29_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_120_col_29_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.329385584,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.274942208,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:121:29: replace + with - in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 121,
+              "column": 29
+            },
+            "end": {
+              "line": 121,
+              "column": 30
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_121_col_29.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_121_col_29.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.3329835,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.272246167,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:121:29: replace + with * in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 121,
+              "column": 29
+            },
+            "end": {
+              "line": 121,
+              "column": 30
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_121_col_29_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_121_col_29_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.328402708,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276218958,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:122:29: replace + with - in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 122,
+              "column": 29
+            },
+            "end": {
+              "line": 122,
+              "column": 30
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_122_col_29.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_122_col_29.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.32675175,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.272897375,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:122:29: replace + with * in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 122,
+              "column": 29
+            },
+            "end": {
+              "line": 122,
+              "column": 30
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_122_col_29_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_122_col_29_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.331550458,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276235375,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:123:29: replace + with - in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 123,
+              "column": 29
+            },
+            "end": {
+              "line": 123,
+              "column": 30
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_123_col_29.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_123_col_29.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.329688375,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.272710375,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:123:29: replace + with * in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 123,
+              "column": 29
+            },
+            "end": {
+              "line": 123,
+              "column": 30
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_123_col_29_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_123_col_29_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.329721,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.272155167,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:124:29: replace + with - in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 124,
+              "column": 29
+            },
+            "end": {
+              "line": 124,
+              "column": 30
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_124_col_29.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_124_col_29.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.329398708,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.273462542,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:124:29: replace + with * in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 124,
+              "column": 29
+            },
+            "end": {
+              "line": 124,
+              "column": 30
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_124_col_29_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_124_col_29_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.329921708,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276283833,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:128:37: replace + with - in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 128,
+              "column": 37
+            },
+            "end": {
+              "line": 128,
+              "column": 38
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_128_col_37.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_128_col_37.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.321504667,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276145542,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:128:37: replace + with * in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 128,
+              "column": 37
+            },
+            "end": {
+              "line": 128,
+              "column": 38
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_128_col_37_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_128_col_37_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.332327584,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.270774875,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:133:19: replace < with == in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 133,
+              "column": 19
+            },
+            "end": {
+              "line": 133,
+              "column": 20
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_133_col_19.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_133_col_19.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.328076583,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276247167,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:133:19: replace < with > in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 133,
+              "column": 19
+            },
+            "end": {
+              "line": 133,
+              "column": 20
+            }
+          },
+          "replacement": ">",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_133_col_19_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_133_col_19_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.329503083,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276282416,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:133:19: replace < with <= in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 133,
+              "column": 19
+            },
+            "end": {
+              "line": 133,
+              "column": 20
+            }
+          },
+          "replacement": "<=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_133_col_19_002.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_133_col_19_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.321784167,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.272219375,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:152:8: delete ! in unpack",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "unpack",
+            "return_type": "-> Result<(String, Vec<u8>, String), WinError>",
+            "span": {
+              "start": {
+                "line": 80,
+                "column": 1
+              },
+              "end": {
+                "line": 157,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 152,
+              "column": 8
+            },
+            "end": {
+              "line": 152,
+              "column": 9
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_152_col_8.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_152_col_8.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.324493916,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276209833,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:164:5: replace brackets_balanced -> bool with true",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 164,
+              "column": 5
+            },
+            "end": {
+              "line": 192,
+              "column": 29
+            }
+          },
+          "replacement": "true",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_164_col_5.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_164_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.327120708,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.436900375,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:164:5: replace brackets_balanced -> bool with false",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 164,
+              "column": 5
+            },
+            "end": {
+              "line": 192,
+              "column": 29
+            }
+          },
+          "replacement": "false",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_164_col_5_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_164_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.325065458,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.273149125,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:174:17: delete match arm b'\\\\' in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 174,
+              "column": 17
+            },
+            "end": {
+              "line": 174,
+              "column": 40
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_174_col_17.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_174_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.32551425,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.657054916,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:175:17: delete match arm b'\"' in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 175,
+              "column": 17
+            },
+            "end": {
+              "line": 175,
+              "column": 43
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_175_col_17.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_175_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.323472083,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.272310208,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:181:13: delete match arm b'\"' in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 181,
+              "column": 13
+            },
+            "end": {
+              "line": 181,
+              "column": 38
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_181_col_13.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_181_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.323961333,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.650464333,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:182:13: delete match arm b'{' | b'[' in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 182,
+              "column": 13
+            },
+            "end": {
+              "line": 182,
+              "column": 39
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_182_col_13.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_182_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.326653709,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.273749417,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:183:13: delete match arm b'}' | b']' in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 183,
+              "column": 13
+            },
+            "end": {
+              "line": 188,
+              "column": 15
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_183_col_13.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_183_col_13.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.322739208,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.27420275,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:182:34: replace += with -= in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 182,
+              "column": 34
+            },
+            "end": {
+              "line": 182,
+              "column": 36
+            }
+          },
+          "replacement": "-=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_182_col_34.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_182_col_34.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.32552325,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.27615675,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:182:34: replace += with *= in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 182,
+              "column": 34
+            },
+            "end": {
+              "line": 182,
+              "column": 36
+            }
+          },
+          "replacement": "*=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_182_col_34_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_182_col_34_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.327644709,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276196,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:184:23: replace -= with += in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 184,
+              "column": 23
+            },
+            "end": {
+              "line": 184,
+              "column": 25
+            }
+          },
+          "replacement": "+=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_184_col_23.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_184_col_23.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.330323583,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.3813185,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:184:23: replace -= with /= in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 184,
+              "column": 23
+            },
+            "end": {
+              "line": 184,
+              "column": 25
+            }
+          },
+          "replacement": "/=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_184_col_23_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_184_col_23_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.327036167,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.275309791,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:185:26: replace < with == in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 185,
+              "column": 26
+            },
+            "end": {
+              "line": 185,
+              "column": 27
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_185_col_26.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_185_col_26.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.329065291,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.273067458,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:185:26: replace < with > in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 185,
+              "column": 26
+            },
+            "end": {
+              "line": 185,
+              "column": 27
+            }
+          },
+          "replacement": ">",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_185_col_26_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_185_col_26_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.320733875,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.487100958,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:185:26: replace < with <= in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 185,
+              "column": 26
+            },
+            "end": {
+              "line": 185,
+              "column": 27
+            }
+          },
+          "replacement": "<=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_185_col_26_002.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_185_col_26_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.331043208,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.384140792,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:192:16: replace && with || in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 192,
+              "column": 16
+            },
+            "end": {
+              "line": 192,
+              "column": 18
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_192_col_16.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_192_col_16.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.323843167,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.490273958,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:192:5: delete ! in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 192,
+              "column": 5
+            },
+            "end": {
+              "line": 192,
+              "column": 6
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_192_col_5.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_192_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.332461208,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.274780375,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:192:25: replace == with != in brackets_balanced",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "brackets_balanced",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 159,
+                "column": 1
+              },
+              "end": {
+                "line": 193,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 192,
+              "column": 25
+            },
+            "end": {
+              "line": 192,
+              "column": 27
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_192_col_25.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_192_col_25.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.327000708,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.324162625,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:197:5: replace is_win_file -> bool with true",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "is_win_file",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 195,
+                "column": 1
+              },
+              "end": {
+                "line": 198,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 197,
+              "column": 5
+            },
+            "end": {
+              "line": 197,
+              "column": 44
+            }
+          },
+          "replacement": "true",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_197_col_5.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_197_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.334059375,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.329491583,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:197:5: replace is_win_file -> bool with false",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "is_win_file",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 195,
+                "column": 1
+              },
+              "end": {
+                "line": 198,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 197,
+              "column": 5
+            },
+            "end": {
+              "line": 197,
+              "column": 44
+            }
+          },
+          "replacement": "false",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_197_col_5_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_197_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.323841417,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.27604825,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:197:21: replace && with || in is_win_file",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "is_win_file",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 195,
+                "column": 1
+              },
+              "end": {
+                "line": 198,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 197,
+              "column": 21
+            },
+            "end": {
+              "line": 197,
+              "column": 23
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_197_col_21.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_197_col_21.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.327830667,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.327482375,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:197:16: replace >= with < in is_win_file",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "is_win_file",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 195,
+                "column": 1
+              },
+              "end": {
+                "line": 198,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 197,
+              "column": 16
+            },
+            "end": {
+              "line": 197,
+              "column": 18
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_197_col_16.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_197_col_16.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.331737459,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276150833,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:197:36: replace == with != in is_win_file",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "is_win_file",
+            "return_type": "-> bool",
+            "span": {
+              "start": {
+                "line": 195,
+                "column": 1
+              },
+              "end": {
+                "line": 198,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 197,
+              "column": 36
+            },
+            "end": {
+              "line": 197,
+              "column": 38
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_197_col_36.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_197_col_36.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.325893541,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276190792,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:202:5: replace sanitize_filename -> String with String::new()",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "sanitize_filename",
+            "return_type": "-> String",
+            "span": {
+              "start": {
+                "line": 200,
+                "column": 1
+              },
+              "end": {
+                "line": 203,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 202,
+              "column": 5
+            },
+            "end": {
+              "line": 202,
+              "column": 64
+            }
+          },
+          "replacement": "String::new()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_202_col_5.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_202_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.379894084,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.276206417,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/win-format/src/lib.rs:202:5: replace sanitize_filename -> String with \"xyzzy\".into()",
+          "package": "win-format",
+          "file": "crates/win-format/src/lib.rs",
+          "function": {
+            "function_name": "sanitize_filename",
+            "return_type": "-> String",
+            "span": {
+              "start": {
+                "line": 200,
+                "column": 1
+              },
+              "end": {
+                "line": 203,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 202,
+              "column": 5
+            },
+            "end": {
+              "line": 202,
+              "column": 64
+            }
+          },
+          "replacement": "\"xyzzy\".into()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__win-format__src__lib.rs_line_202_col_5_001.log",
+      "diff_path": "diff/crates__win-format__src__lib.rs_line_202_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.327865458,
+          "process_status": "Success",
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.327541625,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=win-format@0.1.0"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 86,
+  "missed": 12,
+  "caught": 73,
+  "timeout": 0,
+  "unviable": 1,
+  "success": 0,
+  "start_time": "2026-05-03T19:20:51.662115Z",
+  "end_time": "2026-05-03T19:21:52.108233Z",
+  "cargo_mutants_version": "27.0.0"
+}

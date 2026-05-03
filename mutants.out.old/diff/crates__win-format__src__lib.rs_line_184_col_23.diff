@@ -1,0 +1,21 @@
+--- crates/win-format/src/lib.rs
++++ replace -= with += in brackets_balanced
+@@ -176,17 +176,17 @@
+                 _ => {},
+             }
+             continue;
+         }
+         match b {
+             b'"' => in_string = true,
+             b'{' | b'[' => depth += 1,
+             b'}' | b']' => {
+-                depth -= 1;
++                depth += /* ~ changed by cargo-mutants ~ */ 1;
+                 if depth < 0 {
+                     return false;
+                 }
+             },
+             _ => {},
+         }
+     }
+     !in_string && depth == 0

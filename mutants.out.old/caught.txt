@@ -1,0 +1,73 @@
+crates/win-format/src/lib.rs:28:9: replace WinError::is_container_damage -> bool with false
+crates/win-format/src/lib.rs:28:9: delete ! in WinError::is_container_damage
+crates/win-format/src/lib.rs:34:9: replace <impl std::fmt::Display for WinError>::fmt -> std::fmt::Result with Ok(Default::default())
+crates/win-format/src/lib.rs:62:5: replace pack -> Vec<u8> with vec![]
+crates/win-format/src/lib.rs:62:5: replace pack -> Vec<u8> with vec![0]
+crates/win-format/src/lib.rs:62:5: replace pack -> Vec<u8> with vec![1]
+crates/win-format/src/lib.rs:67:65: replace + with - in pack
+crates/win-format/src/lib.rs:67:46: replace + with - in pack
+crates/win-format/src/lib.rs:67:23: replace + with - in pack
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![], String::new()))
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![], "xyzzy".into()))
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![0], String::new()))
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![0], "xyzzy".into()))
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![1], String::new()))
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![1], "xyzzy".into()))
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok(("xyzzy".into(), vec![], String::new()))
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok(("xyzzy".into(), vec![], "xyzzy".into()))
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok(("xyzzy".into(), vec![0], String::new()))
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok(("xyzzy".into(), vec![0], "xyzzy".into()))
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok(("xyzzy".into(), vec![1], String::new()))
+crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok(("xyzzy".into(), vec![1], "xyzzy".into()))
+crates/win-format/src/lib.rs:85:19: replace < with == in unpack
+crates/win-format/src/lib.rs:85:19: replace < with > in unpack
+crates/win-format/src/lib.rs:90:20: replace != with == in unpack
+crates/win-format/src/lib.rs:96:17: replace > with == in unpack
+crates/win-format/src/lib.rs:96:17: replace > with < in unpack
+crates/win-format/src/lib.rs:96:17: replace > with >= in unpack
+crates/win-format/src/lib.rs:100:19: replace < with == in unpack
+crates/win-format/src/lib.rs:100:19: replace < with > in unpack
+crates/win-format/src/lib.rs:100:30: replace + with - in unpack
+crates/win-format/src/lib.rs:100:30: replace + with * in unpack
+crates/win-format/src/lib.rs:118:29: replace + with - in unpack
+crates/win-format/src/lib.rs:118:29: replace + with * in unpack
+crates/win-format/src/lib.rs:119:29: replace + with - in unpack
+crates/win-format/src/lib.rs:119:29: replace + with * in unpack
+crates/win-format/src/lib.rs:120:29: replace + with - in unpack
+crates/win-format/src/lib.rs:120:29: replace + with * in unpack
+crates/win-format/src/lib.rs:121:29: replace + with - in unpack
+crates/win-format/src/lib.rs:121:29: replace + with * in unpack
+crates/win-format/src/lib.rs:122:29: replace + with - in unpack
+crates/win-format/src/lib.rs:122:29: replace + with * in unpack
+crates/win-format/src/lib.rs:123:29: replace + with - in unpack
+crates/win-format/src/lib.rs:123:29: replace + with * in unpack
+crates/win-format/src/lib.rs:124:29: replace + with - in unpack
+crates/win-format/src/lib.rs:124:29: replace + with * in unpack
+crates/win-format/src/lib.rs:128:37: replace + with - in unpack
+crates/win-format/src/lib.rs:128:37: replace + with * in unpack
+crates/win-format/src/lib.rs:133:19: replace < with == in unpack
+crates/win-format/src/lib.rs:133:19: replace < with > in unpack
+crates/win-format/src/lib.rs:133:19: replace < with <= in unpack
+crates/win-format/src/lib.rs:152:8: delete ! in unpack
+crates/win-format/src/lib.rs:164:5: replace brackets_balanced -> bool with true
+crates/win-format/src/lib.rs:164:5: replace brackets_balanced -> bool with false
+crates/win-format/src/lib.rs:175:17: delete match arm b'"' in brackets_balanced
+crates/win-format/src/lib.rs:182:13: delete match arm b'{' | b'[' in brackets_balanced
+crates/win-format/src/lib.rs:183:13: delete match arm b'}' | b']' in brackets_balanced
+crates/win-format/src/lib.rs:182:34: replace += with -= in brackets_balanced
+crates/win-format/src/lib.rs:182:34: replace += with *= in brackets_balanced
+crates/win-format/src/lib.rs:184:23: replace -= with += in brackets_balanced
+crates/win-format/src/lib.rs:184:23: replace -= with /= in brackets_balanced
+crates/win-format/src/lib.rs:185:26: replace < with == in brackets_balanced
+crates/win-format/src/lib.rs:185:26: replace < with > in brackets_balanced
+crates/win-format/src/lib.rs:185:26: replace < with <= in brackets_balanced
+crates/win-format/src/lib.rs:192:16: replace && with || in brackets_balanced
+crates/win-format/src/lib.rs:192:5: delete ! in brackets_balanced
+crates/win-format/src/lib.rs:192:25: replace == with != in brackets_balanced
+crates/win-format/src/lib.rs:197:5: replace is_win_file -> bool with true
+crates/win-format/src/lib.rs:197:5: replace is_win_file -> bool with false
+crates/win-format/src/lib.rs:197:21: replace && with || in is_win_file
+crates/win-format/src/lib.rs:197:16: replace >= with < in is_win_file
+crates/win-format/src/lib.rs:197:36: replace == with != in is_win_file
+crates/win-format/src/lib.rs:202:5: replace sanitize_filename -> String with String::new()
+crates/win-format/src/lib.rs:202:5: replace sanitize_filename -> String with "xyzzy".into()

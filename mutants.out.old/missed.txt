@@ -1,0 +1,12 @@
+crates/win-format/src/lib.rs:28:9: replace WinError::is_container_damage -> bool with true
+crates/win-format/src/lib.rs:67:65: replace + with * in pack
+crates/win-format/src/lib.rs:67:46: replace + with * in pack
+crates/win-format/src/lib.rs:67:42: replace + with - in pack
+crates/win-format/src/lib.rs:67:42: replace + with * in pack
+crates/win-format/src/lib.rs:67:23: replace + with * in pack
+crates/win-format/src/lib.rs:67:19: replace + with - in pack
+crates/win-format/src/lib.rs:67:19: replace + with * in pack
+crates/win-format/src/lib.rs:85:19: replace < with <= in unpack
+crates/win-format/src/lib.rs:100:19: replace < with <= in unpack
+crates/win-format/src/lib.rs:174:17: delete match arm b'\\' in brackets_balanced
+crates/win-format/src/lib.rs:181:13: delete match arm b'"' in brackets_balanced

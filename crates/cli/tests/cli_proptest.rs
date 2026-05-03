@@ -37,12 +37,21 @@ fn seal_and_get_win(dir: &TempDir, name: &str, content: &[u8]) -> std::path::Pat
     src.with_extension("win")
 }
 
+// CI / dev runs use the modest `cases: 64` default.
+// Set `WISE_EXTREME_PROPTEST=1` for a 32× run (2048 cases per property,
+// ~10240 generated subprocess invocations across 5 properties).
+// Use that mode locally before a release.
+fn proptest_cases() -> u32 {
+    if std::env::var("WISE_EXTREME_PROPTEST").is_ok() {
+        2048
+    } else {
+        64
+    }
+}
+
 proptest! {
     #![proptest_config(ProptestConfig {
-        // 64 cases per property × 5 properties = 320 generated cases per run.
-        // Each case spawns a `win` subprocess so we keep this modest to
-        // keep total test time reasonable.
-        cases: 64,
+        cases: proptest_cases(),
         max_shrink_iters: 32,
         .. ProptestConfig::default()
     })]
@@ -110,5 +119,70 @@ proptest! {
         prop_assert!(stdout.contains(&expected),
             "inspect must show {} for source of length {}: stdout={}",
             expected, content.len(), stdout);
+    }
+
+    /// Property 6: any byte flip in the .win must NOT verify.
+    /// Picks a random byte position, flips it, asserts the result is
+    /// never Verified. Catches drift in the verifier where a corrupted
+    /// container or proof could silently slip through.
+    #[test]
+    fn any_byte_flip_never_verifies(
+        content in prop::collection::vec(any::<u8>(), 1..=256),
+        flip_position_ratio in 0u32..1000u32,
+    ) {
+        let dir = tempfile::tempdir().unwrap();
+        let win_path = seal_and_get_win(&dir, "f.dat", &content);
+        let mut bytes = fs::read(&win_path).unwrap();
+        if bytes.is_empty() { return Ok(()); }
+        // Map ratio to byte position. Skip the first 4 bytes of magic
+        // since flipping magic is already covered by Damaged tests; we
+        // want to exercise the rest of the container space here.
+        let pos = 4 + (flip_position_ratio as usize * (bytes.len() - 4) / 1000);
+        let pos = pos.min(bytes.len() - 1);
+        bytes[pos] ^= 0xFF;
+        fs::write(&win_path, &bytes).unwrap();
+        let out = win(dir.path()).arg("verify").arg(&win_path).output().unwrap();
+        let stdout = String::from_utf8_lossy(&out.stdout);
+        prop_assert!(!stdout.contains("Verified"),
+            "byte flip at position {} must NOT yield Verified; got: {}", pos, stdout);
+    }
+
+    /// Property 7: CLI ↔ in-process verifier parity. For any sealed
+    /// file, the CLI's exit-status word and the verifier crate's status
+    /// must agree. Catches divergence between user-facing CLI output and
+    /// the underlying verification logic.
+    #[test]
+    fn cli_and_verifier_crate_agree_on_status(
+        content in prop::collection::vec(any::<u8>(), 0..=256),
+    ) {
+        let dir = tempfile::tempdir().unwrap();
+        let win_path = seal_and_get_win(&dir, "p.dat", &content);
+        let win_bytes = fs::read(&win_path).unwrap();
+
+        // CLI output
+        let out = win(dir.path()).arg("verify").arg(&win_path).output().unwrap();
+        let cli_word = if String::from_utf8_lossy(&out.stdout).contains("Verified") {
+            "Verified"
+        } else {
+            "Other"
+        };
+
+        // In-process verifier crate
+        let verifier_word = match win_format::unpack(&win_bytes) {
+            Ok((_n, file_bytes, proof)) => {
+                if let Ok(bundle) = serde_json::from_str::<canon_types::ProofBundle>(&proof) {
+                    let result = verifier::verify_from_proof_bundle(&bundle, &file_bytes);
+                    match result.status {
+                        canon_types::VerificationStatus::Verified => "Verified",
+                        _ => "Other",
+                    }
+                } else { "Other" }
+            },
+            Err(_) => "Other",
+        };
+
+        prop_assert_eq!(cli_word, verifier_word,
+            "CLI and verifier crate must agree (cli={}, verifier={})",
+            cli_word, verifier_word);
     }
 }

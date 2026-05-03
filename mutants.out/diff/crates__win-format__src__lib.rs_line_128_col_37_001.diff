@@ -1,0 +1,21 @@
+--- crates/win-format/src/lib.rs
++++ replace + with * in unpack
+@@ -120,17 +120,17 @@
+         data[file_len_start + 3],
+         data[file_len_start + 4],
+         data[file_len_start + 5],
+         data[file_len_start + 6],
+         data[file_len_start + 7],
+     ]);
+ 
+     // Bounds check: file_len must fit in available data
+-    let file_start = file_len_start + 8;
++    let file_start = file_len_start * /* ~ changed by cargo-mutants ~ */ 8;
+     let file_len_usize = usize::try_from(file_len).map_err(|_| WinError::Truncated)?;
+     let file_end = file_start
+         .checked_add(file_len_usize)
+         .ok_or(WinError::Truncated)?;
+     if data.len() < file_end {
+         return Err(WinError::Truncated);
+     }
+ 

@@ -1,0 +1,21 @@
+--- crates/win-format/src/lib.rs
++++ delete match arm b'"' in brackets_balanced
+@@ -173,17 +173,17 @@
+             match b {
+                 b'\\' => escape = true,
+                 b'"' => in_string = false,
+                 _ => {},
+             }
+             continue;
+         }
+         match b {
+-            b'"' => in_string = true,
++             /* ~ changed by cargo-mutants ~ */
+             b'{' | b'[' => depth += 1,
+             b'}' | b']' => {
+                 depth -= 1;
+                 if depth < 0 {
+                     return false;
+                 }
+             },
+             _ => {},

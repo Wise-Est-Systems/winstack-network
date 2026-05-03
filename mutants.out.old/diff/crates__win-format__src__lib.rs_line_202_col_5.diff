@@ -1,0 +1,21 @@
+--- crates/win-format/src/lib.rs
++++ replace sanitize_filename -> String with String::new()
+@@ -194,17 +194,17 @@
+ 
+ /// Check if data starts with .win magic bytes.
+ pub fn is_win_file(data: &[u8]) -> bool {
+     data.len() >= 4 && &data[0..4] == MAGIC
+ }
+ 
+ /// Strip path separators from filename.
+ fn sanitize_filename(name: &str) -> String {
+-    name.rsplit(['/', '\\']).next().unwrap_or(name).to_string()
++    String::new() /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+ 
+     #[test]
+     fn pack_unpack_roundtrip() {

@@ -1,0 +1,63 @@
+[package]
+name = "wise-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+# Layer-4 fuzzing targets for the verifier surfaces. Run with:
+#   rustup default nightly
+#   cargo fuzz run unpack -- -max_total_time=86400          # 24h
+#   cargo fuzz run recognize_win -- -max_total_time=86400
+# Crashes land in fuzz/artifacts/<target>/.
+# Add any crash-reproducing input to crates/win-format/tests/adversarial_corpus.rs
+# as a permanent regression test.
+
+# Stand alone — do not pull this into the parent workspace.
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+serde_json = "1"
+
+[dependencies.win-format]
+path = "../crates/win-format"
+
+[dependencies.canon-types]
+path = "../crates/canon-types"
+
+[dependencies.verifier]
+path = "../crates/verifier"
+
+[dependencies.wise-crypto]
+path = "../crates/crypto"
+
+[[bin]]
+name = "unpack"
+path = "fuzz_targets/unpack.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "recognize_win"
+path = "fuzz_targets/recognize_win.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "verify_bundle"
+path = "fuzz_targets/verify_bundle.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "is_win_file"
+path = "fuzz_targets/is_win_file.rs"
+test = false
+doc = false
+bench = false

@@ -1,0 +1,21 @@
+--- crates/win-format/src/lib.rs
++++ replace != with == in unpack
+@@ -82,17 +82,17 @@
+ /// Security: filename is sanitized (path separators stripped, length capped).
+ /// File length is bounds-checked against actual data. No panics on malformed input.
+ pub fn unpack(data: &[u8]) -> Result<(String, Vec<u8>, String), WinError> {
+     if data.len() < 16 {
+         return Err(WinError::TooShort);
+     }
+ 
+     // Magic
+-    if &data[0..4] != MAGIC {
++    if &data[0..4] == /* ~ changed by cargo-mutants ~ */ MAGIC {
+         return Err(WinError::BadMagic);
+     }
+ 
+     // Filename length (cap at 4096 to prevent DoS)
+     let name_len = u32::from_le_bytes([data[4], data[5], data[6], data[7]]) as usize;
+     if name_len > 4096 {
+         return Err(WinError::BadFilename);
+     }

@@ -1,0 +1,341 @@
+
+*** crates/win-format/src/lib.rs:85:5: replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![1], String::new()))
+
+*** mutation diff:
+--- crates/win-format/src/lib.rs
++++ replace unpack -> Result<(String, Vec<u8>, String), WinError> with Ok((String::new(), vec![1], String::new()))
+@@ -77,88 +77,17 @@
+     out
+ }
+ 
+ /// Unpack a .win container → (filename, file_bytes, proof_json)
+ ///
+ /// Security: filename is sanitized (path separators stripped, length capped).
+ /// File length is bounds-checked against actual data. No panics on malformed input.
+ pub fn unpack(data: &[u8]) -> Result<(String, Vec<u8>, String), WinError> {
+-    if data.len() < 16 {
+-        return Err(WinError::TooShort);
+-    }
+-
+-    // Magic
+-    if &data[0..4] != MAGIC {
+-        return Err(WinError::BadMagic);
+-    }
+-
+-    // Filename length (cap at 4096 to prevent DoS)
+-    let name_len = u32::from_le_bytes([data[4], data[5], data[6], data[7]]) as usize;
+-    if name_len > 4096 {
+-        return Err(WinError::BadFilename);
+-    }
+-    let name_end = 8usize.checked_add(name_len).ok_or(WinError::Truncated)?;
+-    if data.len() < name_end + 8 {
+-        return Err(WinError::Truncated);
+-    }
+-
+-    // Filename — sanitize: strip paths, reject null bytes
+-    let raw_name = std::str::from_utf8(&data[8..name_end]).map_err(|_| WinError::BadFilename)?;
+-    if raw_name.contains('\0') {
+-        return Err(WinError::BadFilename);
+-    }
+-    let filename = sanitize_filename(raw_name);
+-    if filename.is_empty() {
+-        return Err(WinError::BadFilename);
+-    }
+-
+-    // File length — checked arithmetic, no overflow
+-    let file_len_start = name_end;
+-    let file_len = u64::from_le_bytes([
+-        data[file_len_start],
+-        data[file_len_start + 1],
+-        data[file_len_start + 2],
+-        data[file_len_start + 3],
+-        data[file_len_start + 4],
+-        data[file_len_start + 5],
+-        data[file_len_start + 6],
+-        data[file_len_start + 7],
+-    ]);
+-
+-    // Bounds check: file_len must fit in available data
+-    let file_start = file_len_start + 8;
+-    let file_len_usize = usize::try_from(file_len).map_err(|_| WinError::Truncated)?;
+-    let file_end = file_start
+-        .checked_add(file_len_usize)
+-        .ok_or(WinError::Truncated)?;
+-    if data.len() < file_end {
+-        return Err(WinError::Truncated);
+-    }
+-
+-    // File bytes
+-    let file_bytes = data[file_start..file_end].to_vec();
+-
+-    // Proof JSON (everything after file bytes)
+-    let proof_bytes = &data[file_end..];
+-    if proof_bytes.is_empty() {
+-        return Err(WinError::MissingProof);
+-    }
+-    let proof_json = std::str::from_utf8(proof_bytes).map_err(|_| WinError::Truncated)?;
+-
+-    // Structural completeness: a complete JSON proof object must have
+-    // balanced {} and [] brackets (ignoring those inside strings).
+-    // If it doesn't, the .win was cut short during transmission. We
+-    // surface this as `Truncated` (container damage) so the receiver
+-    // sees DAMAGED, not Invalid (which would mean the proof was forged).
+-    if !brackets_balanced(proof_json) {
+-        return Err(WinError::Truncated);
+-    }
+-
+-    Ok((filename, file_bytes, proof_json.to_string()))
++    Ok((String::new(), vec![1], String::new())) /* ~ changed by cargo-mutants ~ */
+ }
+ 
+ /// Cheap, dependency-free check: the JSON proof section must have
+ /// balanced {} and [] brackets. Strings (including escaped quotes) are
+ /// skipped. Used by `unpack` to distinguish a cleanly-cut container
+ /// from one whose proof tail was truncated.
+ fn brackets_balanced(s: &str) -> bool {
+     let mut depth: i64 = 0;
+
+
+*** /Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo test --no-run --verbose --package=win-format@0.1.0
+       Dirty win-format v0.1.0 (/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/crates/win-format): the file `crates/win-format/src/lib.rs` has changed (1777836070.067924202s, 1s after last build at 1777836069.590260538s)
+   Compiling win-format v0.1.0 (/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/crates/win-format)
+     Running `/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name win_format --edition=2021 crates/win-format/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=rust_2018_idioms '--warn=clippy::all' '--warn=clippy::verbose_file_reads' --forbid=unsafe_code '--warn=clippy::unimplemented' '--warn=clippy::todo' '--warn=clippy::rest_pat_in_fully_bound_structs' '--warn=clippy::ref_option_ref' '--warn=clippy::path_buf_push_overwrite' '--warn=clippy::needless_borrow' '--warn=clippy::mutex_atomic' '--warn=clippy::mem_forget' '--warn=clippy::lossy_float_literal' '--warn=clippy::get_unwrap' '--warn=clippy::float_cmp_const' '--warn=clippy::filetype_is_file' '--warn=clippy::dbg_macro' --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=83c514c16b68c3d4 -C extra-filename=-5529ccc54efa790b --out-dir /private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps -C incremental=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/incremental -L dependency=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps`
+     Running `/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name win_format --edition=2021 crates/win-format/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=rust_2018_idioms '--warn=clippy::all' '--warn=clippy::verbose_file_reads' --forbid=unsafe_code '--warn=clippy::unimplemented' '--warn=clippy::todo' '--warn=clippy::rest_pat_in_fully_bound_structs' '--warn=clippy::ref_option_ref' '--warn=clippy::path_buf_push_overwrite' '--warn=clippy::needless_borrow' '--warn=clippy::mutex_atomic' '--warn=clippy::mem_forget' '--warn=clippy::lossy_float_literal' '--warn=clippy::get_unwrap' '--warn=clippy::float_cmp_const' '--warn=clippy::filetype_is_file' '--warn=clippy::dbg_macro' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=f02034940a548b83 -C extra-filename=-0b2a13ed6987f58a --out-dir /private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps -C incremental=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/incremental -L dependency=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps`
+warning: unused variable: `data`
+  --> crates/win-format/src/lib.rs:84:15
+   |
+84 | pub fn unpack(data: &[u8]) -> Result<(String, Vec<u8>, String), WinError> {
+   |               ^^^^ help: if this is intentional, prefix it with an underscore: `_data`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `brackets_balanced` is never used
+  --> crates/win-format/src/lib.rs:92:4
+   |
+92 | fn brackets_balanced(s: &str) -> bool {
+   |    ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `win-format` (lib) generated 2 warnings (run `cargo fix --lib -p win-format` to apply 1 suggestion)
+     Running `/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name adversarial_corpus --edition=2021 crates/win-format/tests/adversarial_corpus.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=rust_2018_idioms '--warn=clippy::all' '--warn=clippy::verbose_file_reads' --forbid=unsafe_code '--warn=clippy::unimplemented' '--warn=clippy::todo' '--warn=clippy::rest_pat_in_fully_bound_structs' '--warn=clippy::ref_option_ref' '--warn=clippy::path_buf_push_overwrite' '--warn=clippy::needless_borrow' '--warn=clippy::mutex_atomic' '--warn=clippy::mem_forget' '--warn=clippy::lossy_float_literal' '--warn=clippy::get_unwrap' '--warn=clippy::float_cmp_const' '--warn=clippy::filetype_is_file' '--warn=clippy::dbg_macro' --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=b0da027d6d9f86e6 -C extra-filename=-34466c797aec78b9 --out-dir /private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps -C incremental=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/incremental -L dependency=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps --extern win_format=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps/libwin_format-0b2a13ed6987f58a.rlib`
+     Running `/Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc --crate-name tamper_grid --edition=2021 crates/win-format/tests/tamper_grid.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 -C split-debuginfo=unpacked --warn=rust_2018_idioms '--warn=clippy::all' '--warn=clippy::verbose_file_reads' --forbid=unsafe_code '--warn=clippy::unimplemented' '--warn=clippy::todo' '--warn=clippy::rest_pat_in_fully_bound_structs' '--warn=clippy::ref_option_ref' '--warn=clippy::path_buf_push_overwrite' '--warn=clippy::needless_borrow' '--warn=clippy::mutex_atomic' '--warn=clippy::mem_forget' '--warn=clippy::lossy_float_literal' '--warn=clippy::get_unwrap' '--warn=clippy::float_cmp_const' '--warn=clippy::filetype_is_file' '--warn=clippy::dbg_macro' --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=84f4ab88c10230c6 -C extra-filename=-4e5d5ddf6f091ecd --out-dir /private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps -C incremental=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/incremental -L dependency=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps --extern win_format=/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps/libwin_format-0b2a13ed6987f58a.rlib`
+warning: `win-format` (lib test) generated 2 warnings (2 duplicates)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.27s
+  Executable `/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps/win_format-5529ccc54efa790b`
+  Executable `/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps/adversarial_corpus-34466c797aec78b9`
+  Executable `/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps/tamper_grid-4e5d5ddf6f091ecd`
+
+*** result: Success
+
+*** /Users/thekingflame/.rustup/toolchains/stable-aarch64-apple-darwin/bin/cargo test --verbose --package=win-format@0.1.0
+warning: unused variable: `data`
+  --> crates/win-format/src/lib.rs:84:15
+   |
+84 | pub fn unpack(data: &[u8]) -> Result<(String, Vec<u8>, String), WinError> {
+   |               ^^^^ help: if this is intentional, prefix it with an underscore: `_data`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `brackets_balanced` is never used
+  --> crates/win-format/src/lib.rs:92:4
+   |
+92 | fn brackets_balanced(s: &str) -> bool {
+   |    ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `win-format` (lib) generated 2 warnings (run `cargo fix --lib -p win-format` to apply 1 suggestion)
+       Fresh win-format v0.1.0 (/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/crates/win-format)
+warning: `win-format` (lib test) generated 2 warnings (2 duplicates)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s
+     Running `/private/var/folders/jb/19ss9ry1019f1sz5_2x3dkt80000gn/T/cargo-mutants-WinStack_Network_v1-L8HS8b.tmp/target/debug/deps/win_format-5529ccc54efa790b`
+
+running 25 tests
+test tests::content_change_is_not_container_damage ... ok
+test tests::empty_file_works ... FAILED
+test tests::empty_data_rejected ... FAILED
+test tests::bad_magic_is_container_damage ... FAILED
+test tests::error_messages_are_descriptive ... ok
+test tests::bad_magic_rejected ... FAILED
+test tests::binary_content_preserved ... FAILED
+test tests::impossible_file_length_is_container_damage ... FAILED
+test tests::is_win_detects_correctly ... ok
+test tests::integer_overflow_file_len ... FAILED
+test tests::missing_proof_section_is_container_damage ... FAILED
+test tests::null_bytes_in_filename_rejected ... FAILED
+test tests::null_filename_is_container_damage ... FAILED
+test tests::pack_unpack_roundtrip ... FAILED
+test tests::path_separators_stripped ... FAILED
+test tests::path_traversal_filename_sanitized_not_damaged ... FAILED
+test tests::large_file ... FAILED
+test tests::path_traversal_stripped ... FAILED
+test tests::filename_length_capped ... FAILED
+test tests::truncated_file_region_rejected ... FAILED
+test tests::truncated_filename_is_container_damage ... FAILED
+test tests::truncated_header_is_container_damage ... FAILED
+test tests::truncated_payload_is_container_damage ... FAILED
+test tests::unpack_then_repack_identical ... FAILED
+test tests::windows_path_traversal_stripped ... FAILED
+
+failures:
+
+---- tests::empty_file_works stdout ----
+
+thread 'tests::empty_file_works' (9042649) panicked at crates/win-format/src/lib.rs:185:9:
+assertion `left == right` failed
+  left: ""
+ right: "empty.txt"
+
+---- tests::empty_data_rejected stdout ----
+
+thread 'tests::empty_data_rejected' (9042648) panicked at crates/win-format/src/lib.rs:157:9:
+assertion failed: unpack(b"").is_err()
+
+---- tests::bad_magic_is_container_damage stdout ----
+
+thread 'tests::bad_magic_is_container_damage' (9042644) panicked at crates/win-format/src/lib.rs:276:33:
+called `Result::unwrap_err()` on an `Ok` value: ("", [1], "")
+
+---- tests::bad_magic_rejected stdout ----
+
+thread 'tests::bad_magic_rejected' (9042645) panicked at crates/win-format/src/lib.rs:162:9:
+assertion failed: unpack(b"NOPE0000000000000000").is_err()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- tests::binary_content_preserved stdout ----
+
+thread 'tests::binary_content_preserved' (9042646) panicked at crates/win-format/src/lib.rs:205:9:
+assertion `left == right` failed
+  left: [1]
+ right: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255]
+
+---- tests::impossible_file_length_is_container_damage stdout ----
+
+thread 'tests::impossible_file_length_is_container_damage' (9042652) panicked at crates/win-format/src/lib.rs:327:33:
+called `Result::unwrap_err()` on an `Ok` value: ("", [1], "")
+
+---- tests::integer_overflow_file_len stdout ----
+
+thread 'tests::integer_overflow_file_len' (9042653) panicked at crates/win-format/src/lib.rs:247:9:
+assertion failed: unpack(&payload).is_err()
+
+---- tests::missing_proof_section_is_container_damage stdout ----
+
+thread 'tests::missing_proof_section_is_container_damage' (9042656) panicked at crates/win-format/src/lib.rs:314:33:
+called `Result::unwrap_err()` on an `Ok` value: ("", [1], "")
+
+---- tests::null_bytes_in_filename_rejected stdout ----
+
+thread 'tests::null_bytes_in_filename_rejected' (9042657) panicked at crates/win-format/src/lib.rs:236:9:
+assertion failed: unpack(&payload).is_err()
+
+---- tests::null_filename_is_container_damage stdout ----
+
+thread 'tests::null_filename_is_container_damage' (9042658) panicked at crates/win-format/src/lib.rs:340:33:
+called `Result::unwrap_err()` on an `Ok` value: ("", [1], "")
+
+---- tests::pack_unpack_roundtrip stdout ----
+
+thread 'tests::pack_unpack_roundtrip' (9042659) panicked at crates/win-format/src/lib.rs:142:9:
+assertion `left == right` failed
+  left: ""
+ right: "test.pdf"
+
+---- tests::path_separators_stripped stdout ----
+
+thread 'tests::path_separators_stripped' (9042660) panicked at crates/win-format/src/lib.rs:176:9:
+assertion `left == right` failed
+  left: ""
+ right: "file.pdf"
+
+---- tests::path_traversal_filename_sanitized_not_damaged stdout ----
+
+thread 'tests::path_traversal_filename_sanitized_not_damaged' (9042661) panicked at crates/win-format/src/lib.rs:350:9:
+assertion `left == right` failed
+  left: ""
+ right: "passwd"
+
+---- tests::large_file stdout ----
+
+thread 'tests::large_file' (9042655) panicked at crates/win-format/src/lib.rs:195:9:
+assertion `left == right` failed
+  left: ""
+ right: "big.bin"
+
+---- tests::path_traversal_stripped stdout ----
+
+thread 'tests::path_traversal_stripped' (9042662) panicked at crates/win-format/src/lib.rs:214:9:
+assertion `left == right` failed
+  left: ""
+ right: "passwd"
+
+---- tests::filename_length_capped stdout ----
+
+thread 'tests::filename_length_capped' (9042651) panicked at crates/win-format/src/lib.rs:259:9:
+assertion failed: unpack(&payload).is_err()
+
+---- tests::truncated_file_region_rejected stdout ----
+
+thread 'tests::truncated_file_region_rejected' (9042663) panicked at crates/win-format/src/lib.rs:169:9:
+assertion failed: unpack(&packed[..16]).is_err()
+
+---- tests::truncated_filename_is_container_damage stdout ----
+
+thread 'tests::truncated_filename_is_container_damage' (9042664) panicked at crates/win-format/src/lib.rs:293:33:
+called `Result::unwrap_err()` on an `Ok` value: ("", [1], "")
+
+---- tests::truncated_header_is_container_damage stdout ----
+
+thread 'tests::truncated_header_is_container_damage' (9042665) panicked at crates/win-format/src/lib.rs:283:42:
+called `Result::unwrap_err()` on an `Ok` value: ("", [1], "")
+
+---- tests::truncated_payload_is_container_damage stdout ----
+
+thread 'tests::truncated_payload_is_container_damage' (9042666) panicked at crates/win-format/src/lib.rs:301:41:
+called `Result::unwrap_err()` on an `Ok` value: ("", [1], "")
+
+---- tests::unpack_then_repack_identical stdout ----
+
+thread 'tests::unpack_then_repack_identical' (9042667) panicked at crates/win-format/src/lib.rs:267:9:
+assertion `left == right` failed
+  left: [87, 73, 78, 1, 7, 0, 0, 0, 100, 111, 99, 46, 112, 100, 102, 16, 0, 0, 0, 0, 0, 0, 0, 80, 68, 70, 32, 99, 111, 110, 116, 101, 110, 116, 32, 104, 101, 114, 101, 123, 34, 104, 97, 115, 104, 34, 58, 34, 97, 98, 99, 34, 125]
+ right: [87, 73, 78, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1]
+
+---- tests::windows_path_traversal_stripped stdout ----
+
+thread 'tests::windows_path_traversal_stripped' (9042668) panicked at crates/win-format/src/lib.rs:223:9:
+assertion `left == right` failed
+  left: ""
+ right: "evil.exe"
+
+
+failures:
+    tests::bad_magic_is_container_damage
+    tests::bad_magic_rejected
+    tests::binary_content_preserved
+    tests::empty_data_rejected
+    tests::empty_file_works
+    tests::filename_length_capped
+    tests::impossible_file_length_is_container_damage
+    tests::integer_overflow_file_len
+    tests::large_file
+    tests::missing_proof_section_is_container_damage
+    tests::null_bytes_in_filename_rejected
+    tests::null_filename_is_container_damage
+    tests::pack_unpack_roundtrip
+    tests::path_separators_stripped
+    tests::path_traversal_filename_sanitized_not_damaged
+    tests::path_traversal_stripped
+    tests::truncated_file_region_rejected
+    tests::truncated_filename_is_container_damage
+    tests::truncated_header_is_container_damage
+    tests::truncated_payload_is_container_damage
+    tests::unpack_then_repack_identical
+    tests::windows_path_traversal_stripped
+
+test result: FAILED. 3 passed; 22 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p win-format --lib`
+
+*** result: Failure(101)
