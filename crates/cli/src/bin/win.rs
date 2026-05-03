@@ -332,11 +332,28 @@ fn win_file(
     };
 
     let proof_chain = if let Some(ref from_path) = from {
-        let pred_data = std::fs::read_to_string(from_path).unwrap_or_else(|e| {
+        let pred_raw = std::fs::read(from_path).unwrap_or_else(|e| {
             eprintln!("ERROR: could not read predecessor: {}", e);
             std::process::exit(2);
         });
-        let pred_bundle: ProofBundle = serde_json::from_str(&pred_data).unwrap_or_else(|e| {
+        // Predecessor can be either a `.win` container (canonical) or a
+        // legacy `.proof.json` sidecar. Detect by magic bytes; fall back
+        // to JSON parsing.
+        let pred_proof_text: String = if win_format::is_win_file(&pred_raw) {
+            match win_format::unpack(&pred_raw) {
+                Ok((_name, _file_bytes, proof_text)) => proof_text,
+                Err(e) => {
+                    eprintln!("ERROR: predecessor .win is malformed: {}", e);
+                    std::process::exit(2);
+                },
+            }
+        } else {
+            String::from_utf8(pred_raw).unwrap_or_else(|e| {
+                eprintln!("ERROR: predecessor is neither a .win nor valid UTF-8 JSON: {}", e);
+                std::process::exit(2);
+            })
+        };
+        let pred_bundle: ProofBundle = serde_json::from_str(&pred_proof_text).unwrap_or_else(|e| {
             eprintln!("ERROR: invalid predecessor: {}", e);
             std::process::exit(2);
         });

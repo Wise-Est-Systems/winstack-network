@@ -35,6 +35,14 @@ assert_cmd = "2"
 predicates = "3"
 tempfile = { workspace = true }
 proptest = "1"
+# Browser-bridge test reads through the same verification pipeline that
+# the WASM verifier exposes, exercising the producer (CLI) ↔ consumer
+# (browser) crossover at byte level.
+verifier = { workspace = true }
+canon-types = { workspace = true }
+wise-crypto = { workspace = true }
+win-format = { path = "../win-format" }
+serde_json = { workspace = true }
 
 [lints]
 workspace = true
