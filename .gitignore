@@ -16,3 +16,8 @@
 /fuzz/corpus/
 /fuzz/artifacts/
 /fuzz/target/
+
+# cargo-mutants output (regenerable)
+/mutants.out/
+/mutants.out.old/
+/mutants.out.*/
