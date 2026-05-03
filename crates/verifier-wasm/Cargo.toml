@@ -12,6 +12,9 @@ crate-type = ["cdylib", "rlib"]
 verifier = { workspace = true }
 canon-types = { workspace = true }
 wise-crypto = { workspace = true }
+identity-core = { workspace = true }
+time-core = { workspace = true }
+policy-core = { workspace = true }
 win-format = { path = "../win-format" }
 serde = { workspace = true }
 serde_json = { workspace = true }

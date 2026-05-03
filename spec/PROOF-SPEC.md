@@ -5,6 +5,24 @@
 
 ---
 
+## 0. What this proof proves (and what it does not)
+
+A Wise proof is a four-tier claim. Each tier is independent of the next; a verifier must not collapse them.
+
+| Tier | Claim | Established by |
+|---|---|---|
+| **Bytes** | The artifact bytes match the digest recorded in the proof. | Local hash equality at verify time. |
+| **Signer key** | A specific Ed25519 keypair signed the proof. | Signature verification on the proof's `object_signature` against the embedded public key. |
+| **Named identity** | The signer claims a display name (e.g. *"alice@example"*). | The signer's choice; verifier surfaces the claim but does not validate it. |
+| **Trusted / official identity** | The signer's key fingerprint matches an entry the receiver added to a local trusted-key list. | Receiver-side configuration. **Never automatic.** |
+| **Real-world identity** | The signer is who they appear to be in the physical world. | **Out of scope for this protocol.** Established only by an external trust process the receiver chose (corporate PKI, in-person key exchange, published release key, etc.). |
+
+A successful verification establishes the first two tiers. The third is a self-declaration. The fourth requires explicit local configuration. The fifth is outside the protocol entirely.
+
+A verifier MUST NOT display language that conflates these tiers (e.g. "signed by &lt;CompanyName&gt;" when only the bytes-and-key tier is established).
+
+---
+
 ## 1. Proof bundle structure
 
 A proof bundle is a self-contained JSON document. It includes everything needed to verify an object offline, without any server or node state.

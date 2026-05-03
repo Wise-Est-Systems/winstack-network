@@ -97,8 +97,8 @@ footer strong{color:var(--gold);font-weight:400}
 <section id="what">
   <span class="eyebrow">In one paragraph</span>
   <h2>What <em>Wise</em> is.</h2>
-  <p>Wise is a small protocol. You take a file you made, and a witness signs that it existed at a specific moment, with a fingerprint of its bytes. The witness's signature plus the timestamp plus the fingerprint is a tag that travels with the file forever. Anyone who later receives the file can drop it on the verifier and get a one-word answer about whether the file is the same one the witness saw.</p>
-  <p>The witness is a real party — today that's us, Wise.Est Systems. Tomorrow it can be a hardware device you own, a notary public, or any person whose key the receiver knows.</p>
+  <p>Wise is a small protocol. A signing key seals a file: the seal contains a fingerprint of the file's bytes plus the key's signature plus a timestamp. That seal travels with the file forever. Anyone who later receives the file can drop it on the verifier and get a one-word answer about whether the file is the same bytes the key sealed.</p>
+  <p>The signing key may be local (generated on a device you control), named (with a self-declared display name), or trusted (matched against a list of known keys the receiver chose to trust). The protocol does not promise anything about the real-world person, company, or organization behind a key unless the receiver has explicitly chosen to trust that key by fingerprint.</p>
 </section>
 
 <section>
@@ -107,15 +107,15 @@ footer strong{color:var(--gold);font-weight:400}
   <p>Drop a file on <a href="https://winstack.dev/" style="color:var(--gold);border-bottom:1px solid var(--gold-dim);text-decoration:none">the verifier</a> and you get exactly one of three answers. No maybes. No confidence scores. No fifth state.</p>
   <div class="split">
     <h3>Verified</h3>
-    <p>The file's fingerprint matches the tag. The witness signature checks out. The file is exactly the one the witness saw, unchanged.</p>
+    <p>The file matches the proof inside this <code>.win</code> container. No byte changes detected. The signing key on the seal is shown alongside, with its trust class — local, named, or trusted — so you can decide what the signature means to you.</p>
   </div>
   <div class="split">
     <h3>Tampered</h3>
-    <p>The tag is intact, but the file's bytes don't match it. The file was changed after sealing. The original is gone.</p>
+    <p>The file no longer matches the proof inside this <code>.win</code> container. At least one byte changed since sealing.</p>
   </div>
   <div class="split">
     <h3>Invalid</h3>
-    <p>The tag itself is malformed or the witness signature doesn't check out. We can't tell you anything about the file from this tag.</p>
+    <p>This <code>.win</code> container is not valid or cannot be verified — malformed structure, broken signature, or unparseable proof.</p>
   </div>
 </section>
 
@@ -124,20 +124,28 @@ footer strong{color:var(--gold);font-weight:400}
   <h2>What a .win <em>does not prove.</em></h2>
   <p>This is the part most provenance systems oversell. Wise will not.</p>
   <div class="split">
+    <h3>It does not prove who is behind the key</h3>
+    <p>A signing key is a number. The key signed the file. Whether the human, company, or device behind that key is who they claim to be is a separate trust question — answered only if the receiver has explicitly added the key fingerprint to a local trusted list.</p>
+  </div>
+  <div class="split">
     <h3>It does not prove the file is true</h3>
-    <p>A .win can seal a lie just as easily as a truth. All it proves is that the file existed at a moment, unchanged since, witnessed by a specific party. It says nothing about whether what's inside is correct.</p>
+    <p>A <code>.win</code> can seal a lie just as easily as a truth. All it proves is that the file existed at a moment, unchanged since, signed by a specific key. It says nothing about whether the contents are correct.</p>
   </div>
   <div class="split">
     <h3>It does not prove the author wrote it</h3>
-    <p>The witness saw a file. The witness did not see who wrote it. A sealed essay proves the essay existed at a time, not that the person sealing it is the author.</p>
+    <p>The signing key sealed bytes. The key did not see who wrote them. A sealed essay proves the essay existed at a time, not that the person who sealed it is the author.</p>
   </div>
   <div class="split">
     <h3>It does not prove the file is original</h3>
     <p>Someone could copy a file and seal the copy. The seal is real; the originality claim is not part of it.</p>
   </div>
   <div class="split">
+    <h3>Wise.Est Systems did not automatically sign your file</h3>
+    <p>Each <code>.win</code> is signed by whichever key sealed it — typically the local key generated on the user's own machine. There is no central Wise.Est Systems signing key in this protocol. If you ever see a result that says <em>"signed by Wise.Est Systems"</em>, it is true only because the signing key matched a fingerprint the receiver explicitly added to their trusted list.</p>
+  </div>
+  <div class="split">
     <h3>It does not depend on us being alive</h3>
-    <p>If Wise.Est Systems disappears tomorrow, every .win ever sealed still verifies. The proof is mathematical, not organizational. This is the whole point.</p>
+    <p>If Wise.Est Systems disappears tomorrow, every <code>.win</code> ever sealed still verifies. The proof is mathematical, not organizational. This is the whole point.</p>
   </div>
 </section>
 
@@ -152,9 +160,10 @@ footer strong{color:var(--gold);font-weight:400}
 
   <div class="trust">
     <h3>Honest notes about how this works</h3>
-    <p><strong style="color:var(--ink)">The witness, today, is Wise.Est Systems.</strong> We sign with our Ed25519 key. Our public key is pinned in the verifier and published openly. Anyone can check that the witness on a .win matches our published key.</p>
-    <p><strong style="color:var(--ink)">A hardware witness is coming.</strong> A small device that holds your own witness key — so you don't have to depend on us being the witness at all. Once it's out, your seals are signed by your own hand, not ours. The protocol is already built to support this transition.</p>
-    <p><strong style="color:var(--ink)">Sealing is not yet open to the public.</strong> Right now you can only verify .win files, not produce them. The sealing flow is being built. When it ships, sealing will be free during launch and remain free for verification forever.</p>
+    <p><strong style="color:var(--ink)">There is no central Wise.Est Systems witness key.</strong> The protocol does not have an "official Wise.Est key" that signs your file. Each <code>.win</code> is signed by a key generated on the device that sealed it. That key may be local-only, named, or one a receiver has explicitly added to a trusted list — but never assumed-trusted by default.</p>
+    <p><strong style="color:var(--ink)">Trust classes the verifier shows.</strong> A signing key is one of: <em>Local</em> (signed by a fresh key generated on the device), <em>Named</em> (the key declares a display name; the receiver still chooses whether to trust it), <em>Trusted</em> (the key fingerprint matches an entry the receiver added to their local trusted list), or <em>Unknown</em> (valid signature, no further trust signal). Verification proves the file matches what the key signed; the trust class tells you what that signature means.</p>
+    <p><strong style="color:var(--ink)">A hardware key is being designed.</strong> A small device that holds a non-extractable signing key — your own, not anyone else's. Each device's key is itself just another key; receivers decide whether to add its fingerprint to their trusted list. The protocol does not assume hardware keys are trusted by default.</p>
+    <p><strong style="color:var(--ink)">Sealing is not yet open to the public.</strong> Right now you can only verify <code>.win</code> files, not produce them. The sealing flow is being built. When it ships, every seal will be signed by a key generated on the user's own device.</p>
     <p><strong style="color:var(--ink)">Read the protocol.</strong> Source and specs at <a href="https://github.com/Wise-Est-Systems/winstack-network">github.com/Wise-Est-Systems</a>. Built to be implementable from scratch by anyone — so it survives us.</p>
   </div>
 </section>

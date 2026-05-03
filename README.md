@@ -9,11 +9,44 @@
 **Files that prove themselves.**
 
 Wise gives every file a *win tag* — a small portable record that
-travels with it. The win tag says who sealed the file, when, and whether
-the file is unchanged since. Receivers read it offline, without
-accounts, without trusting any server.
+travels with it. The win tag says which signing key sealed the file,
+when, and whether the file is unchanged since. Receivers read it
+offline, without accounts, without trusting any server.
 
 A file without a win tag is *untagged*: neutral, not dangerous.
+
+---
+
+## What a `.win` proves
+
+A `.win` proves:
+- the file inside matches the proof inside
+- the file has not changed since it was sealed
+- the sealing key signed that proof
+- the proof travels with the file
+
+A `.win` does **not** automatically prove:
+- the real-world person, company, or organization behind the key
+- that the signer told the truth
+- that the file content is factually correct
+- that Wise.Est Systems signed it
+- that it was the first copy ever made
+
+That is why Wise separates **file integrity** from **human trust**.
+The verifier returns one of three states for the file integrity check
+(Verified / Tampered / Invalid) and, alongside it, a **trust class**
+for the signing key:
+
+| Trust class | What it means |
+|-------------|---------------|
+| **Local Win** | Signed by a key generated on a device. Verification proves the file still matches what that key sealed; it does not prove a real-world identity behind the key. |
+| **Named Win** | Signed by a key with a self-declared display name. The receiver still decides whether to trust that name. |
+| **Official Win** | Signed by a key whose fingerprint matches a key the receiver added to their local trusted list (e.g. a published release key). |
+| **Unknown Win** | Valid signature, but the signer is not in any local trust list. |
+
+There is no central Wise.Est Systems signing key in the protocol. Any
+`.win` is signed by whichever key sealed it — by default, a key
+generated on the sealer's own device.
 
 ---
 
