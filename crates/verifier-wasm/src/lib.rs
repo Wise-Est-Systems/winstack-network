@@ -22,8 +22,8 @@
 //! shape is the contract every receiver-side surface relies on.
 
 use canon_types::{
-    ChainedTimeEvent, IdentityKind, ModuleKind, ObjectClass, OriginRecord, ProofBundle,
-    ProofChain, SealedObject, TimeSource, VerificationStatus,
+    ChainedTimeEvent, IdentityKind, ModuleKind, ObjectClass, OriginRecord, ProofBundle, ProofChain,
+    SealedObject, TimeSource, VerificationStatus,
 };
 use identity_core::{IdentityStore, ModuleRegistry};
 use policy_core::PolicyEvaluator;
@@ -107,6 +107,13 @@ fn message_for(status: VerificationStatus) -> &'static str {
     }
 }
 
+/// User-facing message for a damaged container (bytes missing /
+/// truncated / structurally unreadable). Distinct from Invalid,
+/// which means "container readable but proof itself is broken".
+fn message_damaged() -> &'static str {
+    "This .win file appears incomplete or corrupted."
+}
+
 /// Plain-English summary of what an identity class proves about the
 /// real-world signer. The verifier surfaces this alongside the status.
 fn identity_explainer_for(class: &str) -> &'static str {
@@ -158,9 +165,43 @@ fn status_str(status: VerificationStatus) -> &'static str {
     }
 }
 
-/// Build a Reading for cases where we couldn't even parse the container or
-/// proof. From the receiver's perspective, this is indistinguishable from
-/// any other reason we can't verify the file — so we return Invalid.
+/// Build a Reading for cases where we couldn't even parse the
+/// container or proof. The status is one of two:
+///
+/// - `"Damaged"`: the .win container itself is structurally unreadable
+///   (bytes missing, truncated, wrong magic).
+/// - `"Invalid"`: the container parsed but the proof inside is
+///   malformed/forged/inconsistent.
+fn unrecognizable_reading_with_status(status: &'static str, reason: &str) -> Reading {
+    let msg: &'static str = match status {
+        "Damaged" => message_damaged(),
+        _ => message_for(VerificationStatus::Invalid),
+    };
+    let code: &'static str = match status {
+        "Damaged" => "ContainerDamaged",
+        _ => "ContainerMalformed",
+    };
+    Reading {
+        status,
+        identity_class: "Unknown",
+        identity_explainer: identity_explainer_for("Unknown"),
+        witness: None,
+        born: None,
+        anchored: false,
+        lineage: "Unknown",
+        payload_hash: None,
+        size_bytes: None,
+        failures: vec![FailureInfo {
+            code: code.into(),
+            reason: reason.into(),
+        }],
+        message: msg,
+    }
+}
+
+/// Legacy helper kept for the proof-bundle entry point where the
+/// container is whole but the proof JSON is unparseable. Always
+/// emits Invalid (never Damaged) — the container was readable.
 fn unrecognizable_reading(reason: &str) -> Reading {
     Reading {
         status: "Invalid",
@@ -247,21 +288,40 @@ fn build_reading(bundle: &ProofBundle, file_bytes: &[u8]) -> Reading {
 /// Verify a `.win` container in one call.
 ///
 /// Returns a `Reading` whose `status` is one of "Verified", "Tampered",
-/// "Invalid". Throws only if serialization itself fails — malformed
-/// containers produce an Invalid reading, not an exception.
+/// "Invalid", or "Damaged". Throws only if serialization itself fails —
+/// malformed containers produce a Damaged or Invalid reading, never an
+/// exception.
+///
+/// The four possible status values returned in JSON:
+///   "Verified" — bytes match, proof valid, signatures pass
+///   "Tampered" — container readable, file bytes differ from proof digest
+///   "Invalid"  — container readable, proof section malformed/forged
+///   "Damaged"  — container itself unreadable (truncated, missing magic)
 #[wasm_bindgen]
 pub fn recognize_win(win_bytes: &[u8]) -> Result<JsValue, JsValue> {
     let reading = match win_format::unpack(win_bytes) {
         Ok((_name, file_bytes, proof_text)) => {
             match serde_json::from_str::<ProofBundle>(&proof_text) {
+                // Container parsed cleanly; only the proof JSON is bad.
+                // That's "Invalid" (proof is broken) — NOT "Damaged".
                 Ok(bundle) => build_reading(&bundle, &file_bytes),
-                Err(e) => unrecognizable_reading(&format!(
-                    "win tag's proof section is not valid JSON: {}",
-                    e
-                )),
+                Err(e) => unrecognizable_reading_with_status(
+                    "Invalid",
+                    &format!("win tag's proof section is not valid JSON: {}", e),
+                ),
             }
         },
-        Err(e) => unrecognizable_reading(&format!("{}", e)),
+        // Container parser failed. If win-format classifies this as
+        // structural damage (truncation, bad magic, length-field overflow),
+        // surface as Damaged. Otherwise Invalid.
+        Err(e) => {
+            let status = if e.is_container_damage() {
+                "Damaged"
+            } else {
+                "Invalid"
+            };
+            unrecognizable_reading_with_status(status, &format!("{}", e))
+        },
     };
     serde_wasm_bindgen::to_value(&reading).map_err(|e| JsValue::from_str(&e.to_string()))
 }
@@ -344,8 +404,9 @@ struct SealError {
 pub fn seal_file(filename: &str, file_bytes: &[u8]) -> Result<JsValue, JsValue> {
     let outcome = seal_file_inner(filename, file_bytes);
     match outcome {
-        Ok(result) => serde_wasm_bindgen::to_value(&result)
-            .map_err(|e| JsValue::from_str(&e.to_string())),
+        Ok(result) => {
+            serde_wasm_bindgen::to_value(&result).map_err(|e| JsValue::from_str(&e.to_string()))
+        },
         Err(reason) => {
             let err = SealError { reason };
             Err(serde_wasm_bindgen::to_value(&err)
@@ -380,10 +441,8 @@ fn seal_file_inner(filename: &str, file_bytes: &[u8]) -> Result<SealResult, Stri
         .map(|r| r.public_key_hex.clone())
         .ok_or_else(|| "creator identity record missing".to_string())?;
 
-    let mut time_authority =
-        TimeAuthority::new(ta_id, KeyPair::from_secret_bytes(&ta_secret));
-    let policy_evaluator =
-        PolicyEvaluator::new(pe_id, KeyPair::from_secret_bytes(&pe_secret));
+    let mut time_authority = TimeAuthority::new(ta_id, KeyPair::from_secret_bytes(&ta_secret));
+    let policy_evaluator = PolicyEvaluator::new(pe_id, KeyPair::from_secret_bytes(&pe_secret));
 
     // 2. Module registration — mirror CLI's "wise-cli" but tag this one as
     //    "wise-web-browser" so audits can tell which surface produced it.

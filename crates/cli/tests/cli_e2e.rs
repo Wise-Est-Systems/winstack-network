@@ -204,8 +204,10 @@ fn verify_of_truncated_win_does_not_panic() {
         combined
     );
     assert!(
-        combined.contains("Invalid") || combined.contains("Tampered"),
-        "expected Invalid or Tampered, got: {}",
+        combined.contains("Invalid")
+            || combined.contains("Tampered")
+            || combined.contains("Damaged"),
+        "expected Invalid, Tampered, or Damaged, got: {}",
         combined
     );
 }

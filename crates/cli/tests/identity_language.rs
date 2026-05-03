@@ -107,10 +107,7 @@ fn proofs_explainer_actually_includes_the_corrective_disclaimer() {
     // This is the inverse of the regression test: catch silent removal.
     let path = workspace_root().join("proofs/public/index.html");
     let content = fs::read_to_string(&path).expect("proofs page exists");
-    let needles = [
-        "no central Wise.Est Systems",
-        "did not automatically sign",
-    ];
+    let needles = ["no central Wise.Est Systems", "did not automatically sign"];
     let found = needles.iter().any(|n| content.contains(n));
     assert!(
         found,
@@ -176,8 +173,7 @@ fn verifier_surfaces_warn_when_verified_is_paired_with_unknown_signer() {
         ("window/verify.html", "desktop verifier"),
     ];
     for (rel, label) in pages {
-        let content = fs::read_to_string(workspace_root().join(rel))
-            .expect(rel);
+        let content = fs::read_to_string(workspace_root().join(rel)).expect(rel);
         // We accept any of these phrasings.
         let candidates = [
             "The bytes match. The signer is not trusted by you yet.",
@@ -228,10 +224,8 @@ fn verifier_response_struct_carries_identity_class() {
     // Sanity that the wire format actually includes the field. If
     // someone removes it from window-api the desktop UI would silently
     // fall back to Unknown — caught here at compile-time-of-test.
-    let content = fs::read_to_string(
-        workspace_root().join("crates/window-api/src/lib.rs"),
-    )
-    .expect("window-api lib");
+    let content = fs::read_to_string(workspace_root().join("crates/window-api/src/lib.rs"))
+        .expect("window-api lib");
     assert!(
         content.contains("pub identity_class: String,"),
         "VerifyResponse must carry identity_class field"

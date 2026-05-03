@@ -318,8 +318,14 @@ function renderVerify(d, fname) {
     $('r-mm').classList.remove('hidden');
     $('r-mm-a').textContent = d.file_hash;
     $('r-mm-b').textContent = d.expected_hash;
+  } else if (r === 'Damaged') {
+    v.className = 'verdict enter damaged';
+    $('r-status').textContent = 'Damaged';
+    var reason = 'This .win file appears incomplete or corrupted.';
+    if (d.failures && d.failures.length > 0) reason += ' ' + d.failures[0].reason + '.';
+    $('r-explain').textContent = reason;
   } else {
-    // Invalid \u2014 covers all "we can't tell you about this file" cases.
+    // Invalid \u2014 covers "container readable but proof itself is broken/forged".
     v.className = 'verdict enter warn';
     $('r-status').textContent = 'Invalid';
     var reason = 'This .win container is not valid or cannot be verified.';

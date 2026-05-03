@@ -144,7 +144,52 @@ pub fn unpack(data: &[u8]) -> Result<(String, Vec<u8>, String), WinError> {
     }
     let proof_json = std::str::from_utf8(proof_bytes).map_err(|_| WinError::Truncated)?;
 
+    // Structural completeness: a complete JSON proof object must have
+    // balanced {} and [] brackets (ignoring those inside strings).
+    // If it doesn't, the .win was cut short during transmission. We
+    // surface this as `Truncated` (container damage) so the receiver
+    // sees DAMAGED, not Invalid (which would mean the proof was forged).
+    if !brackets_balanced(proof_json) {
+        return Err(WinError::Truncated);
+    }
+
     Ok((filename, file_bytes, proof_json.to_string()))
+}
+
+/// Cheap, dependency-free check: the JSON proof section must have
+/// balanced {} and [] brackets. Strings (including escaped quotes) are
+/// skipped. Used by `unpack` to distinguish a cleanly-cut container
+/// from one whose proof tail was truncated.
+fn brackets_balanced(s: &str) -> bool {
+    let mut depth: i64 = 0;
+    let mut in_string = false;
+    let mut escape = false;
+    for b in s.bytes() {
+        if escape {
+            escape = false;
+            continue;
+        }
+        if in_string {
+            match b {
+                b'\\' => escape = true,
+                b'"' => in_string = false,
+                _ => {},
+            }
+            continue;
+        }
+        match b {
+            b'"' => in_string = true,
+            b'{' | b'[' => depth += 1,
+            b'}' | b']' => {
+                depth -= 1;
+                if depth < 0 {
+                    return false;
+                }
+            },
+            _ => {},
+        }
+    }
+    !in_string && depth == 0
 }
 
 /// Check if data starts with .win magic bytes.

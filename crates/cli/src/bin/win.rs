@@ -400,6 +400,10 @@ fn verify_bundle(artifact_bytes: &[u8], bundle: &ProofBundle, tsa_root: &[String
     let file_hash = crypto::sha256_hex(artifact_bytes);
     if file_hash != bundle.object.payload_hash {
         println!("  Tampered      {}", label);
+        println!(
+            "    The file no longer matches the proof inside this .win \
+             container. At least one byte changed."
+        );
         println!("    file      sha256:{}", file_hash);
         println!("    expected  sha256:{}", bundle.object.payload_hash);
         std::process::exit(1);
@@ -420,6 +424,10 @@ fn verify_bundle(artifact_bytes: &[u8], bundle: &ProofBundle, tsa_root: &[String
                 &bundle.object.payload_hash[..12],
                 label
             );
+            println!(
+                "    The file matches the proof inside this .win container. \
+                 No byte changes detected."
+            );
             std::process::exit(0);
         },
         VerificationStatus::Tampered => {
@@ -427,6 +435,10 @@ fn verify_bundle(artifact_bytes: &[u8], bundle: &ProofBundle, tsa_root: &[String
                 "  Tampered      sha256:{}  {}",
                 &bundle.object.payload_hash[..12],
                 label
+            );
+            println!(
+                "    The file no longer matches the proof inside this .win \
+                 container. At least one byte changed."
             );
             for (i, f) in result.failures.iter().enumerate() {
                 println!("    [{}] {:?} — {}", i, f.code, f.reason);
@@ -439,6 +451,7 @@ fn verify_bundle(artifact_bytes: &[u8], bundle: &ProofBundle, tsa_root: &[String
                 &bundle.object.payload_hash[..12],
                 label
             );
+            println!("    This .win container is not valid or cannot be verified.");
             for (i, f) in result.failures.iter().enumerate() {
                 println!("    [{}] {:?} — {}", i, f.code, f.reason);
             }
@@ -580,17 +593,31 @@ fn main() {
                 std::process::exit(2);
             }
 
-            // .win container — unpack errors collapse into Invalid alongside content/identity failures.
+            // .win container — distinguish three failure classes:
+            //   Damaged  — container itself unreadable (bytes missing,
+            //              truncated, wrong magic). Per is_container_damage().
+            //   Invalid  — container readable but proof section malformed
+            //              (proof JSON broken, structurally invalid).
+            //   Tampered — handled inside verify_bundle when the file
+            //              digest doesn't match the proof's payload_hash.
             let (_name, artifact_bytes, proof_text) =
                 win_format::unpack(&raw).unwrap_or_else(|e| {
-                    println!("  Invalid       {}", file.display());
-                    println!("    {}", e);
-                    std::process::exit(3);
+                    if e.is_container_damage() {
+                        println!("  Damaged       {}", file.display());
+                        println!("    This .win file appears incomplete or corrupted.");
+                        println!("    {}", e);
+                    } else {
+                        println!("  Invalid       {}", file.display());
+                        println!("    This .win container is not valid or cannot be verified.");
+                        println!("    {}", e);
+                    }
+                    std::process::exit(1);
                 });
             let bundle: ProofBundle = serde_json::from_str(&proof_text).unwrap_or_else(|e| {
                 println!("  Invalid       {}", file.display());
+                println!("    This .win container is not valid or cannot be verified.");
                 println!("    win tag's proof section is not valid JSON: {}", e);
-                std::process::exit(3);
+                std::process::exit(1);
             });
             verify_bundle(
                 &artifact_bytes,

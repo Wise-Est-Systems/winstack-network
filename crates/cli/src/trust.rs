@@ -19,7 +19,9 @@ use std::path::{Path, PathBuf};
 /// Receiver-side classification of how a signing key is trusted.
 /// Stored alongside the fingerprint; controls whether the verifier
 /// surfaces a key as Official or merely Named.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+///
+/// Default is Named — receivers must explicitly elevate to Official.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum TrustClass {
     /// Receiver explicitly accepts this key as a published official key.
@@ -27,13 +29,8 @@ pub enum TrustClass {
     Official,
     /// Receiver knows this key by name but treats it as a regular signer.
     /// The verifier surfaces this seal as "Named Win" with the label.
+    #[default]
     Named,
-}
-
-impl Default for TrustClass {
-    fn default() -> Self {
-        TrustClass::Named
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -107,9 +104,9 @@ impl TrustStore {
     /// as "Official Win".
     #[allow(dead_code)]
     pub fn is_official(&self, public_key_hex: &str) -> bool {
-        self.keys.iter().any(|k| {
-            k.key == public_key_hex && !k.revoked && k.trust_class == TrustClass::Official
-        })
+        self.keys
+            .iter()
+            .any(|k| k.key == public_key_hex && !k.revoked && k.trust_class == TrustClass::Official)
     }
 
     pub fn add(&mut self, key: String, label: Option<String>) -> bool {
@@ -226,7 +223,10 @@ mod tests {
             created_at: Some("2026-01-01T00:00:00Z".into()),
             revoked: true,
         });
-        assert!(!store.is_trusted("abc"), "revoked entry must NOT be trusted");
+        assert!(
+            !store.is_trusted("abc"),
+            "revoked entry must NOT be trusted"
+        );
         assert!(
             !store.is_official("abc"),
             "revoked entry must NOT count as Official"
