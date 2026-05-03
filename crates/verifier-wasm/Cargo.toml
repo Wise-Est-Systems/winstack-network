@@ -2,6 +2,7 @@
 name = "verifier-wasm"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 description = "WASM bindings for the Wise verifier — one artifact for every receiver-side surface."
 
 [lib]

@@ -2,6 +2,7 @@
 name = "wise-crypto"
 version = "0.1.0"
 edition = "2021"
+license.workspace = true
 
 [dependencies]
 sha2 = { workspace = true }

@@ -2,6 +2,7 @@
 name = "wise-desktop"
 version = "0.2.0"
 edition = "2021"
+license.workspace = true
 
 [dependencies]
 canon-types = { path = "../crates/canon-types" }
