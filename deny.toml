@@ -42,6 +42,10 @@ license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+# Path dependencies inside this workspace (path = "../crates/X") are
+# in-tree, not from crates.io, and don't need explicit versions.
+# Without this opt-in cargo-deny flags every one of them as a wildcard.
+allow-wildcard-paths = true
 highlight = "all"
 deny = []
 skip = []
