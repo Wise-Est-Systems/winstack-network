@@ -1106,34 +1106,65 @@ async fn check_bundle(
         )
     })?;
 
+    // Unpack errors split into two user-visible states:
+    //   Damaged — container itself unreadable (truncation, bad magic,
+    //             length fields point past EOF, unbalanced proof JSON).
+    //             Classified by win-format via WinError::is_container_damage().
+    //   Invalid — container parsed but proof inside is broken/forged.
+    // This matches the CLI (`win verify`) and the WASM bridge so all
+    // surfaces agree on the four states.
     let (_file_name, file_bytes, proof_text) = match win_format::unpack(&data) {
         Ok(v) => v,
         Err(e) => {
+            let (status, message) = if e.is_container_damage() {
+                (
+                    "Damaged",
+                    format!("This .win file appears incomplete or corrupted. {}", e),
+                )
+            } else {
+                (
+                    "Invalid",
+                    format!(
+                        "This .win container is not valid or cannot be verified. {}",
+                        e
+                    ),
+                )
+            };
             return Ok(Json(VerifyResponse {
-                result: "Invalid".into(),
+                result: status.into(),
                 object_id: String::new(),
-                message: format!("I can't read this name tag. {}", e),
+                message,
                 file_hash: String::new(),
                 expected_hash: String::new(),
-                failures: vec![],
+                failures: vec![FailureInfo {
+                    code: if status == "Damaged" {
+                        "ContainerDamaged".into()
+                    } else {
+                        "ContainerMalformed".into()
+                    },
+                    reason: format!("{}", e),
+                }],
                 trust_class: String::new(),
                 object_class: String::new(),
+                identity_class: "Unknown".to_string(),
+                identity_explainer:
+                    "Sealed by an unknown key. Valid signature, no further trust signal."
+                        .to_string(),
                 created_at: String::new(),
                 payload_hash: String::new(),
                 time_source: String::new(),
-
                 anchored_time: None,
                 chain_status: String::new(),
                 chain_depth: 0,
-                identity_class: "Local".to_string(),
-
-                identity_explainer: "Sealed by a local key generated on the sealer's device. This proves file integrity, not real-world identity.".to_string(),
-
                 creator_key: String::new(),
             }));
         },
     };
 
+    // Container parsed successfully — any further problem is the proof
+    // itself, which is "Invalid", never "Damaged". JSON parse failure
+    // here means the proof JSON is structurally wrong despite the
+    // container reading cleanly.
     let bundle: ProofBundle = match serde_json::from_str(&proof_text) {
         Ok(b) => b,
         Err(e) => {
@@ -1141,25 +1172,28 @@ async fn check_bundle(
                 result: "Invalid".into(),
                 object_id: String::new(),
                 message: format!(
-                    "I can't read this name tag. Proof section is not valid: {}",
+                    "This .win container is not valid or cannot be verified. \
+                     Proof section is not valid JSON: {}",
                     e
                 ),
                 file_hash: String::new(),
                 expected_hash: String::new(),
-                failures: vec![],
+                failures: vec![FailureInfo {
+                    code: "ProofJsonInvalid".into(),
+                    reason: format!("{}", e),
+                }],
                 trust_class: String::new(),
                 object_class: String::new(),
+                identity_class: "Unknown".to_string(),
+                identity_explainer:
+                    "Sealed by an unknown key. Valid signature, no further trust signal."
+                        .to_string(),
                 created_at: String::new(),
                 payload_hash: String::new(),
                 time_source: String::new(),
-
                 anchored_time: None,
                 chain_status: String::new(),
                 chain_depth: 0,
-                identity_class: "Local".to_string(),
-
-                identity_explainer: "Sealed by a local key generated on the sealer's device. This proves file integrity, not real-world identity.".to_string(),
-
                 creator_key: String::new(),
             }));
         },
