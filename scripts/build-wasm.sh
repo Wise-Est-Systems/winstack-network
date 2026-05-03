@@ -42,10 +42,25 @@ wasm-bindgen \
   --out-dir public/wasm \
   target/wasm32-unknown-unknown/release/verifier_wasm.wasm
 
-# wasm-opt is optional but typically halves the wasm size
+# wasm-opt is optional but typically halves the wasm size.
+#
+# The Rust toolchain emits modern WebAssembly features by default
+# (bulk-memory ops, sign extension, non-trapping float→int, multi-value
+# returns, mutable globals, reference types). wasm-opt's validator
+# rejects these unless the matching feature flags are enabled. The set
+# below is the standard MVP+1 — supported by every current browser and
+# matches what wasm-bindgen targets.
 if command -v wasm-opt >/dev/null 2>&1; then
   echo "▸ Optimizing with wasm-opt…"
-  wasm-opt -Oz -o public/wasm/verifier_wasm_bg.opt.wasm public/wasm/verifier_wasm_bg.wasm
+  wasm-opt -Oz \
+    --enable-bulk-memory \
+    --enable-sign-ext \
+    --enable-nontrapping-float-to-int \
+    --enable-mutable-globals \
+    --enable-multivalue \
+    --enable-reference-types \
+    -o public/wasm/verifier_wasm_bg.opt.wasm \
+    public/wasm/verifier_wasm_bg.wasm
   mv public/wasm/verifier_wasm_bg.opt.wasm public/wasm/verifier_wasm_bg.wasm
 fi
 
