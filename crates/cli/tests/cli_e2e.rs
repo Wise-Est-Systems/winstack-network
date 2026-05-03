@@ -56,17 +56,35 @@ fn seal_share_url_uses_single_v_segment() {
     // Regression: default base_url was "truth.systems/verify" which
     // produced "truth.systems/verify/v/<hash>" — doubled segment.
     let (dir, src) = scratch_with_file("u.txt", b"x");
-    let out = win(dir.path()).arg("seal").arg(&src).arg("--private").output().unwrap();
+    let out = win(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .output()
+        .unwrap();
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(stdout.contains("/v/"), "stdout should mention /v/: {}", stdout);
-    assert!(!stdout.contains("/verify/v/"), "must not double the segment: {}", stdout);
+    assert!(
+        stdout.contains("/v/"),
+        "stdout should mention /v/: {}",
+        stdout
+    );
+    assert!(
+        !stdout.contains("/verify/v/"),
+        "must not double the segment: {}",
+        stdout
+    );
 }
 
 #[test]
 fn seal_with_private_flag_skips_publish() {
     // --private should not create a public/v/<hash>.json artifact.
     let (dir, src) = scratch_with_file("p.txt", b"private content");
-    win(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    win(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     let public = dir.path().join("public").join("v");
     assert!(
         !public.exists() || fs::read_dir(&public).unwrap().next().is_none(),
@@ -81,7 +99,13 @@ fn seal_multiple_files_in_one_invocation() {
     let b = dir.path().join("b.txt");
     fs::write(&a, b"alpha").unwrap();
     fs::write(&b, b"beta").unwrap();
-    win(dir.path()).arg("seal").arg(&a).arg(&b).arg("--private").assert().success();
+    win(dir.path())
+        .arg("seal")
+        .arg(&a)
+        .arg(&b)
+        .arg("--private")
+        .assert()
+        .success();
     assert!(a.with_extension("win").exists(), "a.win missing");
     assert!(b.with_extension("win").exists(), "b.win missing");
 }
@@ -89,7 +113,12 @@ fn seal_multiple_files_in_one_invocation() {
 #[test]
 fn seal_of_empty_file_succeeds() {
     let (dir, src) = scratch_with_file("empty.txt", b"");
-    win(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    win(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     assert!(src.with_extension("win").exists());
 }
 
@@ -115,7 +144,12 @@ fn seal_with_custom_base_url_appears_in_share_link() {
 #[test]
 fn verify_after_seal_returns_verified() {
     let (dir, src) = scratch_with_file("v.txt", b"verify me");
-    win(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    win(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     win(dir.path())
         .arg("verify")
         .arg(src.with_extension("win"))
@@ -127,27 +161,48 @@ fn verify_after_seal_returns_verified() {
 #[test]
 fn verify_of_random_bytes_exits_nonzero() {
     let (dir, _) = scratch_with_file("garbage.dat", &[0u8; 64]);
-    let res = win(dir.path()).arg("verify").arg(dir.path().join("garbage.dat")).assert().failure();
+    let res = win(dir.path())
+        .arg("verify")
+        .arg(dir.path().join("garbage.dat"))
+        .assert()
+        .failure();
     let out = res.get_output();
     let stderr = String::from_utf8_lossy(&out.stderr);
-    assert!(stderr.contains("ERROR") || stderr.contains("not a .win"), "{}", stderr);
+    assert!(
+        stderr.contains("ERROR") || stderr.contains("not a .win"),
+        "{}",
+        stderr
+    );
 }
 
 #[test]
 fn verify_of_truncated_win_does_not_panic() {
     let (dir, src) = scratch_with_file("t.txt", b"truncate test");
-    win(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    win(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     let win_path = src.with_extension("win");
     let bytes = fs::read(&win_path).unwrap();
     fs::write(&win_path, &bytes[..bytes.len() / 2]).unwrap();
     // Should exit nonzero and produce no panic backtrace.
-    let out = win(dir.path()).arg("verify").arg(&win_path).output().unwrap();
+    let out = win(dir.path())
+        .arg("verify")
+        .arg(&win_path)
+        .output()
+        .unwrap();
     let combined = format!(
         "{}{}",
         String::from_utf8_lossy(&out.stdout),
         String::from_utf8_lossy(&out.stderr)
     );
-    assert!(!combined.contains("RUST_BACKTRACE"), "panic surfaced: {}", combined);
+    assert!(
+        !combined.contains("RUST_BACKTRACE"),
+        "panic surfaced: {}",
+        combined
+    );
     assert!(
         combined.contains("Invalid") || combined.contains("Tampered"),
         "expected Invalid or Tampered, got: {}",
@@ -158,20 +213,33 @@ fn verify_of_truncated_win_does_not_panic() {
 #[test]
 fn verify_of_nonexistent_file_exits_nonzero() {
     let dir = tempfile::tempdir().unwrap();
-    win(dir.path()).arg("verify").arg(dir.path().join("nope.win")).assert().failure();
+    win(dir.path())
+        .arg("verify")
+        .arg(dir.path().join("nope.win"))
+        .assert()
+        .failure();
 }
 
 #[test]
 fn verify_after_payload_byte_flip_does_not_return_verified() {
     let (dir, src) = scratch_with_file("flip.txt", b"flip me");
-    win(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    win(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     let win_path = src.with_extension("win");
     let mut bytes = fs::read(&win_path).unwrap();
     // Flip a byte in the latter half (likely inside payload, not header).
     let i = bytes.len() * 3 / 4;
     bytes[i] ^= 0xFF;
     fs::write(&win_path, &bytes).unwrap();
-    let out = win(dir.path()).arg("verify").arg(&win_path).output().unwrap();
+    let out = win(dir.path())
+        .arg("verify")
+        .arg(&win_path)
+        .output()
+        .unwrap();
     let combined = format!(
         "{}{}",
         String::from_utf8_lossy(&out.stdout),
@@ -191,7 +259,12 @@ fn verify_after_payload_byte_flip_does_not_return_verified() {
 #[test]
 fn inspect_shows_file_size_and_fingerprint() {
     let (dir, src) = scratch_with_file("i.txt", b"inspect me please");
-    win(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    win(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     win(dir.path())
         .arg("inspect")
         .arg(src.with_extension("win"))
@@ -204,7 +277,11 @@ fn inspect_shows_file_size_and_fingerprint() {
 #[test]
 fn inspect_of_nonexistent_file_exits_nonzero() {
     let dir = tempfile::tempdir().unwrap();
-    win(dir.path()).arg("inspect").arg(dir.path().join("nope.win")).assert().failure();
+    win(dir.path())
+        .arg("inspect")
+        .arg(dir.path().join("nope.win"))
+        .assert()
+        .failure();
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -215,25 +292,49 @@ fn inspect_of_nonexistent_file_exits_nonzero() {
 fn open_restores_byte_identical_original() {
     let original = b"open and restore me - and check exact bytes";
     let (dir, src) = scratch_with_file("o.txt", original);
-    win(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    win(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     fs::remove_file(&src).unwrap();
-    win(dir.path()).arg("open").arg(src.with_extension("win")).assert().success();
+    win(dir.path())
+        .arg("open")
+        .arg(src.with_extension("win"))
+        .assert()
+        .success();
     let restored = fs::read(&src).unwrap();
-    assert_eq!(&restored, original, "open must restore byte-identical original");
+    assert_eq!(
+        &restored, original,
+        "open must restore byte-identical original"
+    );
 }
 
 #[test]
 fn open_a_tampered_win_without_force_refuses() {
     let (dir, src) = scratch_with_file("of.txt", b"force test");
-    win(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    win(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     let win_path = src.with_extension("win");
     let mut bytes = fs::read(&win_path).unwrap();
     let i = bytes.len() * 3 / 4;
     bytes[i] ^= 0xFF;
     fs::write(&win_path, &bytes).unwrap();
     fs::remove_file(&src).unwrap();
-    win(dir.path()).arg("open").arg(&win_path).assert().failure();
-    assert!(!src.exists(), "open must NOT have restored a tampered file without --force");
+    win(dir.path())
+        .arg("open")
+        .arg(&win_path)
+        .assert()
+        .failure();
+    assert!(
+        !src.exists(),
+        "open must NOT have restored a tampered file without --force"
+    );
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -252,7 +353,14 @@ fn trust_add_then_list_shows_the_key() {
     // 64-char hex public key (placeholder; identity layer doesn't validate
     // it as a real Ed25519 point at the trust-list layer)
     let key = "a".repeat(64);
-    win(dir.path()).arg("trust").arg("add").arg(&key).arg("--label").arg("test").assert().success();
+    win(dir.path())
+        .arg("trust")
+        .arg("add")
+        .arg(&key)
+        .arg("--label")
+        .arg("test")
+        .assert()
+        .success();
     win(dir.path())
         .arg("trust")
         .arg("list")
@@ -265,11 +373,27 @@ fn trust_add_then_list_shows_the_key() {
 fn trust_remove_drops_a_key() {
     let dir = tempfile::tempdir().unwrap();
     let key = "b".repeat(64);
-    win(dir.path()).arg("trust").arg("add").arg(&key).arg("--label").arg("rm").assert().success();
-    win(dir.path()).arg("trust").arg("remove").arg(&key).assert().success();
+    win(dir.path())
+        .arg("trust")
+        .arg("add")
+        .arg(&key)
+        .arg("--label")
+        .arg("rm")
+        .assert()
+        .success();
+    win(dir.path())
+        .arg("trust")
+        .arg("remove")
+        .arg(&key)
+        .assert()
+        .success();
     let out = win(dir.path()).arg("trust").arg("list").output().unwrap();
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(!stdout.contains(&key[..8]), "key should be removed: {}", stdout);
+    assert!(
+        !stdout.contains(&key[..8]),
+        "key should be removed: {}",
+        stdout
+    );
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -284,7 +408,11 @@ fn help_displays_seal_subcommand() {
     let dir = tempfile::tempdir().unwrap();
     let out = win(dir.path()).arg("--help").output().unwrap();
     let stdout = String::from_utf8_lossy(&out.stdout);
-    assert!(stdout.contains("seal"), "help should mention 'seal' subcommand: {}", stdout);
+    assert!(
+        stdout.contains("seal"),
+        "help should mention 'seal' subcommand: {}",
+        stdout
+    );
     // Note: the binary itself is named "win", which appears in usage line.
     // Ensure the *subcommand* list does not include "win" (which would
     // re-introduce the win-win confusion). Look for a line that lists
@@ -302,11 +430,18 @@ fn help_does_not_panic_under_no_args() {
         String::from_utf8_lossy(&out.stdout),
         String::from_utf8_lossy(&out.stderr)
     );
-    assert!(!combined.contains("RUST_BACKTRACE"), "no-arg invocation panicked: {}", combined);
+    assert!(
+        !combined.contains("RUST_BACKTRACE"),
+        "no-arg invocation panicked: {}",
+        combined
+    );
 }
 
 #[test]
 fn invalid_subcommand_exits_nonzero() {
     let dir = tempfile::tempdir().unwrap();
-    win(dir.path()).arg("nonexistent-subcommand").assert().failure();
+    win(dir.path())
+        .arg("nonexistent-subcommand")
+        .assert()
+        .failure();
 }

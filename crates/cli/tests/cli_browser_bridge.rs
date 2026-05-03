@@ -57,12 +57,20 @@ fn cli_produced_win_is_browser_verified() {
     let dir = tempfile::tempdir().unwrap();
     let src = dir.path().join("doc.txt");
     fs::write(&src, b"the producer-consumer bridge test").unwrap();
-    cli(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    cli(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     let win_bytes = fs::read(src.with_extension("win")).unwrap();
 
     // 2. Receiver runs the browser verifier on those bytes.
     let status = browser_recognize_win(&win_bytes);
-    assert_eq!(status, "Verified", "browser pipeline must Verify CLI-produced bytes");
+    assert_eq!(
+        status, "Verified",
+        "browser pipeline must Verify CLI-produced bytes"
+    );
 }
 
 #[test]
@@ -70,7 +78,12 @@ fn cli_produced_win_with_flipped_payload_byte_is_tampered() {
     let dir = tempfile::tempdir().unwrap();
     let src = dir.path().join("t.txt");
     fs::write(&src, b"sealed today, tampered tomorrow").unwrap();
-    cli(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    cli(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
 
     // Flip a byte in the .win container at a position likely to land inside
     // the embedded file payload, not in the header or proof JSON.
@@ -83,7 +96,11 @@ fn cli_produced_win_with_flipped_payload_byte_is_tampered() {
         win_bytes[i] ^= 0xFF;
     }
     let status = browser_recognize_win(&win_bytes);
-    assert_ne!(status, "Verified", "tampered .win must not Verify; got {}", status);
+    assert_ne!(
+        status, "Verified",
+        "tampered .win must not Verify; got {}",
+        status
+    );
 }
 
 #[test]
@@ -103,12 +120,21 @@ fn cli_produced_then_truncated_is_invalid_in_browser() {
     let dir = tempfile::tempdir().unwrap();
     let src = dir.path().join("trunc.txt");
     fs::write(&src, b"truncate me").unwrap();
-    cli(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    cli(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     let win_bytes = fs::read(src.with_extension("win")).unwrap();
     // Cut to half — should fail to unpack cleanly.
     let truncated = &win_bytes[..win_bytes.len() / 2];
     let status = browser_recognize_win(truncated);
-    assert_ne!(status, "Verified", "truncated .win must not Verify; got {}", status);
+    assert_ne!(
+        status, "Verified",
+        "truncated .win must not Verify; got {}",
+        status
+    );
 }
 
 /// Smoke check that varied content sizes all roundtrip cleanly through
@@ -120,7 +146,12 @@ fn varied_sizes_all_browser_verify() {
         let src = dir.path().join(format!("s{}.txt", size));
         let content: Vec<u8> = (0..size).map(|i| (i & 0xFF) as u8).collect();
         fs::write(&src, &content).unwrap();
-        cli(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+        cli(dir.path())
+            .arg("seal")
+            .arg(&src)
+            .arg("--private")
+            .assert()
+            .success();
         let win_bytes = fs::read(src.with_extension("win")).unwrap();
         let status = browser_recognize_win(&win_bytes);
         assert_eq!(status, "Verified", "size {} byte(s) must Verify", size);
@@ -168,7 +199,12 @@ fn url_flow_published_bundle_verifies_against_original() {
     fs::write(&src, original).unwrap();
 
     // Seal then publish to a local public/ directory.
-    cli(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    cli(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     let win_path = src.with_extension("win");
     cli(dir.path())
         .arg("publish")
@@ -194,11 +230,17 @@ fn url_flow_published_bundle_verifies_against_original() {
     // Bundle filename should be the SHA-256 of the original file + ".json".
     let expected_hash = wise_crypto::sha256_hex(original);
     let bundle_stem = bundle_path.file_stem().unwrap().to_string_lossy();
-    assert_eq!(bundle_stem, expected_hash, "URL hash must match file SHA-256");
+    assert_eq!(
+        bundle_stem, expected_hash,
+        "URL hash must match file SHA-256"
+    );
 
     // The receiver in the URL flow drops the original file → recognize_bundle.
     let status = browser_recognize_bundle(&proof_json, original);
-    assert_eq!(status, "Verified", "published bundle must Verify against the original");
+    assert_eq!(
+        status, "Verified",
+        "published bundle must Verify against the original"
+    );
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -225,7 +267,12 @@ fn lineage_first_seal_is_standalone_or_origin() {
     let dir = tempfile::tempdir().unwrap();
     let src = dir.path().join("v1.txt");
     fs::write(&src, b"version 1 content").unwrap();
-    cli(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    cli(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     let win_bytes = fs::read(src.with_extension("win")).unwrap();
     let lineage = read_lineage(&win_bytes);
     assert!(
@@ -245,7 +292,12 @@ fn lineage_child_with_from_flag_is_successor() {
     fs::write(&v2, b"version 2 - has more content").unwrap();
 
     // First seal — the parent.
-    cli(dir.path()).arg("seal").arg(&v1).arg("--private").assert().success();
+    cli(dir.path())
+        .arg("seal")
+        .arg(&v1)
+        .arg("--private")
+        .assert()
+        .success();
     let v1_win = v1.with_extension("win");
     assert!(v1_win.exists());
 
@@ -261,7 +313,11 @@ fn lineage_child_with_from_flag_is_successor() {
     let v2_win_bytes = fs::read(v2.with_extension("win")).unwrap();
 
     let lineage = read_lineage(&v2_win_bytes);
-    assert_eq!(lineage, "Successor", "child seal must be Successor; got {}", lineage);
+    assert_eq!(
+        lineage, "Successor",
+        "child seal must be Successor; got {}",
+        lineage
+    );
     assert_eq!(
         browser_recognize_win(&v2_win_bytes),
         "Verified",
@@ -276,7 +332,12 @@ fn lineage_inspect_surfaces_chain() {
     let v2 = dir.path().join("rev.txt");
     fs::write(&v1, b"original").unwrap();
     fs::write(&v2, b"revised").unwrap();
-    cli(dir.path()).arg("seal").arg(&v1).arg("--private").assert().success();
+    cli(dir.path())
+        .arg("seal")
+        .arg(&v1)
+        .arg("--private")
+        .assert()
+        .success();
     cli(dir.path())
         .arg("seal")
         .arg(&v2)
@@ -298,7 +359,12 @@ fn url_flow_published_bundle_with_wrong_file_returns_tampered() {
     let dir = tempfile::tempdir().unwrap();
     let src = dir.path().join("real.txt");
     fs::write(&src, b"the real file").unwrap();
-    cli(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    cli(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     cli(dir.path())
         .arg("publish")
         .arg(src.with_extension("win"))
@@ -320,5 +386,9 @@ fn url_flow_published_bundle_with_wrong_file_returns_tampered() {
     // but they hand over different bytes. Status must NOT be Verified.
     let wrong_bytes = b"a different file entirely";
     let status = browser_recognize_bundle(&proof_json, wrong_bytes);
-    assert_ne!(status, "Verified", "URL flow with wrong file must not Verify; got {}", status);
+    assert_ne!(
+        status, "Verified",
+        "URL flow with wrong file must not Verify; got {}",
+        status
+    );
 }

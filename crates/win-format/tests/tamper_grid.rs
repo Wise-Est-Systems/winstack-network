@@ -13,7 +13,7 @@
 //! Each test function below loops over many cases. The reported test
 //! count stays small but the assertion count is in the thousands.
 
-use win_format::{pack, unpack, is_win_file, WinError};
+use win_format::{is_win_file, pack, unpack};
 
 fn fixture() -> Vec<u8> {
     pack(
@@ -49,7 +49,7 @@ fn every_single_byte_flip_is_detectable() {
                 } else {
                     detectable += 1;
                 }
-            }
+            },
         }
     }
 
@@ -59,7 +59,11 @@ fn every_single_byte_flip_is_detectable() {
         nondetectable_positions.len(),
         nondetectable_positions
     );
-    assert_eq!(detectable, packed.len(), "every byte must be tamper-detectable");
+    assert_eq!(
+        detectable,
+        packed.len(),
+        "every byte must be tamper-detectable"
+    );
 }
 
 /// For every prefix length 0..N, truncation must NOT produce content
@@ -75,14 +79,14 @@ fn truncation_never_yields_identical_content() {
     for len in 0..packed.len() {
         let truncated = &packed[..len];
         match unpack(truncated) {
-            Err(_) => {} // Detected — fine.
+            Err(_) => {}, // Detected — fine.
             Ok(after) => {
                 assert_ne!(
                     after, original,
                     "truncation at len {} produced identical unpacked content",
                     len
                 );
-            }
+            },
         }
     }
     assert!(unpack(&packed).is_ok(), "full-length must succeed");
@@ -96,9 +100,15 @@ fn magic_byte_gate_covers_full_byte_space() {
     let original_first = buf[0];
     assert!(is_win_file(&buf));
     for b in 0u8..=255u8 {
-        if b == original_first { continue; }
+        if b == original_first {
+            continue;
+        }
         buf[0] = b;
-        assert!(!is_win_file(&buf), "byte {:#04x} as first byte should NOT be recognized", b);
+        assert!(
+            !is_win_file(&buf),
+            "byte {:#04x} as first byte should NOT be recognized",
+            b
+        );
     }
     // Restore and confirm still recognized.
     buf[0] = original_first;
@@ -112,9 +122,15 @@ fn version_byte_gate_covers_full_byte_space() {
     let original = buf[3];
     assert!(is_win_file(&buf));
     for b in 0u8..=255u8 {
-        if b == original { continue; }
+        if b == original {
+            continue;
+        }
         buf[3] = b;
-        assert!(!is_win_file(&buf), "byte {:#04x} as version byte should NOT be recognized", b);
+        assert!(
+            !is_win_file(&buf),
+            "byte {:#04x} as version byte should NOT be recognized",
+            b
+        );
     }
     buf[3] = original;
     assert!(is_win_file(&buf));
@@ -124,7 +140,7 @@ fn version_byte_gate_covers_full_byte_space() {
 #[test]
 fn empty_input_is_rejected() {
     assert!(!is_win_file(b""));
-    assert!(matches!(unpack(b""), Err(_)));
+    assert!(unpack(b"").is_err());
 }
 
 /// One-byte input is rejected.
@@ -133,7 +149,7 @@ fn single_byte_input_is_rejected() {
     for b in 0u8..=255u8 {
         let buf = [b];
         assert!(!is_win_file(&buf));
-        assert!(matches!(unpack(&buf), Err(_)));
+        assert!(unpack(&buf).is_err());
     }
 }
 
@@ -166,7 +182,7 @@ fn roundtrip_preserves_basename_for_varied_filenames() {
     ];
     for (input, expected_basename) in cases {
         let packed = pack(input, b"x", "{}");
-        let (got, _, _) = unpack(&packed).expect(&format!("roundtrip {}", input));
+        let (got, _, _) = unpack(&packed).unwrap_or_else(|_| panic!("roundtrip {}", input));
         assert_eq!(&got, expected_basename, "input: {}", input);
     }
 }
@@ -181,13 +197,21 @@ fn container_damage_flag_is_set_for_structural_errors() {
     // Truncated → structural error.
     let truncated = &packed[..16];
     let err = unpack(truncated).unwrap_err();
-    assert!(err.is_container_damage(), "truncation should mark container damage: {:?}", err);
+    assert!(
+        err.is_container_damage(),
+        "truncation should mark container damage: {:?}",
+        err
+    );
 
     // Magic-byte corruption → structural error.
     let mut bad_magic = packed.clone();
     bad_magic[0] = 0;
     let err = unpack(&bad_magic).unwrap_err();
-    assert!(err.is_container_damage(), "bad magic should mark container damage: {:?}", err);
+    assert!(
+        err.is_container_damage(),
+        "bad magic should mark container damage: {:?}",
+        err
+    );
 }
 
 #[test]

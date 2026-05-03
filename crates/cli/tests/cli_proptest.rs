@@ -28,7 +28,12 @@ fn win(dir: &Path) -> Command {
 fn seal_and_get_win(dir: &TempDir, name: &str, content: &[u8]) -> std::path::PathBuf {
     let src = dir.path().join(name);
     fs::write(&src, content).unwrap();
-    win(dir.path()).arg("seal").arg(&src).arg("--private").assert().success();
+    win(dir.path())
+        .arg("seal")
+        .arg(&src)
+        .arg("--private")
+        .assert()
+        .success();
     src.with_extension("win")
 }
 

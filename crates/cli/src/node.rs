@@ -290,8 +290,7 @@ mod tests {
 
     #[test]
     fn missing_files_do_not_crash() {
-        let dir =
-            std::env::temp_dir().join(format!("wise-test-empty-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("wise-test-empty-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         // No node.json or graph.db — should not panic
         check_and_repair_permissions(&dir);

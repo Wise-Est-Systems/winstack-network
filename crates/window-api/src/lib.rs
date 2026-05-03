@@ -770,9 +770,8 @@ async fn prove_upload(
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(ErrorResponse {
                 error: ErrorDetail {
-                    message:
-                        "no module registered — run 'win prove' first to initialize the node"
-                            .into(),
+                    message: "no module registered — run 'win prove' first to initialize the node"
+                        .into(),
                 },
             }),
         )

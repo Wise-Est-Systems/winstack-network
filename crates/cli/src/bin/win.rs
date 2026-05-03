@@ -349,7 +349,10 @@ fn win_file(
             }
         } else {
             String::from_utf8(pred_raw).unwrap_or_else(|e| {
-                eprintln!("ERROR: predecessor is neither a .win nor valid UTF-8 JSON: {}", e);
+                eprintln!(
+                    "ERROR: predecessor is neither a .win nor valid UTF-8 JSON: {}",
+                    e
+                );
                 std::process::exit(2);
             })
         };

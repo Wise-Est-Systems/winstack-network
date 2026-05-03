@@ -112,8 +112,7 @@ mod tests {
 
     #[test]
     fn save_and_load_roundtrip() {
-        let dir =
-            std::env::temp_dir().join(format!("wise-trust-test-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("wise-trust-test-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         let mut store = TrustStore::default();
         store.add("key1".into(), Some("My key".into()));
@@ -132,8 +131,7 @@ mod tests {
 
     #[test]
     fn load_missing_file_returns_empty() {
-        let dir =
-            std::env::temp_dir().join(format!("wise-trust-empty-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("wise-trust-empty-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         let store = TrustStore::load(&dir);
         assert!(store.keys.is_empty());
