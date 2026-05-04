@@ -365,11 +365,11 @@ struct SealResult {
     /// The UI must not claim Verified unless this field says Verified.
     verification_status: &'static str,
     /// Raw bytes of the produced .win container, base64 is avoided —
-    /// wasm-bindgen marshals Vec<u8> as Uint8Array which is what the
+    /// wasm-bindgen marshals `Vec<u8>` as Uint8Array which is what the
     /// browser needs to trigger a download.
     win_bytes: Vec<u8>,
     /// Filename to use when offering the download. Always
-    /// "<original>.win".
+    /// `<original>.win` (e.g. `report.txt` becomes `report.txt.win`).
     filename: String,
     /// SHA-256 of the file at the moment of sealing.
     payload_hash: String,

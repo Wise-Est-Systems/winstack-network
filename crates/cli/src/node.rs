@@ -43,7 +43,12 @@ mod hex_bytes {
 
 /// Check and repair file permissions on sensitive node files.
 /// Warns on stderr if permissions were too loose and tightens them.
-pub fn check_and_repair_permissions(node_dir: &Path) {
+///
+/// On non-Unix targets (Windows) this is a no-op — POSIX mode bits
+/// don't apply, and Windows ACLs need a different code path that
+/// hasn't been written yet. The `node_dir` parameter is therefore
+/// unused on those targets.
+pub fn check_and_repair_permissions(#[cfg_attr(not(unix), allow(unused_variables))] node_dir: &Path) {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;

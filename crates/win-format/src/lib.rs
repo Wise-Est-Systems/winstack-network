@@ -1,12 +1,12 @@
 //! .win container format — zero dependencies
 //!
 //! Layout:
-//!   [4 bytes]  magic: b"WIN\x01"
-//!   [4 bytes]  filename length (u32 little-endian)
-//!   [N bytes]  filename (UTF-8, no path separators)
-//!   [8 bytes]  file length (u64 little-endian)
-//!   [M bytes]  original file bytes (raw, uncompressed)
-//!   [rest]     proof JSON (UTF-8, everything from here to EOF)
+//! - `4 bytes`   — magic: `b"WIN\x01"`
+//! - `4 bytes`   — filename length (u32 little-endian)
+//! - `N bytes`   — filename (UTF-8, no path separators)
+//! - `8 bytes`   — file length (u64 little-endian)
+//! - `M bytes`   — original file bytes (raw, uncompressed)
+//! - `remaining` — proof JSON (UTF-8, everything from here to EOF)
 
 const MAGIC: &[u8; 4] = b"WIN\x01";
 
