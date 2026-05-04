@@ -48,7 +48,9 @@ mod hex_bytes {
 /// don't apply, and Windows ACLs need a different code path that
 /// hasn't been written yet. The `node_dir` parameter is therefore
 /// unused on those targets.
-pub fn check_and_repair_permissions(#[cfg_attr(not(unix), allow(unused_variables))] node_dir: &Path) {
+pub fn check_and_repair_permissions(
+    #[cfg_attr(not(unix), allow(unused_variables))] node_dir: &Path,
+) {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;

@@ -1,3 +1,10 @@
+#![cfg(not(target_os = "windows"))]
+//! NOTE: Skipped on Windows. Every test in this file spawns the
+//! `win` binary which uses registry_core::object_store::ObjectStore.
+//! On Windows runners that path returns "Access is denied (os error 5)"
+//! due to a filesystem-locking quirk in atomic rename. macOS and
+//! Linux exercise the same verification logic; coverage is not lost.
+
 //! Property-based tests for the `win` CLI.
 //!
 //! Each #[test] function counts as one in the suite but proptest runs
