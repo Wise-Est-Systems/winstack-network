@@ -25,6 +25,16 @@ use assert_cmd::Command;
 use canon_types::{ProofBundle, VerificationStatus};
 use std::fs;
 
+/// Compute the .win path the CLI produces for a given source file.
+/// CLI behavior: `<full filename>.win` so `note.txt` → `note.txt.win`.
+fn win_of(p: &std::path::Path) -> std::path::PathBuf {
+    let name = p
+        .file_name()
+        .expect("source has a filename")
+        .to_string_lossy();
+    p.with_file_name(format!("{name}.win"))
+}
+
 fn cli(dir: &std::path::Path) -> Command {
     let mut cmd = Command::cargo_bin("win").expect("win binary builds");
     cmd.current_dir(dir);
@@ -70,7 +80,7 @@ fn cli_produced_win_is_browser_verified() {
         .arg("--private")
         .assert()
         .success();
-    let win_bytes = fs::read(src.with_extension("win")).unwrap();
+    let win_bytes = fs::read(win_of(&src)).unwrap();
 
     // 2. Receiver runs the browser verifier on those bytes.
     let status = browser_recognize_win(&win_bytes);
@@ -94,7 +104,7 @@ fn cli_produced_win_with_flipped_payload_byte_is_tampered() {
 
     // Flip a byte in the .win container at a position likely to land inside
     // the embedded file payload, not in the header or proof JSON.
-    let mut win_bytes = fs::read(src.with_extension("win")).unwrap();
+    let mut win_bytes = fs::read(win_of(&src)).unwrap();
     // The container layout is: magic(4) + filename_len(4) + filename + content_len(8)
     // + content + proof_len(8) + proof. The content section is somewhere in the
     // middle. Flip near the front of the file content (after the header).
@@ -133,7 +143,7 @@ fn cli_produced_then_truncated_is_invalid_in_browser() {
         .arg("--private")
         .assert()
         .success();
-    let win_bytes = fs::read(src.with_extension("win")).unwrap();
+    let win_bytes = fs::read(win_of(&src)).unwrap();
     // Cut to half — should fail to unpack cleanly.
     let truncated = &win_bytes[..win_bytes.len() / 2];
     let status = browser_recognize_win(truncated);
@@ -159,7 +169,7 @@ fn varied_sizes_all_browser_verify() {
             .arg("--private")
             .assert()
             .success();
-        let win_bytes = fs::read(src.with_extension("win")).unwrap();
+        let win_bytes = fs::read(win_of(&src)).unwrap();
         let status = browser_recognize_win(&win_bytes);
         assert_eq!(status, "Verified", "size {} byte(s) must Verify", size);
     }
@@ -212,7 +222,7 @@ fn url_flow_published_bundle_verifies_against_original() {
         .arg("--private")
         .assert()
         .success();
-    let win_path = src.with_extension("win");
+    let win_path = win_of(&src);
     cli(dir.path())
         .arg("publish")
         .arg(&win_path)
@@ -280,7 +290,7 @@ fn lineage_first_seal_is_standalone_or_origin() {
         .arg("--private")
         .assert()
         .success();
-    let win_bytes = fs::read(src.with_extension("win")).unwrap();
+    let win_bytes = fs::read(win_of(&src)).unwrap();
     let lineage = read_lineage(&win_bytes);
     assert!(
         lineage == "Standalone" || lineage == "Origin",
@@ -305,7 +315,7 @@ fn lineage_child_with_from_flag_is_successor() {
         .arg("--private")
         .assert()
         .success();
-    let v1_win = v1.with_extension("win");
+    let v1_win = win_of(&v1);
     assert!(v1_win.exists());
 
     // Second seal with --from points at the parent.
@@ -317,7 +327,7 @@ fn lineage_child_with_from_flag_is_successor() {
         .arg("--private")
         .assert()
         .success();
-    let v2_win_bytes = fs::read(v2.with_extension("win")).unwrap();
+    let v2_win_bytes = fs::read(win_of(&v2)).unwrap();
 
     let lineage = read_lineage(&v2_win_bytes);
     assert_eq!(
@@ -349,14 +359,14 @@ fn lineage_inspect_surfaces_chain() {
         .arg("seal")
         .arg(&v2)
         .arg("--from")
-        .arg(v1.with_extension("win"))
+        .arg(win_of(&v1))
         .arg("--private")
         .assert()
         .success();
     // inspect on the child must succeed and not panic.
     cli(dir.path())
         .arg("inspect")
-        .arg(v2.with_extension("win"))
+        .arg(win_of(&v2))
         .assert()
         .success();
 }
@@ -374,7 +384,7 @@ fn url_flow_published_bundle_with_wrong_file_returns_tampered() {
         .success();
     cli(dir.path())
         .arg("publish")
-        .arg(src.with_extension("win"))
+        .arg(win_of(&src))
         .arg("--to")
         .arg(dir.path().join("public"))
         .assert()

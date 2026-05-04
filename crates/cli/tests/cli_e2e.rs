@@ -41,6 +41,18 @@ fn scratch_with_file(name: &str, content: &[u8]) -> (TempDir, std::path::PathBuf
     (dir, path)
 }
 
+/// Compute the .win path the CLI produces for a given source file.
+/// CLI behavior: `<full filename>.win` so `note.txt` → `note.txt.win`.
+/// (Path::with_extension would replace the extension, producing the
+/// wrong path; the engine flagged the prior CLI/web mismatch.)
+fn win_of(p: &Path) -> std::path::PathBuf {
+    let name = p
+        .file_name()
+        .expect("source has a filename")
+        .to_string_lossy();
+    p.with_file_name(format!("{name}.win"))
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // SEAL
 // ─────────────────────────────────────────────────────────────────────
@@ -54,8 +66,8 @@ fn seal_produces_a_dot_win_next_to_the_source() {
         .arg("--private")
         .assert()
         .success()
-        .stdout(predicate::str::contains("note.win"));
-    assert!(src.with_extension("win").exists());
+        .stdout(predicate::str::contains("note.txt.win"));
+    assert!(win_of(&src).exists());
 }
 
 #[test]
@@ -113,8 +125,8 @@ fn seal_multiple_files_in_one_invocation() {
         .arg("--private")
         .assert()
         .success();
-    assert!(a.with_extension("win").exists(), "a.win missing");
-    assert!(b.with_extension("win").exists(), "b.win missing");
+    assert!(win_of(&a).exists(), "a.win missing");
+    assert!(win_of(&b).exists(), "b.win missing");
 }
 
 #[test]
@@ -126,7 +138,7 @@ fn seal_of_empty_file_succeeds() {
         .arg("--private")
         .assert()
         .success();
-    assert!(src.with_extension("win").exists());
+    assert!(win_of(&src).exists());
 }
 
 #[test]
@@ -159,7 +171,7 @@ fn verify_after_seal_returns_verified() {
         .success();
     win(dir.path())
         .arg("verify")
-        .arg(src.with_extension("win"))
+        .arg(win_of(&src))
         .assert()
         .success()
         .stdout(predicate::str::contains("Verified"));
@@ -191,7 +203,7 @@ fn verify_of_truncated_win_does_not_panic() {
         .arg("--private")
         .assert()
         .success();
-    let win_path = src.with_extension("win");
+    let win_path = win_of(&src);
     let bytes = fs::read(&win_path).unwrap();
     fs::write(&win_path, &bytes[..bytes.len() / 2]).unwrap();
     // Should exit nonzero and produce no panic backtrace.
@@ -238,7 +250,7 @@ fn verify_after_payload_byte_flip_does_not_return_verified() {
         .arg("--private")
         .assert()
         .success();
-    let win_path = src.with_extension("win");
+    let win_path = win_of(&src);
     let mut bytes = fs::read(&win_path).unwrap();
     // Flip a byte in the latter half (likely inside payload, not header).
     let i = bytes.len() * 3 / 4;
@@ -276,7 +288,7 @@ fn inspect_shows_file_size_and_fingerprint() {
         .success();
     win(dir.path())
         .arg("inspect")
-        .arg(src.with_extension("win"))
+        .arg(win_of(&src))
         .assert()
         .success()
         .stdout(predicate::str::contains("17 bytes"))
@@ -310,7 +322,7 @@ fn open_restores_byte_identical_original() {
     fs::remove_file(&src).unwrap();
     win(dir.path())
         .arg("open")
-        .arg(src.with_extension("win"))
+        .arg(win_of(&src))
         .assert()
         .success();
     let restored = fs::read(&src).unwrap();
@@ -329,7 +341,7 @@ fn open_a_tampered_win_without_force_refuses() {
         .arg("--private")
         .assert()
         .success();
-    let win_path = src.with_extension("win");
+    let win_path = win_of(&src);
     let mut bytes = fs::read(&win_path).unwrap();
     let i = bytes.len() * 3 / 4;
     bytes[i] ^= 0xFF;

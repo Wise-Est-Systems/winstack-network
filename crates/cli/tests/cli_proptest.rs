@@ -25,6 +25,16 @@ use std::fs;
 use std::path::Path;
 use tempfile::TempDir;
 
+/// Compute the .win path the CLI produces for a given source file.
+/// CLI behavior: `<full filename>.win` so `note.txt` → `note.txt.win`.
+fn win_of(p: &std::path::Path) -> std::path::PathBuf {
+    let name = p
+        .file_name()
+        .expect("source has a filename")
+        .to_string_lossy();
+    p.with_file_name(format!("{name}.win"))
+}
+
 fn win(dir: &Path) -> Command {
     let mut cmd = Command::cargo_bin("win").expect("win binary");
     cmd.current_dir(dir);
@@ -41,7 +51,7 @@ fn seal_and_get_win(dir: &TempDir, name: &str, content: &[u8]) -> std::path::Pat
         .arg("--private")
         .assert()
         .success();
-    src.with_extension("win")
+    win_of(&src)
 }
 
 // CI / dev runs use the modest `cases: 64` default.

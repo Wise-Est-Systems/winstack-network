@@ -41,6 +41,11 @@ enum Commands {
         /// Base URL for the share links. Defaults to `https://winstack.dev`.
         #[arg(long, default_value = "https://winstack.dev")]
         base_url: String,
+        /// Suppress writing the share URL(s) to the system clipboard.
+        /// Auto-enabled when stdout is not a TTY (CI, scripts) so the
+        /// command never clobbers a user's clipboard from a pipeline.
+        #[arg(long)]
+        no_clipboard: bool,
     },
     /// Verify a .win file
     Verify {
@@ -472,6 +477,7 @@ fn main() {
             private,
             publish_to,
             base_url,
+            no_clipboard,
         } => {
             if files.is_empty() {
                 eprintln!("ERROR: at least one file required");
@@ -504,15 +510,16 @@ fn main() {
                     .to_string_lossy()
                     .to_string();
                 let win_bytes = win_format::pack(&internal_filename, &artifact_bytes, &proof_json);
-                let stem = file
-                    .file_stem()
-                    .unwrap_or_else(|| std::ffi::OsStr::new("file"))
-                    .to_string_lossy();
+                // Append `.win` to the FULL filename so `invoice.txt` becomes
+                // `invoice.txt.win` — matching the browser/WASM behavior so
+                // verification works the same across surfaces. (Earlier the
+                // CLI used file_stem() which dropped the original extension
+                // and produced `invoice.win`, diverging from the web.)
                 let parent = file.parent().unwrap_or_else(|| std::path::Path::new("."));
-                let mut candidate = parent.join(format!("{stem}.win"));
+                let mut candidate = parent.join(format!("{internal_filename}.win"));
                 if candidate.exists() && candidate != *file {
                     let short = &bundle.object.payload_hash[..8];
-                    candidate = parent.join(format!("{stem}-{short}.win"));
+                    candidate = parent.join(format!("{internal_filename}-{short}.win"));
                 }
                 std::fs::write(&candidate, win_bytes).unwrap_or_else(|e| {
                     eprintln!("ERROR: could not write .win file: {}", e);
@@ -551,15 +558,21 @@ fn main() {
                 println!();
             }
 
-            // Copy share URL(s) to the clipboard.
-            let clipboard_text = share_urls.join("\n");
-            if copy_to_clipboard(&clipboard_text) {
-                let label = if share_urls.len() == 1 {
-                    "URL copied to clipboard".to_string()
-                } else {
-                    format!("{} URLs copied to clipboard", share_urls.len())
-                };
-                println!("  ({label})");
+            // Copy share URL(s) to the clipboard — interactive runs only.
+            // Skip when --no-clipboard is set OR when stdout is not a TTY
+            // (the user is piping output, in CI, or running from a script —
+            // any of those would silently clobber the system clipboard).
+            let stdout_is_tty = std::io::IsTerminal::is_terminal(&std::io::stdout());
+            if !no_clipboard && stdout_is_tty {
+                let clipboard_text = share_urls.join("\n");
+                if copy_to_clipboard(&clipboard_text) {
+                    let label = if share_urls.len() == 1 {
+                        "URL copied to clipboard".to_string()
+                    } else {
+                        format!("{} URLs copied to clipboard", share_urls.len())
+                    };
+                    println!("  ({label})");
+                }
             }
 
             // Helpful nudge if the user's seal can't actually resolve yet.

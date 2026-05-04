@@ -20,6 +20,16 @@ use registry_core::Registry;
 use std::sync::{Arc, Mutex};
 use tower::ServiceExt;
 
+/// Compute the .win path the CLI produces for a given source file.
+/// CLI behavior: `<full filename>.win` so `note.txt` → `note.txt.win`.
+fn win_of(p: &std::path::Path) -> std::path::PathBuf {
+    let name = p
+        .file_name()
+        .expect("source has a filename")
+        .to_string_lossy();
+    p.with_file_name(format!("{name}.win"))
+}
+
 /// Minimal router exposing /check without auth — `/check` itself
 /// requires no State or Bearer token, but `build_router` wires up
 /// the full surface so we provide an empty in-memory Registry.
@@ -187,7 +197,7 @@ fn cli_seal(content: &[u8]) -> Vec<u8> {
         .status()
         .expect("win seal");
     assert!(status.success(), "win seal must succeed for test fixture");
-    std::fs::read(src.with_extension("win")).expect("read .win")
+    std::fs::read(win_of(&src)).expect("read .win")
 }
 
 // Windows runners hit "Access is denied (os error 5)" when the test

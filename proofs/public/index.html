@@ -102,20 +102,24 @@ footer strong{color:var(--gold);font-weight:400}
 </section>
 
 <section>
-  <span class="eyebrow">The three results</span>
+  <span class="eyebrow">The four results</span>
   <h2>What the verifier <em>tells you.</em></h2>
-  <p>Drop a file on <a href="https://winstack.dev/" style="color:var(--gold);border-bottom:1px solid var(--gold-dim);text-decoration:none">the verifier</a> and you get exactly one of three answers. No maybes. No confidence scores. No fifth state.</p>
+  <p>Drop a file on <a href="https://winstack.dev/" style="color:var(--gold);border-bottom:1px solid var(--gold-dim);text-decoration:none">the verifier</a> and you get exactly one of four answers. No maybes. No confidence scores. No fifth state.</p>
   <div class="split">
-    <h3>Verified</h3>
-    <p>The file matches the proof inside this <code>.win</code> container. No byte changes detected. The signing key on the seal is shown alongside, with its trust class — local, named, or trusted — so you can decide what the signature means to you.</p>
+    <h3>&ldquo;Bytes match the seal.&rdquo;</h3>
+    <p>The file matches the proof inside this <code>.win</code> container. No byte changes detected. The signing key on the seal is shown alongside, with its trust class &mdash; local, named, or trusted &mdash; so you can decide what the signature means to you.</p>
   </div>
   <div class="split">
-    <h3>Tampered</h3>
+    <h3>&ldquo;A byte changed.&rdquo;</h3>
     <p>The file no longer matches the proof inside this <code>.win</code> container. At least one byte changed since sealing.</p>
   </div>
   <div class="split">
-    <h3>Invalid</h3>
-    <p>This <code>.win</code> container is not valid or cannot be verified — malformed structure, broken signature, or unparseable proof.</p>
+    <h3>&ldquo;The proof itself is broken.&rdquo;</h3>
+    <p>This <code>.win</code> container is not valid or cannot be verified &mdash; malformed structure, broken signature, or unparseable proof.</p>
+  </div>
+  <div class="split">
+    <h3>&ldquo;The container is unreadable.&rdquo;</h3>
+    <p>The <code>.win</code> bytes are truncated, corrupted, or missing the magic header. The seal could not be read at all &mdash; this is distinct from a forged or tampered seal.</p>
   </div>
 </section>
 

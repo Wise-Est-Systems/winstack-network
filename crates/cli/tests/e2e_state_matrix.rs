@@ -23,6 +23,16 @@ use std::fs;
 use std::path::Path;
 use tempfile::TempDir;
 
+/// Compute the .win path the CLI produces for a given source file.
+/// CLI behavior: `<full filename>.win` so `note.txt` → `note.txt.win`.
+fn win_of(p: &std::path::Path) -> std::path::PathBuf {
+    let name = p
+        .file_name()
+        .expect("source has a filename")
+        .to_string_lossy();
+    p.with_file_name(format!("{name}.win"))
+}
+
 // Pull in the trust module the same way the binary does.
 #[path = "../src/trust.rs"]
 mod trust;
@@ -73,7 +83,7 @@ fn seal(dir: &TempDir, name: &str, content: &[u8]) -> std::path::PathBuf {
         .arg("--private")
         .assert()
         .success();
-    src.with_extension("win")
+    win_of(&src)
 }
 
 /// Read raw bytes of a .win for surgical mutation.
