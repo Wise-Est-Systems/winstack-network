@@ -170,6 +170,30 @@ fn copy_to_clipboard(text: &str) -> bool {
 }
 
 fn resolve_node_dir() -> PathBuf {
+    // Explicit override (tests, multi-tenant deploys, sealed CI environments).
+    if let Ok(d) = std::env::var("WISE_NODE_DIR") {
+        return PathBuf::from(d);
+    }
+    // Per-user default: $HOME/.wise (or %USERPROFILE%\.wise on Windows).
+    // Falls back to a binary-relative path only if neither env var is set —
+    // typical for stand-alone scripted runs without a user shell.
+    let home = std::env::var("HOME")
+        .ok()
+        .or_else(|| std::env::var("USERPROFILE").ok());
+    if let Some(h) = home {
+        let home_node = PathBuf::from(h).join(".wise");
+        // Honor the legacy location if it already exists, so existing nodes
+        // keep working after this change. Otherwise prefer HOME.
+        let legacy = legacy_binary_relative_node_dir();
+        if !home_node.exists() && legacy.exists() {
+            return legacy;
+        }
+        return home_node;
+    }
+    legacy_binary_relative_node_dir()
+}
+
+fn legacy_binary_relative_node_dir() -> PathBuf {
     let bin_path = std::env::current_exe().unwrap();
     let project_root = bin_path
         .parent()

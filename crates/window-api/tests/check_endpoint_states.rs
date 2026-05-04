@@ -191,6 +191,7 @@ fn cli_seal(content: &[u8]) -> Vec<u8> {
         .arg(&src)
         .arg("--private")
         .env("HOME", dir.path())
+        .env("WISE_NODE_DIR", dir.path().join(".wise"))
         .current_dir(dir.path())
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())

@@ -41,6 +41,7 @@ fn cli(dir: &Path) -> Command {
     let mut cmd = Command::cargo_bin("win").expect("win binary");
     cmd.current_dir(dir);
     cmd.env("HOME", dir);
+    cmd.env("WISE_NODE_DIR", dir.join(".wise"));
     cmd
 }
 
