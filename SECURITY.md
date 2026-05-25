@@ -5,7 +5,7 @@
 Do **not** open a public issue. Use one of:
 
 - **GitHub Security Advisories** — preferred. Open a private advisory at
-  <https://github.com/Wise-Est-Systems/wise/security/advisories/new>.
+  <https://github.com/Wise-Est-Systems/winstack-network/security/advisories/new>.
 - **Email** — `security@truth.systems` (PGP-encrypted preferred; see below).
 
 Include enough information to reproduce the issue: version or commit SHA,

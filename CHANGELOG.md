@@ -85,6 +85,6 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - Core verification: SHA-256 hash check, Ed25519 signatures, identity and
   module validation, policy proofs.
 
-[Unreleased]: https://github.com/Wise-Est-Systems/wise/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/Wise-Est-Systems/wise/releases/tag/v0.2.0
-[0.1.0]: https://github.com/Wise-Est-Systems/wise/releases/tag/v0.1.0
+[Unreleased]: https://github.com/Wise-Est-Systems/winstack-network/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Wise-Est-Systems/winstack-network/releases/tag/v0.2.0
+[0.1.0]: https://github.com/Wise-Est-Systems/winstack-network/releases/tag/v0.1.0

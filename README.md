@@ -1,8 +1,8 @@
 # Wise
 
-[![CI](https://github.com/Wise-Est-Systems/wise/actions/workflows/ci.yml/badge.svg)](https://github.com/Wise-Est-Systems/wise/actions/workflows/ci.yml)
-[![WASM](https://github.com/Wise-Est-Systems/wise/actions/workflows/wasm.yml/badge.svg)](https://github.com/Wise-Est-Systems/wise/actions/workflows/wasm.yml)
-[![Audit](https://github.com/Wise-Est-Systems/wise/actions/workflows/audit.yml/badge.svg)](https://github.com/Wise-Est-Systems/wise/actions/workflows/audit.yml)
+[![CI](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/ci.yml/badge.svg)](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/ci.yml)
+[![WASM](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/wasm.yml/badge.svg)](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/wasm.yml)
+[![Audit](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/audit.yml/badge.svg)](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/audit.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![MSRV](https://img.shields.io/badge/MSRV-1.82-orange.svg)](rust-toolchain.toml)
 
@@ -263,7 +263,7 @@ CI runs these on Linux, macOS, and Windows.
 
 ## Downloads
 
-[Latest release](https://github.com/Wise-Est-Systems/wise/releases/latest)
+[Latest release](https://github.com/Wise-Est-Systems/winstack-network/releases/latest)
 
 - **Wise.dmg** — macOS Apple Silicon
 - **Wise.zip** — macOS Apple Silicon (alternative archive)
