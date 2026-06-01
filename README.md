@@ -68,7 +68,7 @@ See [`CHANGELOG.md`](CHANGELOG.md) for what changed in each release.
 ## How it works
 
 1. **Witness seals a file** — `win seal report.pdf` produces
-   `report.win`, a single portable container holding the file plus its
+   `report.pdf.win`, a single portable container holding the file plus its
    win tag.
 2. **The file travels** — email, Slack, Drive, S3. The win tag travels
    inside the container; nothing strips it.
@@ -101,10 +101,10 @@ does not prove.
 ```bash
 cargo build --release
 
-./target/release/win seal   report.pdf          # → report.win
-./target/release/win verify report.win          # Verified / Tampered / Invalid
-./target/release/win open   report.win          # → restores report.pdf
-./target/release/win publish report.win         # → public/v/<hash>.json
+./target/release/win seal   report.pdf          # → report.pdf.win
+./target/release/win verify report.pdf.win      # Verified / Tampered / Invalid
+./target/release/win open   report.pdf.win      # → restores report.pdf
+./target/release/win publish report.pdf.win     # → public/v/<hash>.json
 ```
 
 ---
