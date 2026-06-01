@@ -22,7 +22,7 @@ version = "0.2.0"
 edition = "2021"
 rust-version = "1.82"
 license = "MIT"
-repository = "https://github.com/Wise-Est-Systems/wise"
+repository = "https://github.com/Wise-Est-Systems/winstack-network"
 homepage = "https://truth.systems"
 readme = "README.md"
 

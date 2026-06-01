@@ -28,7 +28,7 @@ Three things follow from that:
 
 ```bash
 # Install the CLI (one-time)
-cargo install --git https://github.com/Wise-Est-Systems/wise wise
+cargo install --git https://github.com/Wise-Est-Systems/winstack-network wise
 
 # Initialize your witness identity. Keys live in ~/.wise/ on Linux/macOS,
 # %APPDATA%\Wise\ on Windows. Permissions are restricted to your user.
