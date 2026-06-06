@@ -9,14 +9,14 @@ A short tour for new contributors. Pair it with [`spec/grammar.md`](../spec/gram
 ┌──────────────────────────────────────────────────────────────────┐
 │                     Witness                Receiver              │
 │                       │                       │                  │
-│                  wise win           wise verify         │
+│                   win seal            win verify        │
 │                       │                       │                  │
 │                       ▼                       ▼                  │
 │                  ┌────────┐              ┌────────┐              │
 │                  │ .win   │ ─ travels ─▶ │ .win   │              │
 │                  └────────┘              └────────┘              │
 │                       │                       │                  │
-│                  wise publish        Drop into verifier      │
+│                   win publish       Drop into verifier      │
 │                       │                       │                  │
 │                       ▼                       ▼                  │
 │            public/v/<hash>.json    Browser / Desktop / WASM      │
@@ -77,7 +77,7 @@ desktop            ─→ Tauri 2 desktop frontend.
 | `win` CLI           | `crates/cli/src/bin/win.rs`        | seal / verify / inspect / open / publish / trust           |
 | Desktop app         | `desktop/`                         | Tauri 2 macOS app (Windows/Linux planned — see ROADMAP)    |
 | Desktop verifier UI | `window/verify.html`               | The desktop app's window — talks to the embedded HTTP API  |
-| URL verifier        | `public/index.html`                | Share-anywhere — `winstack.dev/v/<hash>` — uses WASM        |
+| URL verifier        | `public/index.html`                | Share-anywhere — `truth.systems/v/<hash>` — uses WASM       |
 | WASM verifier       | `crates/verifier-wasm`             | Canonical receiver-side library (see ADR 0005)             |
 | HTTP API            | `crates/window-api`                | `/check`, `/verify`, `/seal`, `/save-and-open`             |
 
@@ -158,7 +158,7 @@ See [ADR 0002](adr/0002-three-state-grammar.md) for the rationale.
 
 | Platform         | Status                                                |
 |------------------|-------------------------------------------------------|
-| macOS (arm64)    | Released — `Wise.dmg` builds shipping             |
+| macOS (arm64)    | Released — `WIN.dmg` builds shipping              |
 | macOS (x86_64)   | Builds pass CI; release artifacts not yet shipped     |
 | Linux (x86_64)   | Builds pass CI; release artifacts not yet shipped     |
 | Windows (x86_64) | Builds pass CI; release artifacts not yet shipped     |

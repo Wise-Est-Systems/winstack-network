@@ -11,6 +11,11 @@ serde_json = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 hex = { workspace = true }
+# Provides the CanonStable signature-determinism marker. The enums in this
+# crate ride inside Ed25519-signed payloads, so they declare themselves
+# canonicalization-stable here (orphan rules require the impl live with the
+# type). Acyclic: wise-crypto does not depend on canon-types.
+wise-crypto = { workspace = true }
 
 [lints]
 workspace = true

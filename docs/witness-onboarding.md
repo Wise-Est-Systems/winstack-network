@@ -2,7 +2,7 @@
 
 A short guide for anyone — a person, an organization, an AI lab — who
 wants to start naming files. Five minutes from "never heard of
-Wise" to "you've named your first file."
+WIN" to "you've named your first file."
 
 ## What being a witness means
 
@@ -28,7 +28,7 @@ Three things follow from that:
 
 ```bash
 # Install the CLI (one-time)
-cargo install --git https://github.com/Wise-Est-Systems/winstack-network wise
+cargo install --git https://github.com/Wise-Est-Systems/winstack-network win
 
 # Initialize your witness identity. Keys live in ~/.wise/ on Linux/macOS,
 # %APPDATA%\Wise\ on Windows. Permissions are restricted to your user.
@@ -69,7 +69,7 @@ identity.
 ## Name your first file
 
 ```bash
-wise win report.pdf
+win seal report.pdf
 
 # Output:
 #   Won           report.pdf
@@ -88,7 +88,7 @@ Sealing produces a `.win`. Publishing makes the URL `truth.systems/v/<hash>`
 return a name tag.
 
 ```bash
-wise publish report.win
+win publish report.win
 # Default: writes public/v/<hash>.json relative to the current dir.
 # Use --to <path> to write to a different deploy root.
 ```
@@ -159,7 +159,7 @@ Repeating, because it matters:
   hosting, not a database of users).
 - We can't recover anything for you.
 
-This is the contract. It makes Wise a tool you *use*, not a
+This is the contract. It makes WIN a tool you *use*, not a
 service you *depend on.* If we vanished tomorrow, every name tag
 ever made would still verify — because verification is just bytes
 plus the open WASM verifier and an open spec.
@@ -184,7 +184,7 @@ get a name tag identifying *which model* wrote the bytes.
 
 **Q: What if my witness gets sued?**
 Out of scope for the protocol. Witnesses speak for themselves.
-Wise does not represent or insure them.
+WIN does not represent or insure them.
 
 **Q: How do I tell people I'm a witness?**
 Publish your public key on a place they trust (your domain, your

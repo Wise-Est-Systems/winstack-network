@@ -450,11 +450,19 @@ pub struct VerifyResponse {
     pub failures: Vec<FailureInfo>,
     pub trust_class: String,
     pub object_class: String,
-    /// Receiver-side identity classification of the signing key.
-    /// One of "Local" | "Named" | "Official" | "Unknown".
-    /// "Official" is only set when the signer fingerprint matches a
-    /// non-revoked entry in the local trusted-keys list with
-    /// trust_class == Official. Default is conservative.
+    /// Identity classification of the signing key, as seen by THIS server.
+    ///
+    /// The full receiver-side vocabulary is "Local" | "Named" | "Official" |
+    /// "Unknown", but only the *receiver's own device* can compute Named /
+    /// Official / Unknown — those depend on the receiver's local trusted-keys
+    /// list, which a shared server does not (and must not) hold. So this API
+    /// always returns "Local": it proves byte integrity, never real-world
+    /// identity, and never silently elevates a key to "Official". The
+    /// receiver-side elevation lives in the browser/desktop verifier
+    /// (public/index.html, window/verify.html) and the CLI `inspect` command,
+    /// each against the local trust list. Do not change this to emit
+    /// "Official" here without a real receiver-side trust source — that would
+    /// be an identity overclaim.
     pub identity_class: String,
     /// Plain-English summary of what `identity_class` proves.
     /// Suitable for direct display next to the verdict.

@@ -1,6 +1,20 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+// Signature-determinism guard: the enums below ride inside Ed25519-signed
+// payloads. They serialize to a fixed string per variant (byte-stable across
+// machines), so they are declared canonicalization-stable. See
+// `wise_crypto::CanonStable` and the guard test in
+// `tests/signature_determinism_guard.rs` for why this matters.
+wise_crypto::impl_canon_stable!(
+    IdentityKind,
+    IdentityStatus,
+    ModuleKind,
+    TimeSource,
+    PolicyDecision,
+    ObjectClass,
+);
+
 // ---------------------------------------------------------------------------
 // Identity
 // ---------------------------------------------------------------------------

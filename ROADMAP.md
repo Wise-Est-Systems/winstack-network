@@ -9,7 +9,7 @@
 - [x] Full chain-walk verification
 - [x] Browser verifier (`public/index.html`, WASM-backed)
 - [x] WASM verifier crate (`verifier-wasm`)
-- [x] URL verifier (`truth.systems/v/<hash>` and `winstack.dev/v/<hash>`)
+- [x] URL verifier (`truth.systems/v/<hash>`)
 - [x] Plain-English explainer (`proofs.systems`)
 - [x] Desktop app (macOS Apple Silicon)
 - [x] Cross-platform CI (Linux + macOS + Windows)

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wise — Verify</title>
+<title>WIN — Verify</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -88,7 +88,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
 </style>
 </head>
 <body>
-<nav><div class="logo">Wise</div></nav>
+<nav><div class="logo">WIN</div></nav>
 <main>
 <div class="app">
   <div id="input-state">
@@ -124,7 +124,7 @@ footer{padding:8px 24px;display:flex;align-items:center;justify-content:center;b
   </div>
 </div>
 </main>
-<footer><span class="foot">Wise</span></footer>
+<footer><span class="foot">WIN · A Wise.Est system</span></footer>
 <script>
 // Block ALL native file-drop navigation — must be first, capture phase
 document.addEventListener('dragover', function(e) { e.preventDefault(); }, true);
@@ -235,11 +235,14 @@ function showErr(m) { $('r-verdict').style.display = 'none'; $('r-err').classLis
 // Trust class display: a Verified file with an Unknown signer is NOT
 // the same as a Verified file from an Official key. Never let one
 // read as the other.
+// Receiver-local labels assigned by this device, not protocol-enforced
+// identity. A verified .win proves bytes are unchanged since sealed by
+// SOME key — never who holds that key.
 var TRUST_LINE = {
-  Official: 'Signed by an official trusted key you recognize.',
-  Named:    'Signed by a named key you saved.',
-  Local:    "Signed by this device's local key.",
-  Unknown:  'Signed by a key not currently trusted or named.'
+  Official: "This key's fingerprint is on a list you keep locally. WIN does not verify the real-world identity behind it.",
+  Named:    'The key carries a self-declared display name. You still decide whether to trust it.',
+  Local:    "Signed by a key generated on this device.",
+  Unknown:  'Valid signature, but this key is not on any list you keep locally.'
 };
 function classifyTrust(d) {
   var c = d && d.identity_class;
@@ -260,9 +263,10 @@ function renderTrustBlock(d) {
     ? d.creator_key.slice(0,8) + '…' + d.creator_key.slice(56)
     : '';
   var verifiedUnknown = (d.result === 'Verified') && (cls === 'Unknown');
+  var TRUST_BADGE = { Official: 'On your list', Named: 'Named by signer', Local: 'Local key', Unknown: 'Unknown' };
   var html = ''
     + '<div class="trust-row">'
-    +   '<span class="trust-badge ' + cls.toLowerCase() + '">' + cls + '</span>'
+    +   '<span class="trust-badge ' + cls.toLowerCase() + '">' + (TRUST_BADGE[cls] || cls) + '</span>'
     +   '<span class="trust-label">' + line + '</span>'
     + '</div>';
   if (expl) html += '<div class="trust-explainer">' + expl + '</div>';

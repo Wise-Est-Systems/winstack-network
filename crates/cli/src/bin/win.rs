@@ -703,11 +703,26 @@ fn main() {
             let node_dir = resolve_node_dir();
             let key_trust = trust::TrustStore::load(&node_dir);
             let creator_key = &bundle.creator_identity.public_key_hex;
-            let trust_label = if key_trust.is_trusted(creator_key) {
-                key_trust
-                    .label_for(creator_key)
-                    .unwrap_or("Trusted key")
-                    .to_string()
+            // Surface must match what the trust module actually distinguishes.
+            // Three real states, in descending trust:
+            //   Official  — receiver explicitly elevated this fingerprint
+            //   Named     — receiver trusts the key (label optional)
+            //   Untrusted — not in the local trusted-keys list
+            // `is_official` was previously dead in the binary while the module
+            // documented an "Official" class; wiring it here makes the live
+            // surface honest about the class it claims to support. This is a
+            // local, receiver-side display decision only — it does not affect
+            // proof validity or any signed bytes.
+            let trust_label = if key_trust.is_official(creator_key) {
+                match key_trust.label_for(creator_key) {
+                    Some(label) => format!("Official — {}", label),
+                    None => "Official".to_string(),
+                }
+            } else if key_trust.is_trusted(creator_key) {
+                match key_trust.label_for(creator_key) {
+                    Some(label) => format!("Named — {}", label),
+                    None => "Named".to_string(),
+                }
             } else {
                 "Untrusted key".to_string()
             };

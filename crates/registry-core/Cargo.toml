@@ -24,6 +24,7 @@ thiserror = { workspace = true }
 tempfile = { workspace = true }
 base64 = { workspace = true }
 hex = { workspace = true }
+win-format = { workspace = true }
 
 [lints]
 workspace = true

@@ -1,0 +1,2 @@
+WIN golden regression vector v1.
+Sealed once. Must re-verify forever, offline, anywhere.

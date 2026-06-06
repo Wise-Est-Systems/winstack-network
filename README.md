@@ -1,4 +1,4 @@
-# Wise
+# WIN — Wise Independent Network
 
 [![CI](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/ci.yml/badge.svg)](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/ci.yml)
 [![WASM](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/wasm.yml/badge.svg)](https://github.com/Wise-Est-Systems/winstack-network/actions/workflows/wasm.yml)
@@ -6,14 +6,18 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![MSRV](https://img.shields.io/badge/MSRV-1.82-orange.svg)](rust-toolchain.toml)
 
-**Files that prove themselves.**
+**Files that prove themselves. Drop a file. Get the truth.**
 
-Wise gives every file a *win tag* — a small portable record that
-travels with it. The win tag says which signing key sealed the file,
-when, and whether the file is unchanged since. Receivers read it
-offline, without accounts, without trusting any server.
+WIN gives every file a *win tag* — a small portable record that
+travels with it. The win tag says when the file was sealed, the key
+that sealed it, and whether the file is unchanged since. Receivers
+read it offline, without accounts, without trusting any server.
 
-A file without a win tag is *untagged*: neutral, not dangerous.
+There is one public file type: `.win`. The proof and the change-map
+live inside it. A file without a win tag is *untagged*: neutral, not
+dangerous.
+
+WIN (Wise Independent Network) is a Wise.Est Systems product.
 
 ---
 
@@ -25,24 +29,31 @@ A `.win` proves:
 - the sealing key signed that proof
 - the proof travels with the file
 
-A `.win` does **not** automatically prove:
+A verified `.win` proves the file is **unchanged since it was sealed by
+some key.** It does **not** prove who that key belongs to. Specifically,
+a `.win` does **not** prove:
 - the real-world person, company, or organization behind the key
 - that the signer told the truth
 - that the file content is factually correct
 - that Wise.Est Systems signed it
 - that it was the first copy ever made
 
-That is why Wise separates **file integrity** from **human trust**.
+That is why WIN separates **file integrity** from **human trust**.
 The verifier returns one of three states for the file integrity check
-(Verified / Tampered / Invalid) and, alongside it, a **trust class**
-for the signing key:
+(Verified / Tampered / Invalid). Alongside it, the verifier surfaces a
+**receiver-local label** for the signing key — a hint about whether
+*you* have seen this key before, not a claim the protocol enforces:
 
-| Trust class | What it means |
-|-------------|---------------|
-| **Local Win** | Signed by a key generated on a device. Verification proves the file still matches what that key sealed; it does not prove a real-world identity behind the key. |
-| **Named Win** | Signed by a key with a self-declared display name. The receiver still decides whether to trust that name. |
-| **Official Win** | Signed by a key whose fingerprint matches a key the receiver added to their local trusted list (e.g. a published release key). |
-| **Unknown Win** | Valid signature, but the signer is not in any local trust list. |
+| Label | What it means |
+|-------|---------------|
+| **Local** | Signed by a key generated on a device. Verification proves the file still matches what that key sealed; it does not prove a real-world identity behind the key. |
+| **Unknown** | Valid signature, but the signer is not on any list you maintain locally. |
+
+These labels are decided by the receiver's own machine. The protocol
+does **not** cryptographically prove real-world identity, and there is
+no notion of an "official" identity enforced by `verify_object` today.
+That is the paid roadmap — official witnessing and attestation — not a
+claim we make now.
 
 There is no central Wise.Est Systems signing key in the protocol. Any
 `.win` is signed by whichever key sealed it — by default, a key
@@ -59,7 +70,7 @@ generated on the sealer's own device.
 | `.win` container v1  | Stable. Backwards-compatibility contract in CONTRIBUTING |
 | CLI                  | `win` — Linux / macOS / Windows                          |
 | Desktop app          | macOS Apple Silicon shipping; Linux / Windows in CI     |
-| URL verifier         | `winstack.dev/v/<hash>` — share-anywhere static page     |
+| URL verifier         | `truth.systems/v/<hash>` — share-anywhere static page    |
 
 See [`CHANGELOG.md`](CHANGELOG.md) for what changed in each release.
 
@@ -88,11 +99,11 @@ Three states. No fourth. See [ADR 0002](docs/adr/0002-three-state-grammar.md).
 
 ## Try it
 
-**Without installing anything** — open [winstack.dev](https://winstack.dev/),
+**Without installing anything** — open [truth.systems](https://truth.systems/),
 drop a `.win`. Verification runs locally in the browser; nothing is
-uploaded. *(Migrating to truth.systems; the verifier is the same code.)*
+uploaded.
 
-**Plain-English intro** — [proofs-one.vercel.app](https://proofs-one.vercel.app/)
+**Plain-English intro** — [proofs.systems](https://proofs.systems/)
 explains what a `.win` is, what the three results mean, and what it
 does not prove.
 
@@ -124,14 +135,19 @@ The win tag is safe to share publicly.
 
 ---
 
-## How Wise spreads
+## How WIN spreads
 
 The product is not the app. **The product is the win tag attached to
 the file.**
 
 - A witness seals a file. The file and win tag travel together.
-- Any receiver verifies using any Wise verifier. No coordination.
+- A receiver verifies using any WIN verifier. No coordination.
 - The app and CLI are creator tools and verifiers — not a platform.
+
+WIN is **designed** so a `.win` verifies anywhere, offline, with no
+account. (Cross-machine, cross-OS verification is the design intent; a
+frozen golden-artifact cross-OS test is on the roadmap, not yet a proven
+guarantee.)
 
 Three verification paths, same result:
 
@@ -145,7 +161,7 @@ Three verification paths, same result:
 
 ## Comparison
 
-|                              | Wise       | Traditional hash | Blockchain notary | Cloud signing |
+|                              | WIN            | Traditional hash | Blockchain notary | Cloud signing |
 |------------------------------|----------------|------------------|-------------------|---------------|
 | Works offline                | Yes            | Yes              | No                | No            |
 | Requires server trust        | No             | No               | Yes               | Yes           |
@@ -156,21 +172,22 @@ Three verification paths, same result:
 | Accounts required            | No             | No               | Yes               | Yes           |
 | External timestamps          | Optional       | No               | Built-in          | Built-in      |
 
-Wise is not a blockchain, a certificate authority, or a cloud
+WIN is not a blockchain, a certificate authority, or a cloud
 service. It is a local proof system. Win tags are self-contained;
 verification contacts nothing.
 
 ---
 
-## What Wise proves
+## What WIN proves
 
 - A specific file existed at a specific time (local device clock, or
   anchored via RFC 3161).
-- It has not been modified since.
-- It was signed by a specific key.
+- It has not been modified since it was sealed.
+- It was sealed by a specific key (the key — not a verified real-world
+  identity).
 - It may be part of a verifiable lineage.
 
-## What Wise does NOT prove
+## What WIN does NOT prove
 
 - That the file content is true or accurate.
 - The real-world identity of the witness (only key continuity).
@@ -265,8 +282,8 @@ CI runs these on Linux, macOS, and Windows.
 
 [Latest release](https://github.com/Wise-Est-Systems/winstack-network/releases/latest)
 
-- **Wise.dmg** — macOS Apple Silicon
-- **Wise.zip** — macOS Apple Silicon (alternative archive)
+- **WIN.dmg** — macOS Apple Silicon
+- **WIN.zip** — macOS Apple Silicon (alternative archive)
 
 > macOS may show a developer warning on first launch (the app is not yet
 > code-signed). Right-click → Open → Open to bypass.

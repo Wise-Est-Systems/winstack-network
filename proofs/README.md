@@ -34,10 +34,10 @@ proofs/
 A plain-English explainer aimed at someone arriving cold. Written to be understandable in under 15 seconds. Sections in order:
 
 1. **What is a .win file?** — one paragraph
-2. **What Wise is** — the protocol in plain English
+2. **What WIN is** — the protocol in plain English
 3. **The three results** — Verified, Tampered, Invalid
 4. **What a .win does not prove** — honest disclaimers
-5. **Try it** — link to the verifier at winstack.dev
+5. **Try it** — link to the verifier at truth.systems
 
 ## What this page is *not*
 

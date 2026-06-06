@@ -400,6 +400,7 @@ dependencies = [
  "serde",
  "serde_json",
  "uuid",
+ "wise-crypto",
 ]
 
 [[package]]
@@ -3524,6 +3525,7 @@ dependencies = [
  "time-core 0.1.0",
  "uuid",
  "verifier",
+ "win-format",
  "wise-crypto",
 ]
 
@@ -6035,6 +6037,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "thiserror 1.0.69",
+ "uuid",
 ]
 
 [[package]]

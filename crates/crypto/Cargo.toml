@@ -13,6 +13,9 @@ hex = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+# Used by the CanonStable determinism guard: Uuid is a signed-payload field
+# type, so it must be declared canonicalization-stable here.
+uuid = { workspace = true }
 
 [lints]
 workspace = true
