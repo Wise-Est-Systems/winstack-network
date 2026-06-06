@@ -182,9 +182,20 @@ macro_rules! canon_stable_primitives {
 // Determinism-safe scalars. NOTE the deliberate ABSENCE of f32/f64.
 canon_stable_primitives!(
     bool,
-    u8, u16, u32, u64, u128, usize,
-    i8, i16, i32, i64, i128, isize,
-    String, str,
+    u8,
+    u16,
+    u32,
+    u64,
+    u128,
+    usize,
+    i8,
+    i16,
+    i32,
+    i64,
+    i128,
+    isize,
+    String,
+    str,
     uuid::Uuid,
 );
 

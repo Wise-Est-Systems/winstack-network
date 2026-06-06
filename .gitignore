@@ -2,6 +2,8 @@
 .wise/
 *.proof.json
 *.win
+# Exception: the committed golden .win regression fixture must be tracked.
+!crates/registry-core/tests/vectors/golden/golden.win
 .vercel
 .DS_Store
 
