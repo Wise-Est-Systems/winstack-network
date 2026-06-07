@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WIN — what is a .win file?</title>
-<meta name="description" content="A .win file is a sealed, self-verifying record of an artifact at a moment in time. Anyone can check it offline, with no account, even if we disappear. Plain-English intro.">
+<title>WIN — the .win reference</title>
+<meta name="description" content="The complete builders' reference for WIN (Wise Independent Network): the .win format, what it proves and honestly does not, the trust model, the WiseOrder→WIN→WISEATA stack, verification, determinism, and roadmap. Offline, no account, survives us.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@ body{min-height:100vh;display:flex;flex-direction:column;position:relative}
 #particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
 .scrim-bg{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse 86% 78% at 50% 42%,rgba(0,0,0,0.86),rgba(0,0,0,0.64) 52%,rgba(0,0,0,0.34) 100%)}
 
-nav{position:relative;z-index:2;padding:20px 28px;display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--rule)}
+nav{position:sticky;top:0;z-index:20;padding:16px 28px;display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--rule);background:rgba(5,5,5,0.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .logo{font-size:20px;font-weight:200;color:var(--ink);letter-spacing:0.02em}
 .logo a{color:inherit;text-decoration:none}
 .logo .dot{color:var(--gold);font-weight:400}
@@ -33,41 +33,83 @@ nav{position:relative;z-index:2;padding:20px 28px;display:flex;align-items:basel
 .parent a:hover{border-color:var(--gold)}
 
 main{flex:1;position:relative;z-index:2;padding:0 28px}
-section{max-width:680px;margin:0 auto;padding:80px 0}
-section.hero{padding:120px 0 80px;text-align:center}
+section{max-width:720px;margin:0 auto;padding:72px 0;border-bottom:1px solid var(--rule)}
+section:last-of-type{border-bottom:none}
+section.hero{padding:108px 0 64px;text-align:center;border-bottom:none}
 
-h1{font-size:clamp(36px,6vw,64px);font-weight:200;color:var(--ink);line-height:1.05;letter-spacing:-0.01em;margin-bottom:28px;max-width:22ch;margin-left:auto;margin-right:auto}
-h1 .nb{white-space:nowrap}
+h1{font-size:clamp(34px,6vw,60px);font-weight:200;color:var(--ink);line-height:1.06;letter-spacing:-0.01em;margin-bottom:24px;max-width:18ch;margin-left:auto;margin-right:auto}
 h1 em{font-style:italic;color:var(--gold);font-weight:300}
-.lede{font-size:clamp(15px,2.2vw,18px);color:var(--ink-soft);line-height:1.6;max-width:48ch;margin:0 auto 44px}
-
-h2{font-size:clamp(22px,3.5vw,32px);font-weight:300;color:var(--ink);letter-spacing:-0.01em;margin-bottom:24px}
+.lede{font-size:clamp(15px,2.2vw,18px);color:var(--ink-soft);line-height:1.65;max-width:52ch;margin:0 auto 36px;text-shadow:0 1px 14px rgba(0,0,0,0.72)}
+h2{font-size:clamp(22px,3.5vw,30px);font-weight:300;color:var(--ink);letter-spacing:-0.01em;margin-bottom:22px}
 h2 em{font-style:italic;color:var(--gold);font-weight:300}
-p{color:var(--ink-soft);line-height:1.7;margin-bottom:16px}
+h3{font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:10px}
+p{color:var(--ink-soft);line-height:1.7;margin-bottom:16px;text-shadow:0 1px 14px rgba(0,0,0,0.7)}
 p:last-child{margin-bottom:0}
-
+code{font-family:var(--mono);font-size:0.88em;color:var(--gold);background:rgba(201,168,76,0.08);padding:1px 5px;border-radius:2px}
 .eyebrow{display:inline-block;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:14px}
 
+.toc{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;max-width:620px;margin:0 auto}
+.toc a{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold-dim);text-decoration:none;border-bottom:1px solid var(--subtle);padding-bottom:2px}
+.toc a:hover{color:var(--gold);border-color:var(--gold)}
+
 .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:8px}
-.cta{display:inline-block;padding:16px 28px;font-size:14px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;text-decoration:none;border:1px solid var(--gold);color:var(--gold);background:transparent;transition:all 0.2s;cursor:pointer;font-family:var(--sans)}
+.cta{display:inline-block;padding:15px 28px;font-size:13px;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;text-decoration:none;border:1px solid var(--gold);color:var(--gold);background:transparent;transition:all 0.2s;cursor:pointer;font-family:var(--sans)}
 .cta:hover{background:var(--gold);color:var(--bg)}
 .cta.primary{background:var(--gold);color:var(--bg)}
-.cta.primary:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.cta.primary:hover{background:var(--ink);border-color:var(--ink)}
 .cta-note{display:block;margin-top:14px;font-size:11px;color:var(--muted);letter-spacing:0.04em}
 
-.split{border:1px solid var(--rule);background:var(--surface);padding:32px;margin-top:32px}
-.split h3{font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:12px}
-.split p{font-size:14px;color:var(--ink-soft);margin-bottom:0}
-.split + .split{margin-top:16px}
+.split{border:1px solid var(--rule);background:var(--surface);padding:24px 26px;margin-top:16px}
+.split h3{color:var(--gold);margin-bottom:10px}
+.split p{font-size:14px;margin-bottom:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:620px){.grid2{grid-template-columns:1fr}}
+.box{border:1px solid var(--rule);background:var(--surface);padding:22px 24px}
+.box ul{list-style:none}
+.box li{font-size:13.5px;line-height:2;position:relative;padding-left:22px;color:var(--ink-soft)}
+.box.yes li::before{content:'\2713';position:absolute;left:0;color:var(--gold)}
+.box.no li{color:var(--muted)}
+.box.no li::before{content:'\00D7';position:absolute;left:0;color:var(--gold-dim)}
 
-.trust{margin-top:48px;padding:28px;border:1px solid var(--rule);background:var(--bg)}
-.trust h3{font-size:13px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink);font-weight:500;margin-bottom:14px}
-.trust p{font-size:13px;color:var(--ink-soft);line-height:1.7;margin-bottom:12px}
-.trust p:last-child{margin-bottom:0}
+.fmt{font-family:var(--mono);font-size:12px;line-height:1.85;color:var(--ink-soft);background:var(--surface);border:1px solid var(--rule);padding:18px 20px;overflow-x:auto;white-space:pre;margin:18px 0;text-shadow:none}
+.fmt .c{color:var(--gold)}
+.kv{display:flex;gap:14px;font-size:13.5px;line-height:1.6;padding:9px 0;border-bottom:1px solid var(--rule)}
+.kv:last-child{border-bottom:none}
+.kv .k{min-width:140px;color:var(--gold-dim);font-size:11px;letter-spacing:0.08em;text-transform:uppercase;padding-top:2px}
+.kv .v{color:var(--ink-soft)}
+.kv .v code{font-size:12px}
+
+.layer{border:1px solid var(--rule);background:var(--surface);padding:20px 24px;margin-top:14px}
+.layer .tag{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:6px}
+.layer .nm{font-size:18px;font-weight:300;color:var(--ink);margin-bottom:6px}
+.layer .nm b{color:var(--gold);font-weight:400}
+.layer p{font-size:13.5px;margin-bottom:0}
+
+.crates{columns:2;column-gap:30px;margin-top:16px}
+@media(max-width:560px){.crates{columns:1}}
+.crates li{list-style:none;font-size:13px;line-height:1.6;margin-bottom:12px;break-inside:avoid}
+.crates code{display:inline-block;margin-bottom:2px}
+.crates span{display:block;color:var(--muted);font-size:12px;line-height:1.5}
+
+.road h3{margin-top:24px}
+.road ul{list-style:none;margin-bottom:6px}
+.road li{font-size:13.5px;line-height:1.95;position:relative;padding-left:26px;color:var(--ink-soft)}
+.road li::before{position:absolute;left:0;font-size:9px;letter-spacing:0.05em;top:3px;font-weight:600}
+.road .now li::before{content:'LIVE';color:var(--gold)}
+.road .soon li::before{content:'SOON';color:var(--gold-dim)}
+.road .no li::before{content:'NO';color:var(--muted)}
+.road .now li{color:var(--ink-soft)}
+
+.fingerprint{font-family:var(--mono);font-size:10.5px;color:var(--muted);word-break:break-all;line-height:1.7}
+.fingerprint b{color:var(--gold-dim);font-weight:400}
+
+.trust{margin-top:30px;padding:26px;border:1px solid var(--rule);background:var(--bg)}
+.trust h3{color:var(--ink)}
+.trust p{font-size:13px;margin-bottom:12px}
 .trust a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-dim)}
 .trust a:hover{background:var(--gold);color:var(--bg)}
 
-footer{position:relative;z-index:2;padding:32px 28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;border-top:1px solid var(--rule);margin-top:80px}
+footer{position:relative;z-index:2;padding:36px 28px;text-align:center;color:var(--muted);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;border-top:1px solid var(--rule)}
 footer a{color:var(--gold-dim);text-decoration:none}
 footer a:hover{color:var(--gold)}
 footer strong{color:var(--gold);font-weight:400}
@@ -81,93 +123,233 @@ h1,h2,.lede,.eyebrow,section>p{text-shadow:0 1px 14px rgba(0,0,0,0.72)}
 
 <nav>
   <div class="logo"><a href="/">WIN</a></div>
-  <div class="parent">files that prove themselves</div>
+  <div class="parent">A <a href="https://wisest.systems">Wise<span class="dot">.</span>Est</a> system</div>
 </nav>
 
 <main>
 
 <section class="hero">
-  <span class="eyebrow">A plain-English intro</span>
-  <h1><span class="nb">What is a</span> <em><span class="nb">.win</span></em> <span class="nb">file?</span></h1>
-  <p class="lede">A <strong style="color:var(--ink)">.win</strong> is a sealed record of a file at a moment in time. Anyone can check it. They don't need an account. They don't need to trust us. They don't even need us to be around tomorrow.</p>
+  <span class="eyebrow">The builders' reference</span>
+  <h1>Everything about <em>.win</em></h1>
+  <p class="lede">A <strong style="color:var(--ink)">.win</strong> is a sealed record of a file at a moment in time. Anyone can check it — offline, no account, no trusting us, even if we're gone tomorrow. This page is the whole protocol: the format, what it proves, what it honestly does not, and how to build it yourself.</p>
   <div class="cta-row">
-    <a href="https://truth.systems/" class="cta primary">Try the verifier</a>
-    <a href="#what" class="cta">Read more</a>
+    <a href="https://truth.systems/" class="cta primary">Drop a file →</a>
+    <a href="https://github.com/Wise-Est-Systems" class="cta">Read the source</a>
   </div>
   <span class="cta-note">Free. Forever. No account on either side.</span>
+</section>
+
+<section class="hero" style="padding:24px 0 8px">
+  <nav class="toc">
+    <a href="#what">What WIN is</a>
+    <a href="#results">The three results</a>
+    <a href="#proves">What it proves</a>
+    <a href="#not">What it doesn't</a>
+    <a href="#trust">Trust &amp; identity</a>
+    <a href="#format">The .win format</a>
+    <a href="#stack">The stack</a>
+    <a href="#verify">Verification</a>
+    <a href="#determinism">Determinism</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="#source">Source</a>
+  </nav>
 </section>
 
 <section id="what">
   <span class="eyebrow">In one paragraph</span>
   <h2>What <em>WIN</em> is.</h2>
-  <p>WIN — the Wise Independent Network — is a small protocol. A signing key seals a file: the seal contains a fingerprint of the file's bytes plus the key's signature plus a timestamp. That seal travels with the file forever, inside one <code>.win</code> container. Anyone who later receives the file can drop it on the verifier and get a one-word answer about whether the file is the same bytes the key sealed.</p>
-  <p>The protocol proves the file is unchanged since it was sealed by some key. It does <em>not</em> verify the real-world person, company, or organization behind that key. The verifier may also show a receiver-local label — for example, whether the key's fingerprint is one you already added to your own list — but that label is a hint your own machine assigns, not an identity the protocol enforces.</p>
+  <p><strong style="color:var(--ink)">WIN — the Wise Independent Network.</strong> Three commitments in the name: <em style="font-style:normal;color:var(--ink)">Wise</em> (the family it belongs to), <em style="font-style:normal;color:var(--ink)">Independent</em> (no organization is needed to verify), <em style="font-style:normal;color:var(--ink)">Network</em> (no central operator runs it).</p>
+  <p>WIN gives every file a <em>win tag</em> — a small portable record that travels with it. The tag says when the file was sealed, which key sealed it, and whether the file is unchanged since. Receivers read it offline, with no account and no trusted server. There is one public file type: <code>.win</code>. The proof and the change-map live inside it.</p>
 </section>
 
-<section>
+<section id="results">
   <span class="eyebrow">The three results</span>
   <h2>What the verifier <em>tells you.</em></h2>
   <p>Drop a file on <a href="https://truth.systems/" style="color:var(--gold);border-bottom:1px solid var(--gold-dim);text-decoration:none">the verifier</a> and you get exactly one of three answers. No maybes. No confidence scores. No fourth state.</p>
   <div class="split">
-    <h3>&ldquo;Verified — bytes match the seal.&rdquo;</h3>
-    <p>The file matches the proof inside this <code>.win</code> container. No byte changes detected since it was sealed. The signing key is shown alongside, with a receiver-local label, so you can decide what the signature means to you.</p>
+    <h3>Verified — bytes match the seal</h3>
+    <p>The file matches the proof inside this <code>.win</code>. No byte has changed since it was sealed, and the signature is intact. The signing key is shown alongside, with a receiver-local label, so you decide what the signature means to you.</p>
   </div>
   <div class="split">
-    <h3>&ldquo;Tampered — a byte changed.&rdquo;</h3>
-    <p>The file no longer matches the proof inside this <code>.win</code> container. At least one byte changed since sealing.</p>
+    <h3>Tampered — a byte changed</h3>
+    <p>The file was sealed once and has been altered since. The file's SHA-256 no longer matches the hash recorded in the tag. The original is gone.</p>
   </div>
   <div class="split">
-    <h3>&ldquo;Invalid — the proof can't be verified.&rdquo;</h3>
-    <p>This <code>.win</code> container is not valid or cannot be verified &mdash; a broken signature, an unparseable proof, or bytes that are truncated, corrupted, or missing the magic header. The seal could not be trusted or read.</p>
+    <h3>Invalid — the proof can't be verified</h3>
+    <p>The <code>.win</code> is broken or unreadable — a signature that won't verify, an unparseable container, a missing magic header, a time chain that won't link, or a bad policy proof. The seal could not be trusted or read.</p>
   </div>
 </section>
 
-<section>
+<section id="proves">
+  <span class="eyebrow">The claim, exactly</span>
+  <h2>What a .win <em>proves.</em></h2>
+  <p>A verified <code>.win</code> establishes a layered claim — and not one inch more:</p>
+  <div class="box yes">
+    <ul>
+      <li><strong style="color:var(--ink);font-weight:400">Bytes</strong> — the file's bytes match the SHA-256 digest recorded in the proof</li>
+      <li><strong style="color:var(--ink);font-weight:400">Signing key</strong> — a specific Ed25519 keypair signed that proof</li>
+      <li><strong style="color:var(--ink);font-weight:400">Self-declared name</strong> — the signer may attach a display name; the verifier shows the claim, it does not validate it</li>
+      <li><strong style="color:var(--ink);font-weight:400">Lineage</strong> — the file may carry a verifiable version chain (parents, generations, key delegation)</li>
+      <li><strong style="color:var(--ink);font-weight:400">Anchored time</strong> — <em>if</em> RFC 3161 anchoring was used, an independent timestamp authority confirms the hash existed at that moment</li>
+    </ul>
+  </div>
+</section>
+
+<section id="not">
   <span class="eyebrow">Honesty first</span>
   <h2>What a .win <em>does not prove.</em></h2>
   <p>This is the part most provenance systems oversell. WIN will not.</p>
-  <div class="split">
-    <h3>It does not prove who is behind the key</h3>
-    <p>A signing key is a number. The key signed the file. Whether the human, company, or device behind that key is who they claim to be is a separate trust question — answered only if the receiver has explicitly added the key fingerprint to a local trusted list.</p>
+  <div class="box no">
+    <ul>
+      <li>Who is behind the key — the real-world person, company, or device</li>
+      <li>That the signer told the truth</li>
+      <li>That the file's content is factually correct</li>
+      <li>That Wise.Est Systems signed it — there is no central key</li>
+      <li>That it is the first copy ever made — only the first in this lineage</li>
+      <li>That a local timestamp is globally authoritative — only RFC 3161 anchors are independently verifiable</li>
+    </ul>
   </div>
-  <div class="split">
-    <h3>It does not prove the file is true</h3>
-    <p>A <code>.win</code> can seal a lie just as easily as a truth. All it proves is that the file existed at a moment, unchanged since, sealed by a specific key. It says nothing about whether the contents are correct.</p>
+  <p style="margin-top:18px;color:var(--gold);font-style:italic">That honesty is the point. A <code>.win</code> can seal a lie just as easily as a truth — all it proves is the bytes are unchanged since a specific key sealed them.</p>
+</section>
+
+<section id="trust">
+  <span class="eyebrow">Keys, not identities</span>
+  <h2>Trust &amp; <em>identity.</em></h2>
+  <p>Witnesses generate and hold their own <strong style="color:var(--ink)">Ed25519</strong> keys. Wise.Est Systems does not store keys, does not run accounts, and is not contacted during verification — the public key is read straight from the win tag. Whether the human behind a key is who they claim is a <em>separate</em> trust question.</p>
+  <div class="grid2">
+    <div class="split"><h3>Local</h3><p>Signed by a key generated on a device — often the receiver's own. Proves the file still matches what that key sealed; not a real-world identity.</p></div>
+    <div class="split"><h3>Unknown</h3><p>A valid signature from a key not on any list you keep locally. Real signature, unrecognized signer.</p></div>
   </div>
-  <div class="split">
-    <h3>It does not prove the author wrote it</h3>
-    <p>The signing key sealed bytes. The key did not see who wrote them. A sealed essay proves the essay existed at a time, not that the person who sealed it is the author.</p>
-  </div>
-  <div class="split">
-    <h3>It does not prove the file is original</h3>
-    <p>Someone could copy a file and seal the copy. The seal is real; the originality claim is not part of it.</p>
-  </div>
-  <div class="split">
-    <h3>Wise.Est Systems did not automatically sign your file</h3>
-    <p>Each <code>.win</code> is signed by whichever key sealed it — typically the local key generated on the user's own machine. There is no central Wise.Est Systems signing key in this protocol. If you ever see a result that says <em>"signed by Wise.Est Systems"</em>, it is true only because the signing key matched a fingerprint the receiver explicitly added to their trusted list.</p>
-  </div>
-  <div class="split">
-    <h3>It does not depend on us being alive</h3>
-    <p>If Wise.Est Systems disappears tomorrow, every <code>.win</code> ever sealed still verifies. The proof is mathematical, not organizational. This is the whole point.</p>
+  <p style="margin-top:16px">These labels are assigned by <em>your own machine</em>, never enforced by the protocol. Larger witnesses can use signed <strong style="color:var(--ink)">key-delegation chains</strong> to rotate keys without invalidating prior tags. There is no "Official" trust class today — verified real-world identity and official witnessing are the future paid layer, not a claim made now.</p>
+</section>
+
+<section id="format">
+  <span class="eyebrow">The wire format</span>
+  <h2>The <em>.win</em> container.</h2>
+  <p>One binary container. Magic header, the original file carried whole, then the proof as JSON to end-of-file:</p>
+  <div class="fmt"><span class="c">[4 bytes]</span>   magic: WIN\x01
+<span class="c">[4 bytes]</span>   filename length  (u32, little-endian)
+<span class="c">[N bytes]</span>   filename         (UTF-8, no path separators, ≤ 4096 bytes)
+<span class="c">[8 bytes]</span>   file length      (u64, little-endian)
+<span class="c">[M bytes]</span>   original file    (raw, uncompressed)
+<span class="c">[rest]</span>      proof JSON       (UTF-8, to EOF)</div>
+  <h3 style="margin-top:24px">Inside the seal</h3>
+  <div style="border:1px solid var(--rule);background:var(--surface);padding:6px 22px;margin-top:12px">
+    <div class="kv"><div class="k">payload_hash</div><div class="v">SHA-256 of the file — 64 hex chars. Always SHA-256.</div></div>
+    <div class="kv"><div class="k">object_signature</div><div class="v">Ed25519 over the canonical JSON payload — 128 hex chars. Keys are 32 bytes (64 hex).</div></div>
+    <div class="kv"><div class="k">creator_identity</div><div class="v">The signer's identity record (and any key-delegation chain).</div></div>
+    <div class="kv"><div class="k">time_event</div><div class="v"><code>Local</code> (device clock, default) or <code>External</code> — an RFC 3161 TSA token + anchored time.</div></div>
+    <div class="kv"><div class="k">policy_proof</div><div class="v">Signed proof that a policy evaluator permitted the seal (Permit/Deny).</div></div>
+    <div class="kv"><div class="k">lineage</div><div class="v"><code>parent_ids</code>, <code>lineage_id</code>, optional delegation — the verifiable version chain.</div></div>
+    <div class="kv"><div class="k">protocol</div><div class="v"><code>"V1"</code> — recorded in every proof. Future versions use a different string.</div></div>
   </div>
 </section>
 
-<section>
-  <span class="eyebrow">Try it</span>
-  <h2>Drop a file on <em>the verifier.</em></h2>
-  <p>The verifier is the public demo. It runs in your browser via WebAssembly. Files don't leave your device. There's no account, no signup, no contact with our servers in the verification path. (Verifying offline is the design intent; a frozen cross-OS verification test is on the roadmap.)</p>
-  <div class="cta-row">
-    <a href="https://truth.systems/" class="cta primary">Open the verifier</a>
+<section id="stack">
+  <span class="eyebrow">Where WIN sits</span>
+  <h2>The <em>stack.</em></h2>
+  <p>WIN is the implementation layer of a three-part system. A kernel defines the rules, WIN enforces them at the verification boundary, and a research layer explains exactly how files differ.</p>
+  <div class="layer">
+    <div class="tag">Kernel</div>
+    <div class="nm"><b>WiseOrder</b></div>
+    <p>Governs how cognition becomes consequence. Classifies claims into verification regimes and produces auditable epistemic artifacts. Not a model, not a network service — it defines the rules WIN enforces. <span style="color:var(--muted)">(wiseorder-protocol)</span></p>
   </div>
-  <span class="cta-note">If you don't have a .win to test, drop any file — it'll come back as Invalid (no tag).</span>
+  <div class="layer">
+    <div class="tag">Implementation</div>
+    <div class="nm"><b>WIN</b> — files that prove themselves</div>
+    <p>The <code>.win</code> format, the crypto layer, the native + WebAssembly verifiers, the desktop drop-target, and the CLI. The part you touch. <span style="color:var(--muted)">(winstack-network)</span></p>
+  </div>
+  <div class="layer">
+    <div class="tag">Research</div>
+    <div class="nm"><b>WISEATA</b> — how things differ</div>
+    <p>Deterministic structural analysis. A proof (<code>.wiseproof</code>) and an expansion (<code>.wiseexp</code>) that show not just <em>that</em> two files differ but <em>how</em> — byte, positional, frequency, transition, and structural layers. <span style="color:var(--muted)">(wop)</span></p>
+  </div>
+  <h3 style="margin-top:30px">WIN is built from 13 small Rust crates</h3>
+  <ul class="crates" style="margin-top:14px;padding:0">
+    <li><code>canon-types</code><span>The three-state grammar. Pure data.</span></li>
+    <li><code>crypto</code><span>SHA-256 + Ed25519 wrappers.</span></li>
+    <li><code>identity-core</code><span>Identity records, key delegation.</span></li>
+    <li><code>time-core</code><span>Time events + RFC 3161 validation.</span></li>
+    <li><code>policy-core</code><span>Policy decisions and proofs.</span></li>
+    <li><code>object-store</code><span>Content-addressed storage (SQLite).</span></li>
+    <li><code>graph-index</code><span>Lineage DAG over object IDs.</span></li>
+    <li><code>verifier</code><span>Pure-function 12-step verifier. No I/O.</span></li>
+    <li><code>verifier-wasm</code><span>Same logic, JS-callable, ≤ 1 MB.</span></li>
+    <li><code>win-format</code><span>The <code>.win</code> container. Zero deps.</span></li>
+    <li><code>registry-core</code><span>The 10-step sealing pipeline.</span></li>
+    <li><code>window-api</code><span>Axum HTTP API for the desktop app.</span></li>
+    <li><code>cli</code><span>The <code>win</code> binary.</span></li>
+  </ul>
+</section>
 
+<section id="verify">
+  <span class="eyebrow">How it checks</span>
+  <h2>Verification.</h2>
+  <p>The verifier is a pure function — same input, same result, no I/O, no network. It runs in your browser via WebAssembly: files never leave your device, there is no signup, and nothing contacts our servers in the verification path. The same <code>verifier</code> crate compiles to native and to the <code>.wasm</code> that powers every browser surface.</p>
+  <p>A verified <code>.win</code> passes a 12-step pipeline, in order: protocol version → payload hash → size bounds → object signature → creator identity → module validation → origin consistency → AI-generation record (if present) → import declaration (if present) → time event + chain linkage → policy proof → lineage links, cycle detection, RFC 3161 token, and proof-chain linkage. Any failure that isn't a clean hash-mismatch resolves to <code>Invalid</code>; a hash-mismatch resolves to <code>Tampered</code>.</p>
+</section>
+
+<section id="determinism">
+  <span class="eyebrow">Same answer, everywhere, forever</span>
+  <h2>Determinism &amp; <em>conformance.</em></h2>
+  <p>Same input, same verifier release, same accept/reject — on every host, in every conformant implementation. Non-determinism is treated as a defect, not a feature. Canonicalization is <strong style="color:var(--ink)">RFC 8785 JCS</strong>; the hash is always SHA-256.</p>
+  <p>WiseOrder Protocol v0.1.0 freezes its conformance suite by fingerprint. Any future v0.1.0 implementation must reproduce these byte-for-byte — a divergence is a non-conformance, not a version bump:</p>
+  <div class="split" style="margin-top:18px">
+    <div class="fingerprint">
+      <b>vectors</b> (33: 23 baseline + 10 adversarial)<br>sha256:6168d2075931baa98bba763f9cd537142554aae7b26f19e3e93a60de2ee5bb0f<br><br>
+      <b>manifests</b> (3 fixtures)<br>sha256:74eaaa62271f23172232bda43ba3340543e66c46ba1e2f5e6da18d3447a6ba29<br><br>
+      <b>corpus</b> (10 entries)<br>sha256:c95685bff48c15abc313c462908b05ac309250bc660c2d802ae51af5a8038b09
+    </div>
+  </div>
+  <p style="margin-top:18px">WIN itself ships under hard CI gates on Linux, macOS, and Windows: <code>cargo fmt</code>, <code>clippy -D warnings</code>, the full test suite (189 tests), and a WASM build held under a 1 MB compressed budget. Every verifier crate is <code>#![forbid(unsafe_code)]</code>; <code>win-format</code> has zero dependencies. MSRV: Rust 1.82.</p>
+</section>
+
+<section id="roadmap">
+  <span class="eyebrow">Honest about status</span>
+  <h2>Roadmap.</h2>
+  <div class="road">
+    <h3>Shipping today</h3>
+    <ul class="now">
+      <li>Three-state verifier, the <code>.win</code> format, proof chaining + key delegation</li>
+      <li>RFC 3161 anchored timestamps (opt-in)</li>
+      <li>Browser verifier + WASM crate, URL verifier (<code>truth.systems/v/&lt;hash&gt;</code>), this reference</li>
+      <li>Desktop app (macOS Apple Silicon), cross-platform CI, supply-chain audit</li>
+    </ul>
+    <h3>Planned</h3>
+    <ul class="soon">
+      <li>Windows / Linux release artifacts, macOS notarization</li>
+      <li>AI-output sealing — every model output sealed by the lab's key</li>
+      <li>Browser extensions, Slack/Discord/Gmail receivers, CMS embed, lineage view</li>
+      <li><strong style="color:var(--ink);font-weight:400">Official witnessing &amp; attestation</strong> — verified real-world identity. This is the paid layer, and the only thing a <code>.win</code> can't prove today.</li>
+      <li>Independent security audit; post-quantum migration path</li>
+    </ul>
+    <h3>Deliberately never</h3>
+    <ul class="no">
+      <li>Accounts or registration to verify or seal</li>
+      <li>Cloud storage or server-side verification</li>
+      <li>Blockchain</li>
+      <li>Payment to use the free core — verify and seal locally is free forever</li>
+    </ul>
+  </div>
+</section>
+
+<section id="source">
+  <span class="eyebrow">Build it yourself</span>
+  <h2>Source &amp; <em>specs.</em></h2>
+  <p>Built to be implementable from scratch by anyone, so it survives us. If Wise.Est Systems disappears tomorrow, every <code>.win</code> ever sealed still verifies — the proof is mathematical, not organizational. That is the whole point.</p>
+  <div style="border:1px solid var(--rule);background:var(--surface);padding:6px 22px;margin-top:16px">
+    <div class="kv"><div class="k">WIN — winstack-network</div><div class="v">The <code>.win</code> implementation: crates, WASM, desktop, CLI. <em style="font-style:normal;color:var(--muted)">MIT.</em></div></div>
+    <div class="kv"><div class="k">wiseorder-protocol</div><div class="v">The governance kernel: spec, audit chain, conformance vectors. <em style="font-style:normal;color:var(--muted)">Apache-2.0.</em></div></div>
+    <div class="kv"><div class="k">wop — WISEATA</div><div class="v">Structural-difference primitives and WiseDigest. <em style="font-style:normal;color:var(--muted)">Apache-2.0.</em></div></div>
+  </div>
   <div class="trust">
-    <h3>Honest notes about how this works</h3>
-    <p><strong style="color:var(--ink)">There is no central Wise.Est Systems witness key.</strong> The protocol does not have an "official Wise.Est key" that signs your file. Each <code>.win</code> is signed by a key generated on the device that sealed it. That key may be local-only, named, or one a receiver has explicitly added to a trusted list — but never assumed-trusted by default.</p>
-    <p><strong style="color:var(--ink)">Receiver-local labels, not enforced identity.</strong> Verification proves the file matches what the key sealed. Alongside, the verifier may show a label your own machine assigns — for example <em>Local</em> (a key generated on this device) or <em>Unknown</em> (a valid signature from a key not on any list you keep). These are hints about whether <em>you</em> have seen the key before. The protocol does not cryptographically prove the real-world identity behind any key.</p>
-    <p><strong style="color:var(--ink)">A hardware key is being designed.</strong> A small device that holds a non-extractable signing key — your own, not anyone else's. Each device's key is itself just another key; receivers decide whether to add its fingerprint to a list they keep. The protocol does not assume hardware keys are trusted by default.</p>
-    <p><strong style="color:var(--ink)">Official witnessing and attestation are the paid roadmap.</strong> Today a <code>.win</code> proves "unchanged since sealed by some key" — not who sealed it. Verified real-world identity does not exist in the protocol yet; that is what the paid tier is being built to add. The upfront honesty is the point.</p>
-    <p><strong style="color:var(--ink)">Read the protocol.</strong> Source and specs at <a href="https://github.com/Wise-Est-Systems/winstack-network">github.com/Wise-Est-Systems</a>. Built to be implementable from scratch by anyone — so it survives us.</p>
+    <h3>The honest summary</h3>
+    <p>A <code>.win</code> proves one thing precisely: <em>these bytes are unchanged since a specific key sealed them, at a recorded time.</em> It does not prove who holds that key, or that the contents are true. Verified identity is the paid roadmap — stated plainly, because overstating it would defeat the purpose.</p>
+    <p>Source and specs at <a href="https://github.com/Wise-Est-Systems">github.com/Wise-Est-Systems</a>.</p>
+  </div>
+  <div class="cta-row" style="margin-top:30px">
+    <a href="https://truth.systems/" class="cta primary">Drop a file →</a>
+    <a href="https://github.com/Wise-Est-Systems" class="cta">Read the source</a>
   </div>
 </section>
 
@@ -258,5 +440,7 @@ h1,h2,.lede,.eyebrow,section>p{text-shadow:0 1px 14px rgba(0,0,0,0.72)}
 })();
 </script>
 
+<!-- Vercel Web Analytics (cookieless, privacy-respecting) -->
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
