@@ -14,6 +14,7 @@ html{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15p
 body{min-height:100vh;display:flex;flex-direction:column;position:relative}
 ::selection{background:var(--purple);color:#fff}
 #particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.scrim-bg{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse 85% 75% at 50% 45%,rgba(0,0,0,0.82),rgba(0,0,0,0.60) 55%,rgba(0,0,0,0.32) 100%)}
 nav{position:relative;z-index:2;padding:20px 28px;display:flex;align-items:baseline;justify-content:space-between}
 .logo{font-size:20px;font-weight:200;color:var(--ink);letter-spacing:0.02em}.logo a{color:inherit;text-decoration:none}.logo .dot{color:var(--gold);font-weight:400}
 .parent{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)}.parent a{color:var(--gold-dim);text-decoration:none;border-bottom:1px solid var(--subtle);padding-bottom:1px}.parent a:hover{border-color:var(--gold)}
@@ -97,10 +98,12 @@ h1{font-size:clamp(32px,5vw,48px);font-weight:200;color:var(--ink);line-height:1
 .honesty .neg{color:var(--muted)}
 .hidden{display:none!important}
 footer{position:relative;z-index:2;padding:20px 28px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;border-top:1px solid var(--rule)}footer a{color:var(--gold-dim);text-decoration:none}footer a:hover{color:var(--gold)}footer strong{color:var(--gold);font-weight:400}
+h1,.sub{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
 </style>
 </head>
 <body>
 <canvas id="particles"></canvas>
+<div class="scrim-bg"></div>
 <nav><div class="logo"><a href="/">WIN</a></div><div class="parent">A <a href="https://wisest.systems">Wise<strong>.</strong>Est</a> system</div></nav>
 <main><div class="app">
   <div id="boot-state" class="processing" style="display:block"><div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div class="proc-label">Loading verifier</div></div>
@@ -142,7 +145,78 @@ footer{position:relative;z-index:2;padding:20px 28px;text-align:center;color:var
 </div></main>
 <footer><a href="https://wisest.systems">Wise<strong>.</strong>Est</a> &middot; <span style="color:var(--gold)">Verify a file</span> &middot; <a href="https://proofs.systems">What is a .win?</a> &middot; <a href="https://github.com/Wise-Est-Systems">Source</a><br>WIN · A Wise.Est system · Proof or nothing.</footer>
 <script>
-(function(){var c=document.getElementById('particles'),x=c.getContext('2d');var W,H,cols,drops,chars='0123456789ABCDEF';function resize(){c.width=W=window.innerWidth;c.height=H=window.innerHeight;cols=Math.floor(W/16);drops=[];for(var i=0;i<cols;i++)drops[i]=Math.random()*-50;}resize();window.addEventListener('resize',resize);function draw(){x.fillStyle='rgba(5,5,5,0.06)';x.fillRect(0,0,W,H);x.fillStyle='#c9a84c';x.font='12px monospace';for(var i=0;i<cols;i++){if(drops[i]>0){x.globalAlpha=0.05+Math.random()*0.06;x.fillText(chars[Math.floor(Math.random()*16)],i*16,drops[i]*16);}drops[i]+=0.12+Math.random()*0.12;if(drops[i]*16>H&&Math.random()>0.99)drops[i]=0;}x.globalAlpha=1;requestAnimationFrame(draw);}draw();})();
+(function(){
+  var cv=document.getElementById('particles');if(!cv)return;
+  var gl=cv.getContext('webgl',{antialias:true,powerPreference:'high-performance'})||cv.getContext('experimental-webgl');
+  if(!gl)return;
+  var DPR=Math.min(window.devicePixelRatio||1,1.25);
+  function size(){var w=window.innerWidth,h=window.innerHeight;cv.width=Math.floor(w*DPR);cv.height=Math.floor(h*DPR);cv.style.width=w+'px';cv.style.height=h+'px';gl.viewport(0,0,cv.width,cv.height);}
+  size();window.addEventListener('resize',size);
+  var VS='attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}';
+  var FS=[
+    'precision highp float;',
+    'uniform float uTime;uniform float uScroll;uniform vec2 uMouse;uniform vec2 uRes;',
+    'float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}',
+    'float noise(vec2 p){vec2 i=floor(p),f=fract(p);float a=hash(i),b=hash(i+vec2(1.,0.)),c=hash(i+vec2(0.,1.)),d=hash(i+vec2(1.,1.));vec2 u=f*f*(3.-2.*f);return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}',
+    'float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*noise(p);p=p*2.02;a*=.5;}return v;}',
+    'void main(){',
+    '  vec2 vUv=gl_FragCoord.xy/uRes;',
+    '  float asp=uRes.x/uRes.y;',
+    '  vec2 p=(vUv-0.5)*vec2(asp,1.0);',
+    '  float t=uTime*0.05*(1.0+uScroll*2.5);',
+    '  vec2 q=vec2(fbm(p*2.0+vec2(0.0,t)),fbm(p*2.0+vec2(5.2,-t)));',
+    '  vec2 r=p*3.0+q*1.7;',
+    '  float field=fbm(r+vec2(t*1.5,0.0));',
+    '  float ln=abs(fract(field*6.0)-0.5);',
+    '  float fil=smoothstep(0.07,0.0,ln);',
+    '  vec2 g=abs(fract(p*9.0+vec2(0.0,t*2.0))-0.5);',
+    '  float grid=smoothstep(0.47,0.5,max(g.x,g.y))*0.12;',
+    '  vec2 m=(uMouse-0.5)*vec2(asp,1.0);',
+    '  float md=length(p-m);',
+    '  float mg=exp(-md*md*5.0);',
+    '  fil+=mg*0.7*smoothstep(0.85,0.0,ln);',
+    '  float pulse=smoothstep(0.88,1.0,fract(field*3.0-t*4.0))*fil;',
+    '  vec3 gold=vec3(0.79,0.66,0.30);',
+    '  vec3 purp=vec3(0.49,0.23,0.93);',
+    '  vec3 col=vec3(0.0);',
+    '  col+=gold*fil*(0.85+mg*1.2);',
+    '  col+=purp*pulse*1.5;',
+    '  col+=gold*grid;',
+    '  col+=purp*mg*0.30;',
+    '  float vig=smoothstep(1.45,0.25,length((vUv-0.5)*2.0));',
+    '  col*=vig;',
+    '  col*=(1.0+uScroll*0.25);',
+    '  gl_FragColor=vec4(col,1.0);',
+    '}'
+  ].join('\n');
+  function sh(ty,src){var s=gl.createShader(ty);gl.shaderSource(s,src);gl.compileShader(s);return s;}
+  var prog=gl.createProgram();
+  gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));
+  gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));
+  gl.linkProgram(prog);
+  if(!gl.getProgramParameter(prog,gl.LINK_STATUS))return;
+  gl.useProgram(prog);
+  var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  var la=gl.getAttribLocation(prog,'a');gl.enableVertexAttribArray(la);gl.vertexAttribPointer(la,2,gl.FLOAT,false,0,0);
+  var uTime=gl.getUniformLocation(prog,'uTime'),uScroll=gl.getUniformLocation(prog,'uScroll'),uMouse=gl.getUniformLocation(prog,'uMouse'),uRes=gl.getUniformLocation(prog,'uRes');
+  var mx=0.5,my=0.5,smx=0.5,smy=0.5,scr=0,tgt=0,hidden=false,t0=null;
+  document.addEventListener('mousemove',function(e){mx=e.clientX/window.innerWidth;my=1.0-e.clientY/window.innerHeight;});
+  document.addEventListener('touchmove',function(e){if(e.touches&&e.touches[0]){mx=e.touches[0].clientX/window.innerWidth;my=1.0-e.touches[0].clientY/window.innerHeight;}},{passive:true});
+  function onScroll(){var d=document.body.scrollHeight-window.innerHeight;tgt=d>0?window.scrollY/d:0;}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  document.addEventListener('visibilitychange',function(){hidden=document.hidden;});
+  function frame(ts){
+    requestAnimationFrame(frame);
+    if(hidden)return;
+    if(t0===null)t0=ts;
+    var t=(ts-t0)*0.001;
+    scr+=(tgt-scr)*0.05;smx+=(mx-smx)*0.06;smy+=(my-smy)*0.06;
+    gl.uniform1f(uTime,t);gl.uniform1f(uScroll,scr);gl.uniform2f(uMouse,smx,smy);gl.uniform2f(uRes,cv.width,cv.height);
+    gl.drawArrays(gl.TRIANGLES,0,3);
+  }
+  requestAnimationFrame(frame);
+})();
 </script>
 <script type="module">
 import init, { recognize_win, recognize_bundle, seal_file } from '/wasm/verifier_wasm.js';
