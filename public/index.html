@@ -3,7 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WIN — verify a .win file</title>
+<title>Truth.Systems — Verify, or it's a lie.</title>
+<meta name="description" content="Drop any file and get proof it hasn't changed since it was sealed. Verification runs in your browser — nothing is uploaded. Proof that doesn't ask to be believed.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#050505">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://truth.systems/">
+<!-- Icons / PWA -->
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Truth.Systems">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<!-- Open Graph (Facebook, LinkedIn, Discord, Slack, Telegram, iMessage) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Truth.Systems">
+<meta property="og:title" content="Verify, or it's a lie.">
+<meta property="og:description" content="Drop any file and get proof it hasn't changed since it was sealed. Runs in your browser — nothing is uploaded.">
+<meta property="og:url" content="https://truth.systems/">
+<meta property="og:image" content="https://truth.systems/og.jpg">
+<meta property="og:image:secure_url" content="https://truth.systems/og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The WE seal — NON ROGAT FIDEM, WISE·EST SYSTEMS — beside the words: VERIFY, OR IT'S A LIE.">
+<meta property="og:locale" content="en_US">
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@WiseEstSystems">
+<meta name="twitter:creator" content="@WiseEstSystems">
+<meta name="twitter:title" content="Verify, or it's a lie.">
+<meta name="twitter:description" content="Drop any file and get proof it hasn't changed since it was sealed. Runs in your browser — nothing is uploaded.">
+<meta name="twitter:image" content="https://truth.systems/og.jpg">
+<meta name="twitter:image:alt" content="The WE seal beside the words VERIFY, OR IT'S A LIE.">
+<!-- Structured data -->
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://truth.systems/#org","name":"Wise.Est Systems","url":"https://wisest.systems","logo":"https://truth.systems/icon-512.png","slogan":"NON ROGAT FIDEM","sameAs":["https://x.com/WiseEstSystems","https://github.com/Wise-Est-Systems"]},{"@type":"WebSite","@id":"https://truth.systems/#site","url":"https://truth.systems/","name":"Truth.Systems","description":"Verify, or it's a lie. In-browser proof that a file hasn't changed since it was sealed.","publisher":{"@id":"https://truth.systems/#org"}},{"@type":"WebApplication","name":"Truth.Systems Verifier","url":"https://truth.systems/","applicationCategory":"SecurityApplication","operatingSystem":"Any (web browser)","browserRequirements":"Requires WebAssembly","description":"Drop a .win file to check it is unchanged since it was sealed, or drop any file to seal it into one. Verification runs locally in the browser; nothing is uploaded.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"publisher":{"@id":"https://truth.systems/#org"}}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
@@ -96,6 +133,19 @@ h1{font-size:clamp(32px,5vw,48px);font-weight:200;color:var(--ink);line-height:1
 .honesty h3{font-size:10px;font-weight:400;color:var(--gold-dim);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:6px}
 .honesty p{font-size:11px;color:var(--ink-soft);line-height:1.65;margin-bottom:10px}.honesty p:last-child{margin-bottom:0}
 .honesty .neg{color:var(--muted)}
+.demo-hero{margin-bottom:22px}
+.demo-card{border:1px solid var(--gold-dim);background:var(--surface);padding:18px 20px;text-align:left;transition:border-color .35s}
+.demo-card.tampered{border-color:#5a3030}
+.demo-doc{font-size:12px;color:var(--ink-soft);letter-spacing:.01em}.demo-doc b{color:var(--ink);font-weight:500;font-family:var(--mono)}
+.demo-verdict{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;font-weight:300;letter-spacing:.02em;color:var(--gold)}
+.demo-card.tampered .demo-verdict{color:var(--red)}
+.demo-verdict svg{width:17px;height:17px;flex-shrink:0}
+.demo-hash{font-size:9px;color:var(--muted);margin-top:8px;letter-spacing:.04em;word-break:break-all}
+.demo-btn{display:inline-block;margin-top:14px;background:none;border:1px solid var(--subtle);color:var(--ink-soft);font-family:var(--sans);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:11px 22px;cursor:pointer;transition:all .2s}
+.demo-btn:hover{border-color:var(--gold);color:var(--gold)}
+.demo-btn:disabled{opacity:.45;cursor:default;border-color:var(--subtle);color:var(--muted)}
+.demo-caption{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:11px}
+.demo-handoff{font-size:12px;color:var(--ink-soft);margin-top:20px;line-height:1.6}.demo-handoff em{color:var(--gold);font-style:italic}
 .hidden{display:none!important}
 footer{position:relative;z-index:2;padding:20px 28px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;border-top:1px solid var(--rule)}footer a{color:var(--gold-dim);text-decoration:none}footer a:hover{color:var(--gold)}footer strong{color:var(--gold);font-weight:400}
 h1,.sub{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
@@ -109,8 +159,18 @@ h1,.sub{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
   <div id="boot-state" class="processing" style="display:block"><div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div class="proc-label">Loading verifier</div></div>
   <div id="fatal-state" class="fatal"><div class="fatal-status" id="fatal-title">No win tag here</div><div class="fatal-explain" id="fatal-msg">This URL doesn't point to anything WIN can verify.</div></div>
   <div id="input-state" class="hidden">
-    <h1 id="title">Drop a file. Get the <em>truth</em>.</h1>
-    <p class="sub" id="subtitle">Drop a <span class="mono">.win</span> and we tell you if it's unchanged since it was sealed. Drop anything else and we seal it into a <span class="mono">.win</span>.</p>
+    <h1 id="title">Verify, or <em>it's a lie.</em></h1>
+    <p class="sub" id="subtitle">Every file deserves proof. Drop a <span class="mono">.win</span> to check it's unchanged since it was sealed — or drop anything to seal it into one.</p>
+    <div id="demo-hero" class="demo-hero hidden">
+      <div class="demo-card" id="demo-card">
+        <div class="demo-doc">Sample invoice &mdash; total <b id="demo-total">$1,000</b></div>
+        <div class="demo-verdict" id="demo-verdict"></div>
+        <div class="demo-hash mono" id="demo-hash"></div>
+      </div>
+      <button class="demo-btn" id="demo-btn">Change one character &rarr;</button>
+      <div class="demo-caption">Checked in your browser. Nothing uploaded.</div>
+      <div class="demo-handoff hidden" id="demo-handoff">That is the whole idea &mdash; one character, and the seal breaks. Now do it with <em>your</em> file &darr;</div>
+    </div>
     <div id="preview-block" class="preview hidden">
       <div class="preview-row"><div class="preview-k">Witness</div><div class="preview-v" id="pv-witness">—</div></div>
       <div class="preview-row"><div class="preview-k">Created</div><div class="preview-v" id="pv-born">—</div></div>
@@ -143,7 +203,7 @@ h1,.sub{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
   </div>
   <div id="batch-state" class="batch"><div class="batch-head"><div class="batch-title" id="batch-title">Verifying</div><div class="batch-progress" id="batch-progress">0 of 0</div><div class="batch-counts" id="batch-counts"></div></div><div class="batch-list" id="batch-list"></div><button class="again" id="batch-again">Drop another batch</button></div>
 </div></main>
-<footer><a href="https://wisest.systems">Wise<strong>.</strong>Est</a> &middot; <span style="color:var(--gold)">Verify a file</span> &middot; <a href="https://proofs.systems">What is a .win?</a> &middot; <a href="https://github.com/Wise-Est-Systems">Source</a><br>WIN · A Wise.Est system · Proof or nothing.</footer>
+<footer><a href="https://wisest.systems">Wise<strong>.</strong>Est</a> &middot; <span style="color:var(--gold)">Verify a file</span> &middot; <a href="https://proofs.systems">What is a .win?</a> &middot; <a href="https://github.com/Wise-Est-Systems">Source</a> &middot; <a href="https://x.com/WiseEstSystems" rel="me" target="_blank">@WiseEstSystems</a><br>WIN · A Wise.Est system · Proof or nothing.</footer>
 <script>
 (function(){
   var cv=document.getElementById('particles');if(!cv)return;
@@ -230,7 +290,25 @@ let mode='homepage';let fetchedBundleJson=null;let fetchedBundleObj=null;let rWi
 async function boot(){try{await init();rWin=recognize_win;rBundle=recognize_bundle;}catch(e){fatal('Verifier unavailable','WebAssembly verifier could not load.');return;}const hash=urlHash();if(hash){mode='urlflow';await initUrlFlow(hash);}else{mode='homepage';initHomepageFlow();}}
 async function initUrlFlow(hash){let res;try{res=await fetch(`/v/${hash}.json`,{headers:{'Accept':'application/json'}});}catch(e){fatal('Cannot reach','Network failed.');return;}if(res.status===404){fatal('No win tag here','No file sealed at this hash.');return;}if(!res.ok){fatal('Cannot read',`Server returned ${res.status}.`);return;}let bundle;try{fetchedBundleJson=await res.text();bundle=JSON.parse(fetchedBundleJson);}catch(e){fatal('Invalid','Not valid.');return;}if(!bundle.object||!bundle.object.payload_hash){fatal('Invalid','Incomplete.');return;}if(bundle.object.payload_hash.toLowerCase()!==hash){fatal('Invalid',"Hash mismatch.");return;}fetchedBundleObj=bundle;renderPreview(bundle);$('title').innerHTML='Is this file <em>verified</em>?';$('subtitle').textContent='Drop the file you received.';$('drop-label').textContent='Drop the file here';$('preview-block').classList.remove('hidden');show('input-state');}
 function renderPreview(b){const c=b.creator_identity||{};const k=c.public_key_hex||'';$('pv-witness').textContent=k?`${k.slice(0,8)}…${k.slice(56)}`:'unknown';$('pv-born').textContent=b.object.origin?.created_at||'unknown';$('pv-time').textContent=b.object.time_event?.time_source==='External'?'Anchored (RFC 3161)':'Local creation date only';$('pv-hash').textContent=b.object.payload_hash;}
-function initHomepageFlow(){$('title').innerHTML='Drop a file. Get the <em>truth</em>.';$('subtitle').textContent="Drop a .win and we tell you if it's unchanged since it was sealed. Drop anything else and we seal it into a .win.";$('preview-block').classList.add('hidden');$('drop-label').textContent='Drop a file';$('drop-hint').textContent='or click to browse';$('file-input').setAttribute('multiple','');show('input-state');}
+// ── Pre-loaded hero demo: real seal -> real one-byte tamper -> real re-verify.
+// Uses the SAME wasm (seal_file / recognize_win) the product uses. Nothing is
+// faked: the VERIFIED line is what the verifier returns on the sealed bytes; the
+// TAMPERED line is what it returns after one payload byte is flipped ($1,000 ->
+// $9,000). If the verifier does not return Verified on the fresh seal, the hero
+// stays hidden and the normal dropzone is shown — never a fabricated green.
+const DEMO_SAMPLE='WISE.EST SAMPLE INVOICE\n----------------------------------------\nBill to:     Acme Holdings LLC\nInvoice #:   WX-4471\nIssued:      2026-06-24\n\n  Consulting services (June) ......... $1,000\n----------------------------------------\nInvoice total: $1,000\n';
+const _enc=new TextEncoder();
+let _demoWin=null,_demoTampered=false;
+function _seq(hay,needle,start){for(let i=start;i<=hay.length-needle.length;i++){let ok=true;for(let j=0;j<needle.length;j++){if(hay[i+j]!==needle[j]){ok=false;break;}}if(ok)return i;}return -1;}
+function _lastSeq(hay,needle){let r=-1,i=0,n;while((n=_seq(hay,needle,i))!==-1){r=n;i=n+1;}return r;}
+let _sealedHash='';
+function _fmtHash(h){return String(h||'').slice(0,20)+'…';}
+function _u32le(b,o){return (b[o]|b[o+1]<<8|b[o+2]<<16|b[o+3]*0x1000000);}
+function _payload(b){const nameLen=_u32le(b,4);const start=8+nameLen+8;const len=_u32le(b,8+nameLen);return b.slice(start,start+len);}
+function _demoVerdict(status){const card=$('demo-card'),v=$('demo-verdict');if(status==='Verified'){card.className='demo-card';v.innerHTML=iconSvg('Verified')+'<span>VERIFIED — unchanged since it was sealed</span>';}else{card.className='demo-card tampered';v.innerHTML=iconSvg('Tampered')+'<span>TAMPERED — the seal broke</span>';}}
+function runHeroDemo(){try{const sr=seal_file('invoice.txt',_enc.encode(DEMO_SAMPLE));if((sr.verification_status||'')!=='Verified')return;_demoWin=Uint8Array.from(sr.win_bytes);const chk=rWin(_demoWin);if(chk.status!=='Verified')return;_sealedHash=chk.payload_hash||'';_demoVerdict('Verified');$('demo-hash').textContent='fingerprint sha256 '+_fmtHash(_sealedHash);$('demo-hero').classList.remove('hidden');}catch(e){/* hero stays hidden; dropzone still works */}}
+$('demo-btn').addEventListener('click',async()=>{if(!_demoWin||_demoTampered)return;const at=_lastSeq(_demoWin,_enc.encode('$1,000'));if(at<0)return;_demoTampered=true;const mutated=_demoWin.slice();mutated[at+1]=0x39;/* '1'(0x31) -> '9'(0x39) */$('demo-total').textContent='$9,000';const r=rWin(mutated);_demoVerdict(r.status);let nowHash='';try{nowHash=await sha256hex(_payload(mutated));}catch(_){}$('demo-hash').innerHTML='sealed '+_fmtHash(_sealedHash)+' &nbsp;&ne;&nbsp; now '+_fmtHash(nowHash);const b=$('demo-btn');b.disabled=true;b.textContent='One byte changed — the seal broke';$('demo-handoff').classList.remove('hidden');});
+function initHomepageFlow(){$('title').innerHTML="Verify, or <em>it's a lie.</em>";$('subtitle').innerHTML='Every file deserves proof. Drop a <span class="mono">.win</span> to check it\'s unchanged since it was sealed — or drop anything to seal it into one.';$('preview-block').classList.add('hidden');$('drop-label').textContent='Drop a file';$('drop-hint').textContent='or click to browse';$('file-input').setAttribute('multiple','');show('input-state');runHeroDemo();}
 function iconSvg(s){if(s==='Verified'||s==='Won')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 7"/></svg>';if(s==='Tampered')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';if(s==='Invalid')return'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 9a3 3 0 1 1 5.5 1.6c-.5.7-1.2 1-1.7 1.5-.4.5-.6 1-.6 1.7"/><circle cx="12.2" cy="17.5" r="0.9" fill="currentColor"/></svg>';return'';}
 function isWin(b){return b.length>=4&&b[0]===0x57&&b[1]===0x49&&b[2]===0x4E&&b[3]===0x01;}
 async function sha256hex(buf){const h=await crypto.subtle.digest('SHA-256',buf);return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('');}
