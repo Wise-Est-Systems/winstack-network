@@ -22,9 +22,9 @@ p384 = { workspace = true }
 p256 = { workspace = true }
 ecdsa = { workspace = true }
 sha2 = { workspace = true }
-der = "0.7"
-spki = "0.7"
-const-oid = "0.9"
+der = "0.8"
+spki = "0.8"
+const-oid = "0.10"
 
 [lints]
 workspace = true
