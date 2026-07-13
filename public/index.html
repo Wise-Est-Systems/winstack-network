@@ -129,6 +129,7 @@ h1{font-size:clamp(32px,5vw,48px);font-weight:200;color:var(--ink);line-height:1
 .seal-cta{display:inline-block;background:var(--gold);color:var(--bg);font-family:var(--sans);font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;border:none;padding:12px 24px;cursor:pointer;text-decoration:none;transition:all 0.18s}
 .seal-cta:hover{background:var(--ink)}
 .seal-meta{font-size:9px;color:var(--muted);margin-top:18px;letter-spacing:0.1em;text-transform:uppercase}
+.seal-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
 .honesty{border:1px solid var(--rule);background:var(--bg);padding:18px 22px;margin-top:14px;text-align:left}
 .honesty h3{font-size:10px;font-weight:400;color:var(--gold-dim);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:6px}
 .honesty p{font-size:11px;color:var(--ink-soft);line-height:1.65;margin-bottom:10px}.honesty p:last-child{margin-bottom:0}
@@ -147,6 +148,21 @@ h1{font-size:clamp(32px,5vw,48px);font-weight:200;color:var(--ink);line-height:1
 .demo-caption{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:11px}
 .demo-handoff{font-size:12px;color:var(--ink-soft);margin-top:20px;line-height:1.6}.demo-handoff em{color:var(--gold);font-style:italic}
 .hidden{display:none!important}
+.result-cta{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.again.ghost{background:transparent;border:1px solid var(--rule);color:var(--ink-soft)}
+.again.ghost:hover{border-color:var(--gold-dim);color:var(--ink)}
+.share{margin-top:24px;padding-top:22px;border-top:1px solid var(--rule)}
+.share-head{font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;text-align:center}
+.share-card-wrap{position:relative;width:100%;max-width:520px;margin:0 auto;border:1px solid var(--rule);background:#000}
+#share-card{display:block;width:100%;height:auto}
+.share-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+.share-btn{font-family:var(--sans);font-size:12px;letter-spacing:0.04em;padding:9px 14px;background:var(--surface);border:1px solid var(--rule);color:var(--ink-soft);cursor:pointer;transition:all 0.18s}
+.share-btn:hover{border-color:var(--gold-dim);color:var(--ink);background:var(--card)}
+.share-btn.primary{background:var(--gold);border-color:var(--gold);color:#050505;font-weight:600}
+.share-btn.primary:hover{background:#e0bd5a;color:#050505}
+.share-btn.copied{border-color:var(--gold);color:var(--gold)}
+.share-note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:14px;text-align:center;max-width:440px;margin-left:auto;margin-right:auto}
+.share-note .mono{color:var(--ink-soft)}
 footer{position:relative;z-index:2;padding:20px 28px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;border-top:1px solid var(--rule)}footer a{color:var(--gold-dim);text-decoration:none}footer a:hover{color:var(--gold)}footer strong{color:var(--gold);font-weight:400}
 h1,.sub{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
 </style>
@@ -185,6 +201,10 @@ h1,.sub{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
       <div class="seal-status" id="seal-status">Sealed</div>
       <div class="seal-explain" id="seal-explain">This .win was created in your browser.</div>
       <a class="seal-cta" id="seal-download" href="#" download>Download .win</a>
+      <div class="seal-actions hidden" id="seal-actions">
+        <button class="share-btn" id="seal-share">Verify &amp; share this proof</button>
+        <button class="share-btn" id="seal-note">Copy note for receiver</button>
+      </div>
       <div class="seal-meta" id="seal-meta">browser-local witness</div>
     </div>
     <div class="honesty">
@@ -199,7 +219,30 @@ h1,.sub{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
   <div id="result-state" class="outcome">
     <div class="verdict" id="verdict"><div class="verdict-icon" id="r-icon"></div><div class="verdict-status" id="r-status"></div><div class="verdict-explain" id="r-explain"></div><div class="trust-block hidden" id="r-trust"></div><div class="verdict-meta hidden" id="r-meta"></div></div>
     <div id="details-panel" class="details-panel hidden"></div>
-    <button class="again" id="r-again">Try another file</button>
+    <div id="r-honesty" class="honesty hidden">
+      <h3>What this verification proves</h3>
+      <p id="r-proves"></p>
+      <h3>What it does not prove</h3>
+      <p class="neg" id="r-notproves"></p>
+    </div>
+    <div id="r-share" class="share hidden">
+      <div class="share-head">Send the proof onward</div>
+      <div class="share-card-wrap"><canvas id="share-card" width="1200" height="630" aria-label="Shareable proof card"></canvas></div>
+      <div class="share-actions">
+        <button class="share-btn primary" id="sh-native">Share this proof</button>
+        <button class="share-btn" id="sh-x">Post to X</button>
+        <button class="share-btn" id="sh-li">LinkedIn</button>
+        <button class="share-btn" id="sh-bs">Bluesky</button>
+        <button class="share-btn" id="sh-copytext">Copy summary</button>
+        <button class="share-btn" id="sh-copylink">Copy verify link</button>
+        <button class="share-btn" id="sh-download">Download card</button>
+      </div>
+      <p class="share-note" id="sh-note">The proof lives in the <span class="mono">.win</span> file. Send that file — the receiver drops it at <span class="mono">truth.systems</span> and checks it themselves, offline if they want.</p>
+    </div>
+    <div class="result-cta">
+      <button class="again" id="r-again">Verify another file</button>
+      <button class="again ghost" id="r-seal-cta">Seal your own file</button>
+    </div>
   </div>
   <div id="batch-state" class="batch"><div class="batch-head"><div class="batch-title" id="batch-title">Verifying</div><div class="batch-progress" id="batch-progress">0 of 0</div><div class="batch-counts" id="batch-counts"></div></div><div class="batch-list" id="batch-list"></div><button class="again" id="batch-again">Drop another batch</button></div>
 </div></main>
@@ -285,10 +328,23 @@ const $=(id)=>document.getElementById(id);const esc=(s)=>String(s??'').replace(/
 const STATES=['boot-state','fatal-state','input-state','proc-state','result-state','batch-state','seal-state'];
 function show(name){for(const id of STATES){const el=$(id);if(id===name){el.classList.remove('hidden');if(id==='batch-state'||id==='seal-state')el.classList.add('show');el.style.display='block';}else{el.classList.add('hidden');el.classList.remove('show');el.style.display='none';}}}
 function fatal(t,m){$('fatal-title').textContent=t;$('fatal-msg').textContent=m;show('fatal-state');}
+// ── Phase 11: privacy-safe loop instrumentation. Emits ONLY coarse product events
+// (a name + low-cardinality boolean/enum dimensions) through the existing cookieless
+// Vercel analytics. It NEVER sends file contents, filenames, sizes, or fingerprints.
+// The verified-this-session flag lives in sessionStorage (no cookie, cleared on tab
+// close) so the loop metric survives a navigation from verify → seal within one visit.
+function track(name,data){try{if(typeof window!=='undefined'&&typeof window.va==='function'){window.va('event',data?{name:name,data:data}:{name:name});}}catch(e){}}
+function markVerified(){try{sessionStorage.setItem('wnstk_v','1');}catch(e){}}
+function hasVerified(){try{return sessionStorage.getItem('wnstk_v')==='1';}catch(e){return false;}}
 function urlHash(){const m=location.pathname.match(/^\/v\/([a-f0-9]{32,128})\/?$/i);return m?m[1].toLowerCase():null;}
 let mode='homepage';let fetchedBundleJson=null;let fetchedBundleObj=null;let rWin,rBundle;
 async function boot(){try{await init();rWin=recognize_win;rBundle=recognize_bundle;}catch(e){fatal('Verifier unavailable','WebAssembly verifier could not load.');return;}const hash=urlHash();if(hash){mode='urlflow';await initUrlFlow(hash);}else{mode='homepage';initHomepageFlow();}}
-async function initUrlFlow(hash){let res;try{res=await fetch(`/v/${hash}.json`,{headers:{'Accept':'application/json'}});}catch(e){fatal('Cannot reach','Network failed.');return;}if(res.status===404){fatal('No win tag here','No file sealed at this hash.');return;}if(!res.ok){fatal('Cannot read',`Server returned ${res.status}.`);return;}let bundle;try{fetchedBundleJson=await res.text();bundle=JSON.parse(fetchedBundleJson);}catch(e){fatal('Invalid','Not valid.');return;}if(!bundle.object||!bundle.object.payload_hash){fatal('Invalid','Incomplete.');return;}if(bundle.object.payload_hash.toLowerCase()!==hash){fatal('Invalid',"Hash mismatch.");return;}fetchedBundleObj=bundle;renderPreview(bundle);$('title').innerHTML='Is this file <em>verified</em>?';$('subtitle').textContent='Drop the file you received.';$('drop-label').textContent='Drop the file here';$('preview-block').classList.remove('hidden');show('input-state');}
+async function initUrlFlow(hash){let res;try{res=await fetch(`/v/${hash}.json`,{headers:{'Accept':'application/json'}});}catch(e){urlFlowLocalOnly(hash,'Couldn’t reach Truth.Systems. You can still verify offline — drop the .win file you received.');return;}if(res.status===404){urlFlowLocalOnly(hash,'No public preview is published for this artifact. You can still verify it yourself — drop the .win file you received.');return;}if(!res.ok){urlFlowLocalOnly(hash,'Couldn’t load the public preview. Verify the file yourself — drop the .win file you received.');return;}let bundle;try{fetchedBundleJson=await res.text();bundle=JSON.parse(fetchedBundleJson);}catch(e){urlFlowLocalOnly(hash,'The published preview is unreadable. Verify the file yourself — drop the .win file you received.');return;}if(!bundle.object||!bundle.object.payload_hash||bundle.object.payload_hash.toLowerCase()!==hash){urlFlowLocalOnly(hash,'The published preview does not match this link. Trust only your own check — drop the .win file you received.');return;}fetchedBundleObj=bundle;track('vlink_open',{mode:'preview'});renderPreview(bundle);$('title').innerHTML='Is this file <em>verified</em>?';$('subtitle').textContent='Drop the file you received.';$('drop-label').textContent='Drop the file here';$('preview-block').classList.remove('hidden');show('input-state');}
+// Fail OPEN: a /v/<hash> link with no usable published preview must still pull the
+// receiver into LOCAL verification (Law #3 — verification never depends on
+// Truth.Systems). We advertise no data we don't hold; the only claim is the URL's
+// target fingerprint, which the local check will confirm or deny on drop.
+function urlFlowLocalOnly(hash,note){track('vlink_open',{mode:'local_only'});fetchedBundleJson=null;fetchedBundleObj=null;$('pv-witness').textContent='not published here';$('pv-born').textContent='not published here';$('pv-time').textContent='verify locally';$('pv-hash').textContent=hash;$('title').innerHTML='Verify this <em>.win</em>';$('subtitle').textContent=note;$('drop-label').textContent='Drop the .win file to verify locally';$('preview-block').classList.remove('hidden');show('input-state');}
 function renderPreview(b){const c=b.creator_identity||{};const k=c.public_key_hex||'';$('pv-witness').textContent=k?`${k.slice(0,8)}…${k.slice(56)}`:'unknown';$('pv-born').textContent=b.object.origin?.created_at||'unknown';$('pv-time').textContent=b.object.time_event?.time_source==='External'?'Anchored (RFC 3161)':'Local creation date only';$('pv-hash').textContent=b.object.payload_hash;}
 // ── Pre-loaded hero demo: real seal -> real one-byte tamper -> real re-verify.
 // Uses the SAME wasm (seal_file / recognize_win) the product uses. Nothing is
@@ -328,10 +384,22 @@ function bytesToBlob(bytesLike, mime){
   return new Blob([arr], { type: mime || 'application/octet-stream' });
 }
 const SEAL_DISPLAY={Verified:'It won.',Tampered:'It lost.',Invalid:"Couldn't read it."};
-function renderSealResult(r,fname){const card=$('seal-card');const status=r.verification_status||'Invalid';card.className='seal-card '+status.toLowerCase();$('seal-status').textContent=SEAL_DISPLAY[status]||status;if(status==='Verified'){$('seal-explain').innerHTML='Your file is now a <span class="mono">.win</span>. It downloaded automatically.';}else if(status==='Tampered'){$('seal-explain').textContent='Something corrupted the win as it was made. Do not trust this file.';}else{$('seal-explain').textContent='Could not produce a readable win for this file.';}const blob=bytesToBlob(r.win_bytes,'application/octet-stream');const url=URL.createObjectURL(blob);const a=$('seal-download');a.href=url;a.setAttribute('download',r.filename||(fname+'.win'));a.textContent='Re-download';$('seal-meta').textContent=(r.witness_trust||'browser-local witness')+' · sha256 '+(r.payload_hash||'').slice(0,12);show('seal-state');if(status==='Verified')setTimeout(()=>a.click(),50);}
+let _lastSealWin=null,_lastSealName='file.win',_lastSealHash='';
+function renderSealResult(r,fname){const card=$('seal-card');const status=r.verification_status||'Invalid';card.className='seal-card '+status.toLowerCase();$('seal-status').textContent=SEAL_DISPLAY[status]||status;if(status==='Verified'){$('seal-explain').innerHTML='Your file is now a <span class="mono">.win</span>. It downloaded automatically.';}else if(status==='Tampered'){$('seal-explain').textContent='Something corrupted the win as it was made. Do not trust this file.';}else{$('seal-explain').textContent='Could not produce a readable win for this file.';}const blob=bytesToBlob(r.win_bytes,'application/octet-stream');const url=URL.createObjectURL(blob);const a=$('seal-download');a.href=url;a.setAttribute('download',r.filename||(fname+'.win'));a.textContent='Re-download';$('seal-meta').textContent=(r.witness_trust||'browser-local witness')+' · sha256 '+(r.payload_hash||'').slice(0,12);
+// Post-seal share handoff — only from a genuine Verified seal. We keep the sealed
+// bytes so "Verify & share" re-runs the REAL verifier (not seal metadata) and lands
+// on the standard result view, which carries the per-artifact link, the honesty-gated
+// card, and the true browser-local trust class. Fails closed if re-verify isn't Verified.
+_lastSealWin=(status==='Verified')?Uint8Array.from(r.win_bytes):null;_lastSealName=r.filename||(fname+'.win');_lastSealHash=(r.payload_hash||'').toLowerCase();
+$('seal-actions').classList.toggle('hidden',status!=='Verified');
+track('seal',{status:String(status),after_verify:hasVerified()});if(status==='Verified'&&hasVerified())track('loop_close');
+show('seal-state');if(status==='Verified')setTimeout(()=>a.click(),50);}
+function receiverNote(){var link=/^[a-f0-9]{32,128}$/.test(_lastSealHash)?VERIFY_URL+'/v/'+_lastSealHash:VERIFY_URL;return'I sent this as a .win file so you can independently check whether the protected content changed after I sealed it. Open it with the W.I.N. verifier or verify it at Truth.Systems — you’ll need this .win file itself.\nVerify: '+link;}
+$('seal-share').addEventListener('click',()=>{if(!_lastSealWin)return;let chk;try{chk=rWin(_lastSealWin);}catch(e){fatal('Error',String(e?.message||e));return;}renderResult(chk,_lastSealName);});
+$('seal-note').addEventListener('click',async function(){track('share',{channel:'receiver_note'});await copyTo(receiverNote());flash(this,'Copied ✓');}.bind($('seal-note')));
 $('seal-again').addEventListener('click',()=>{$('file-input').value='';show('input-state');});
 function wireDrop(){const input=$('file-input');const zone=$('drop');input.setAttribute('multiple','');input.addEventListener('change',()=>{if(input.files?.length)dispatch(input.files);});zone.addEventListener('dragover',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.add('over');});zone.addEventListener('dragleave',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over');});zone.addEventListener('drop',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over');document.body.classList.remove('body-over');dispatch(e.dataTransfer?.files);});document.body.addEventListener('dragover',(e)=>{e.preventDefault();document.body.classList.add('body-over');});document.body.addEventListener('dragleave',(e)=>{if(!e.relatedTarget)document.body.classList.remove('body-over');});document.body.addEventListener('drop',(e)=>{e.preventDefault();document.body.classList.remove('body-over');dispatch(e.dataTransfer?.files);});}
-async function handleFile(file){show('proc-state');const buf=new Uint8Array(await file.arrayBuffer());if(isWin(buf)){let r;try{r=rWin(buf);}catch(e){fatal('Error',String(e?.message||e));return;}if(mode==='urlflow'&&r.payload_hash){const u=urlHash();if(r.payload_hash.toLowerCase()===u)r._url_match=true;else{r._url_match=false;r._url_other=r.payload_hash.toLowerCase();}}renderResult(r,file.name);return;}if(mode==='urlflow'){let r;try{r=rBundle(fetchedBundleJson,buf);}catch(e){fatal('Error',String(e?.message||e));return;}renderResult(r,file.name);return;}await sealFile(file,buf);}
+async function handleFile(file){show('proc-state');const buf=new Uint8Array(await file.arrayBuffer());if(isWin(buf)){track('verify_start',{mode:mode==='urlflow'?'url':'drop',kind:'win'});let r;try{r=rWin(buf);}catch(e){fatal('Error',String(e?.message||e));return;}if(mode==='urlflow'&&r.payload_hash){const u=urlHash();if(r.payload_hash.toLowerCase()===u)r._url_match=true;else{r._url_match=false;r._url_other=r.payload_hash.toLowerCase();}}renderResult(r,file.name);return;}if(mode==='urlflow'){if(!fetchedBundleJson){$('subtitle').textContent='That was the original file, not the sealed .win. Drop the .win file you received.';show('input-state');return;}track('verify_start',{mode:'url',kind:'bundle'});let r;try{r=rBundle(fetchedBundleJson,buf);}catch(e){fatal('Error',String(e?.message||e));return;}renderResult(r,file.name);return;}await sealFile(file,buf);}
 // Trust class display: a Verified file with an Unknown signer is NOT
 // the same as a Verified file from an Official key. Never let one
 // read as the other in the UI.
@@ -367,8 +435,95 @@ function renderTrustBlock(r){
   if(verifiedUnknown)html+=`<div class="trust-not-equal">The bytes match. The signer is not trusted by you yet.</div>`;
   el.innerHTML=html;el.classList.remove('hidden');
 }
-function renderResult(r,fname){const v=$('verdict');$('details-panel').classList.add('hidden');$('r-meta').classList.add('hidden');$('r-meta').classList.remove('match');const s=r.status;v.className=`verdict ${s.toLowerCase()}`;$('r-icon').innerHTML=iconSvg(s);$('r-status').textContent=s;let html=esc(r.message);if(s==='Verified'){const m=$('r-meta');m.classList.remove('hidden');let t='Verified';t+=r.anchored?' \u2022 Anchored creation date':' \u2022 Local creation date only';if(r.lineage==='Successor')t+=' \u2022 Lineage successor';else if(r.lineage==='Origin')t+=' \u2022 First in lineage';if(r._url_match===true){t+=' \u2022 Matches this URL';m.classList.add('match');}m.textContent=t;}if(r._url_match===false&&r._url_other){html+=`<span class="url-note">Different win tag. <a href="/v/${esc(r._url_other)}">See it \u2192</a></span>`;}$('r-explain').innerHTML=html;renderTrustBlock(r);const dt=(k,v)=>`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`;if(r.witness||r.born||r.payload_hash){const w=r.witness?.public_key_hex?`${r.witness.public_key_hex.slice(0,8)}\u2026${r.witness.public_key_hex.slice(56)}`:'unknown';const tm=r.anchored?'Anchored \u2014 RFC 3161':'Local \u2014 witness device clock';$('details-panel').innerHTML=[dt('File',fname),dt('Created',r.born||'unknown'),dt('Fingerprint',r.payload_hash||'unknown'),dt('Size',r.size_bytes!=null?`${r.size_bytes} bytes`:'unknown'),dt('Time',tm),dt('Signer',w),dt('Trust class',classifyTrust(r)),dt('Lineage',r.lineage||'Unknown'),dt('Verified by','WebAssembly verifier')].join('');$('details-panel').classList.remove('hidden');}show('result-state');requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));}
+function renderResult(r,fname){const v=$('verdict');$('details-panel').classList.add('hidden');$('r-meta').classList.add('hidden');$('r-meta').classList.remove('match');const s=r.status;v.className=`verdict ${s.toLowerCase()}`;$('r-icon').innerHTML=iconSvg(s);$('r-status').textContent=s;if(s==='Verified'){markVerified();track('verify_pass',{anchored:!!r.anchored,trust:classifyTrust(r),url_match:r._url_match===true});}else{track('verify_fail',{status:String(s||'unknown')});}let html=esc(r.message);if(s==='Verified'){const m=$('r-meta');m.classList.remove('hidden');let t='Verified';t+=r.anchored?' \u2022 Anchored creation date':' \u2022 Local creation date only';if(r.lineage==='Successor')t+=' \u2022 Lineage successor';else if(r.lineage==='Origin')t+=' \u2022 First in lineage';if(r._url_match===true){t+=' \u2022 Matches this URL';m.classList.add('match');}m.textContent=t;}if(r._url_match===false&&r._url_other){html+=`<span class="url-note">Different win tag. <a href="/v/${esc(r._url_other)}">See it \u2192</a></span>`;}$('r-explain').innerHTML=html;renderTrustBlock(r);const dt=(k,v)=>`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`;if(r.witness||r.born||r.payload_hash){const w=r.witness?.public_key_hex?`${r.witness.public_key_hex.slice(0,8)}\u2026${r.witness.public_key_hex.slice(56)}`:'unknown';const tm=r.anchored?'Anchored \u2014 RFC 3161':'Local \u2014 witness device clock';$('details-panel').innerHTML=[dt('File',fname),dt('Created',r.born||'unknown'),dt('Fingerprint',r.payload_hash||'unknown'),dt('Size',r.size_bytes!=null?`${r.size_bytes} bytes`:'unknown'),dt('Time',tm),dt('Signer',w),dt('Trust class',classifyTrust(r)),dt('Lineage',r.lineage||'Unknown'),dt('Verified by','WebAssembly verifier')].join('');$('details-panel').classList.remove('hidden');}renderHonesty(r);renderShare(r,fname);show('result-state');requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));}
+// ── Share loop ─────────────────────────────────────────────────────
+// The proof travels in the .win file, not a URL. The card and text
+// below are generated from the REAL verifier reading only. A non-
+// Verified reading never yields a green "VERIFIED" card: the status
+// label and colour come from ONE map, cardConfig(), keyed on r.status.
+const VERIFY_URL='https://truth.systems';
+// Per-artifact verify link. Points the receiver at THIS artifact's page so the
+// proof pulls them into the flow. Falls back to the homepage only if we somehow
+// lack a valid fingerprint. The /v/<hash> page fails open to local verification,
+// so the link is useful even when the proof was never published to our server.
+function verifyLink(r){var h=r&&r.payload_hash?String(r.payload_hash).toLowerCase():'';return /^[a-f0-9]{32,128}$/.test(h)?VERIFY_URL+'/v/'+h:VERIFY_URL;}
+/*CARD_STATUS_START*/
+const CARD_STATUS={
+  Verified:{label:'.win VERIFIED',sub:'Protected content unchanged since sealing.',color:'#c9a84c',verified:true},
+  Tampered:{label:'.win TAMPERED',sub:'Protected content changed after sealing.',color:'#c27a7a',verified:false},
+  Invalid: {label:'.win INVALID', sub:'This container could not be verified.',color:'#c27a7a',verified:false},
+  Damaged: {label:'.win DAMAGED', sub:'This container is incomplete or corrupted.',color:'#a08860',verified:false}
+};
+// Single source of truth for card styling. Unknown/missing status is
+// treated as Invalid — it can NEVER return the Verified styling.
+function cardConfig(status){
+  var c=CARD_STATUS[status];
+  if(c&&status==='Verified')return c;      // only the exact "Verified" string is green
+  if(c)return c;
+  return CARD_STATUS.Invalid;              // fail closed
+}
+/*CARD_STATUS_END*/
+function honestyText(r){
+  if(r.status==='Verified')return{
+    proves:'The file inside this .win is byte-for-byte identical to what was sealed: its SHA-256 fingerprint matches the one committed at sealing, and the proof’s signatures verify.',
+    notproves:'It does not prove who sealed it, that the signing key belongs to any particular real-world person or company, that the contents are factually true, or that Wise.Est Systems signed it. '+(r.identity_explainer||'')};
+  if(r.status==='Tampered')return{
+    proves:'This .win was sealed once, but the file no longer matches the fingerprint committed at sealing. At least one byte changed since it was sealed.',
+    notproves:'It does not tell you who changed the file, when, or whether the original was ever trustworthy. Do not rely on this file.'};
+  return{
+    proves:'This .win could not be verified. Its proof section is malformed, forged, incomplete, or the container is damaged.',
+    notproves:'Nothing about the file’s origin, integrity, or authorship can be concluded from this result.'};
+}
+function renderHonesty(r){const h=$('r-honesty');const t=honestyText(r);$('r-proves').textContent=t.proves;$('r-notproves').textContent=t.notproves;h.classList.remove('hidden');}
+function fmtFp(h){if(!h)return['','',''];h=String(h).toLowerCase();return[h.slice(0,32),h.slice(32,64),h];}
+let _shareR=null,_shareF='';
+function drawShareCard(r,fname){
+  var cv=$('share-card');if(!cv||!cv.getContext)return;var g=cv.getContext('2d');var W=1200,H=630;
+  var cfg=cardConfig(r.status);var fp=fmtFp(r.payload_hash);
+  g.fillStyle='#050505';g.fillRect(0,0,W,H);
+  g.fillStyle=cfg.color;g.fillRect(0,0,W,6);
+  g.strokeStyle='#1a1a1a';g.lineWidth=2;g.strokeRect(40,40,W-80,H-80);
+  g.textBaseline='alphabetic';g.textAlign='left';
+  g.fillStyle='#c9a84c';g.font='700 34px Inter,Helvetica,Arial,sans-serif';g.fillText('W.I.N.',72,110);
+  g.fillStyle='#6a6050';g.font='500 15px Inter,Helvetica,Arial,sans-serif';g.fillText('WISE INDEPENDENT NETWORK',74,136);
+  g.textAlign='right';g.fillStyle='#a09880';g.font='500 22px "SF Mono",Menlo,monospace';g.fillText('.win',W-72,116);g.textAlign='left';
+  g.fillStyle=cfg.color;g.font='700 76px Inter,Helvetica,Arial,sans-serif';g.fillText(cfg.label,72,296);
+  g.fillStyle='#e8dcc8';g.font='400 29px Inter,Helvetica,Arial,sans-serif';g.fillText(cfg.sub,72,346);
+  g.fillStyle='#6a6050';g.font='500 15px Inter,Helvetica,Arial,sans-serif';g.fillText('ARTIFACT FINGERPRINT · SHA-256',72,420);
+  g.fillStyle='#a09880';g.font='400 25px "SF Mono",Menlo,monospace';g.fillText(fp[0],72,456);g.fillText(fp[1],72,488);
+  var meta=[];if(r.born)meta.push('Sealed '+String(r.born).split('T')[0]);if(r.witness&&r.witness.public_key_hex)meta.push('Key '+r.witness.public_key_hex.slice(0,10)+'…');if(r.anchored)meta.push('Anchored time');else meta.push('Local time');
+  g.fillStyle='#6a6050';g.font='400 18px Inter,Helvetica,Arial,sans-serif';g.fillText(meta.join('   ·   '),72,532);
+  g.fillStyle='#c9a84c';g.font='700 26px Inter,Helvetica,Arial,sans-serif';g.fillText('truth.systems',72,H-54);
+  g.textAlign='right';g.fillStyle='#e8dcc8';g.font='700 22px Inter,Helvetica,Arial,sans-serif';g.fillText("VERIFY OR IT’S A LIE.",W-72,H-56);
+  g.fillStyle='#6a6050';g.font='400 13px Inter,Helvetica,Arial,sans-serif';g.fillText('NON ROGAT FIDEM',W-72,H-32);g.textAlign='left';
+}
+function renderShare(r,fname){
+  _shareR=r;_shareF=fname||'file';
+  var box=$('r-share');
+  // Only a genuine Verified reading opens the share loop.
+  if(!r||r.status!=='Verified'){box.classList.add('hidden');return;}
+  drawShareCard(r,fname);track('share_card');box.classList.remove('hidden');
+}
+function shareText(r){return'I verified this .win artifact. Its protected content matches what was committed when it was sealed.\nVerify it yourself: '+verifyLink(r)+'\nProof or nothing.';}
+function summaryText(r,fname){var fp=fmtFp(r.payload_hash);return['.win verification — truth.systems','File: '+(fname||'file'),'Result: VERIFIED — protected content unchanged since sealing','Fingerprint (SHA-256): '+(fp[2]||'unknown'),'Signer key: '+((r.witness&&r.witness.public_key_hex)||'unknown'),'Sealed: '+(r.born||'unknown'),'','This proves the file is byte-for-byte unchanged since it was sealed by this key.','It does not prove the signer’s real-world identity or that the contents are true.','Verify it yourself: '+verifyLink(r)].join('\n');}
+function cardBlob(){return new Promise(function(res){var cv=$('share-card');if(!cv||!cv.toBlob){res(null);return;}cv.toBlob(res,'image/png');});}
+function copyTo(text){if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(text);return new Promise(function(res){try{var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();res();}catch(e){res();}});}
+function flash(btn,label){if(!btn)return;var old=btn.textContent;btn.textContent=label;btn.classList.add('copied');setTimeout(function(){btn.textContent=old;btn.classList.remove('copied');},1600);}
+function openIntent(url){window.open(url,'_blank','noopener,noreferrer');}
+async function nativeShare(){track('share',{channel:'native'});var text=shareText(_shareR);try{var blob=await cardBlob();if(blob&&navigator.canShare){var file=new File([blob],'win-proof.png',{type:'image/png'});if(navigator.canShare({files:[file]})){await navigator.share({files:[file],text:text,title:'.win verified'});return;}}}catch(e){}try{if(navigator.share){await navigator.share({text:text,url:verifyLink(_shareR),title:'.win verified'});return;}}catch(e){}await copyTo(text);flash($('sh-native'),'Copied ✓');}
+function wireShare(){
+  var b=function(id){return $(id);};
+  b('sh-native').addEventListener('click',nativeShare);
+  b('sh-x').addEventListener('click',function(){track('share',{channel:'x'});openIntent('https://x.com/intent/post?text='+encodeURIComponent(shareText(_shareR)));});
+  b('sh-li').addEventListener('click',function(){track('share',{channel:'linkedin'});openIntent('https://www.linkedin.com/sharing/share-offsite/?url='+encodeURIComponent(verifyLink(_shareR)));});
+  b('sh-bs').addEventListener('click',function(){track('share',{channel:'bluesky'});openIntent('https://bsky.app/intent/compose?text='+encodeURIComponent(shareText(_shareR)));});
+  b('sh-copytext').addEventListener('click',async function(){track('share',{channel:'copy_summary'});await copyTo(summaryText(_shareR,_shareF));flash(this,'Copied ✓');}.bind(b('sh-copytext')));
+  b('sh-copylink').addEventListener('click',async function(){track('share',{channel:'copy_link'});await copyTo(verifyLink(_shareR));flash(this,'Copied ✓');}.bind(b('sh-copylink')));
+  b('sh-download').addEventListener('click',async function(){track('share',{channel:'download_card'});var blob=await cardBlob();if(!blob)return;var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='win-proof-'+((_shareR&&_shareR.payload_hash)||'card').slice(0,12)+'.png';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},2000);});
+}
+wireShare();
 $('r-again').addEventListener('click',()=>{$('file-input').value='';show('input-state');});
+$('r-seal-cta').addEventListener('click',()=>{$('file-input').value='';$('drop-label').textContent='Drop any file to seal it';show('input-state');});
 const STATE_ORDER=['Verified','Won','Tampered','Invalid'];
 async function handleBatch(files){show('batch-state');const counts={Verified:0,Won:0,Tampered:0,Invalid:0};$('batch-list').innerHTML='';$('batch-progress').textContent=`0 of ${files.length}`;$('batch-counts').innerHTML=renderCountsHtml(counts,null);wireBF(null);const wonDownloads=[];for(let i=0;i<files.length;i++){let r;try{r=await processOne(files[i]);}catch(e){r={state:'Invalid',name:files[i].name,size:files[i].size};}counts[r.state]=(counts[r.state]||0)+1;if(r.state==='Won'&&r._winBlobUrl)wonDownloads.push({url:r._winBlobUrl,name:r._winName});$('batch-list').insertAdjacentHTML('beforeend',renderRow(r));$('batch-progress').textContent=`${i+1} of ${files.length}`;$('batch-counts').innerHTML=renderCountsHtml(counts,cbf);wireBF(cbf);if((i+1)%8===0)await new Promise(r=>setTimeout(r,0));}applyBF(cbf);for(const d of wonDownloads){const a=document.createElement('a');a.href=d.url;a.download=d.name;document.body.appendChild(a);a.click();a.remove();await new Promise(r=>setTimeout(r,80));}}
 async function processOne(f){const buf=new Uint8Array(await f.arrayBuffer());if(!isWin(buf)){try{const sr=seal_file(f.name,buf);const blob=bytesToBlob(sr.win_bytes,'application/octet-stream');const url=URL.createObjectURL(blob);const winName=sr.filename||(f.name+'.win');return{state:'Won',name:f.name,size:f.size,payload_hash:sr.payload_hash,_winBlobUrl:url,_winName:winName};}catch(e){return{state:'Invalid',name:f.name,size:f.size};}}let r;try{r=rWin(buf);}catch(e){return{state:'Invalid',name:f.name,size:f.size};}return{state:r.status,name:f.name,size:f.size,born:r.born,payload_hash:r.payload_hash,witness:r.witness?.public_key_hex};}
