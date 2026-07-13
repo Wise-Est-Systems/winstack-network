@@ -202,8 +202,9 @@ h1,.sub{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
       <div class="seal-explain" id="seal-explain">This .win was created in your browser.</div>
       <a class="seal-cta" id="seal-download" href="#" download>Download .win</a>
       <div class="seal-actions hidden" id="seal-actions">
-        <button class="share-btn" id="seal-share">Verify &amp; share this proof</button>
+        <button class="share-btn primary" id="seal-sendfile">Send the .win file</button>
         <button class="share-btn" id="seal-note">Copy note for receiver</button>
+        <button class="share-btn" id="seal-share">Verify &amp; show proof card</button>
       </div>
       <div class="seal-meta" id="seal-meta">browser-local witness</div>
     </div>
@@ -384,6 +385,9 @@ function bytesToBlob(bytesLike, mime){
   return new Blob([arr], { type: mime || 'application/octet-stream' });
 }
 const SEAL_DISPLAY={Verified:'It won.',Tampered:'It lost.',Invalid:"Couldn't read it."};
+// Canonical traveling name is <original>.<ext>.win (e.g. report.pdf.win) — the
+// wasm returns it as r.filename, and it matches the CLI for cross-surface parity.
+// The full original name is also stored INSIDE the .win so the receiver can restore it.
 let _lastSealWin=null,_lastSealName='file.win',_lastSealHash='';
 function renderSealResult(r,fname){const card=$('seal-card');const status=r.verification_status||'Invalid';card.className='seal-card '+status.toLowerCase();$('seal-status').textContent=SEAL_DISPLAY[status]||status;if(status==='Verified'){$('seal-explain').innerHTML='Your file is now a <span class="mono">.win</span>. It downloaded automatically.';}else if(status==='Tampered'){$('seal-explain').textContent='Something corrupted the win as it was made. Do not trust this file.';}else{$('seal-explain').textContent='Could not produce a readable win for this file.';}const blob=bytesToBlob(r.win_bytes,'application/octet-stream');const url=URL.createObjectURL(blob);const a=$('seal-download');a.href=url;a.setAttribute('download',r.filename||(fname+'.win'));a.textContent='Re-download';$('seal-meta').textContent=(r.witness_trust||'browser-local witness')+' · sha256 '+(r.payload_hash||'').slice(0,12);
 // Post-seal share handoff — only from a genuine Verified seal. We keep the sealed
@@ -397,6 +401,12 @@ show('seal-state');if(status==='Verified')setTimeout(()=>a.click(),50);}
 function receiverNote(){var link=/^[a-f0-9]{32,128}$/.test(_lastSealHash)?VERIFY_URL+'/v/'+_lastSealHash:VERIFY_URL;return'I sent this as a .win file so you can independently check whether the protected content changed after I sealed it. Open it with the W.I.N. verifier or verify it at Truth.Systems — you’ll need this .win file itself.\nVerify: '+link;}
 $('seal-share').addEventListener('click',()=>{if(!_lastSealWin)return;let chk;try{chk=rWin(_lastSealWin);}catch(e){fatal('Error',String(e?.message||e));return;}renderResult(chk,_lastSealName);});
 $('seal-note').addEventListener('click',async function(){track('share',{channel:'receiver_note'});await copyTo(receiverNote());flash(this,'Copied ✓');}.bind($('seal-note')));
+// The .win file IS the proof — send the artifact itself, not a link. On phones the
+// file rides the native share sheet; on desktop it (re)downloads the .win and copies
+// the note so the sender attaches the real file. The receiver never has to be handed
+// proof separately — they already hold it.
+async function shareWinFile(){if(!_lastSealWin){return;}var name=_lastSealName;var file=new File([_lastSealWin],name,{type:'application/octet-stream'});try{if(navigator.canShare&&navigator.canShare({files:[file]})){track('share',{channel:'win_file',mode:'native'});await navigator.share({files:[file],title:name,text:receiverNote()});return;}}catch(e){}track('share',{channel:'win_file',mode:'download'});var blob=new Blob([_lastSealWin],{type:'application/octet-stream'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},2000);await copyTo(receiverNote());flash($('seal-sendfile'),'Saved + note copied ✓');}
+$('seal-sendfile').addEventListener('click',shareWinFile);
 $('seal-again').addEventListener('click',()=>{$('file-input').value='';show('input-state');});
 function wireDrop(){const input=$('file-input');const zone=$('drop');input.setAttribute('multiple','');input.addEventListener('change',()=>{if(input.files?.length)dispatch(input.files);});zone.addEventListener('dragover',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.add('over');});zone.addEventListener('dragleave',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over');});zone.addEventListener('drop',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over');document.body.classList.remove('body-over');dispatch(e.dataTransfer?.files);});document.body.addEventListener('dragover',(e)=>{e.preventDefault();document.body.classList.add('body-over');});document.body.addEventListener('dragleave',(e)=>{if(!e.relatedTarget)document.body.classList.remove('body-over');});document.body.addEventListener('drop',(e)=>{e.preventDefault();document.body.classList.remove('body-over');dispatch(e.dataTransfer?.files);});}
 async function handleFile(file){show('proc-state');const buf=new Uint8Array(await file.arrayBuffer());if(isWin(buf)){track('verify_start',{mode:mode==='urlflow'?'url':'drop',kind:'win'});let r;try{r=rWin(buf);}catch(e){fatal('Error',String(e?.message||e));return;}if(mode==='urlflow'&&r.payload_hash){const u=urlHash();if(r.payload_hash.toLowerCase()===u)r._url_match=true;else{r._url_match=false;r._url_other=r.payload_hash.toLowerCase();}}renderResult(r,file.name);return;}if(mode==='urlflow'){if(!fetchedBundleJson){$('subtitle').textContent='That was the original file, not the sealed .win. Drop the .win file you received.';show('input-state');return;}track('verify_start',{mode:'url',kind:'bundle'});let r;try{r=rBundle(fetchedBundleJson,buf);}catch(e){fatal('Error',String(e?.message||e));return;}renderResult(r,file.name);return;}await sealFile(file,buf);}

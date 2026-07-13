@@ -1,7 +1,7 @@
 {
   "outputDirectory": "public",
   "rewrites": [
-    { "source": "/v/:hash", "destination": "/index.html" }
+    { "source": "/v/:hash([a-f0-9]{32,128})", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -16,13 +16,6 @@
       "source": "/wasm/(.*).wasm",
       "headers": [
         { "key": "Content-Type", "value": "application/wasm" }
-      ]
-    },
-    {
-      "source": "/v/:hash([a-f0-9]{32,128}).json",
-      "headers": [
-        { "key": "Content-Type", "value": "application/json" },
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
