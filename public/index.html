@@ -163,6 +163,11 @@ h1{font-size:clamp(32px,5vw,48px);font-weight:200;color:var(--ink);line-height:1
 .share-btn.copied{border-color:var(--gold);color:var(--gold)}
 .share-note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:14px;text-align:center;max-width:440px;margin-left:auto;margin-right:auto}
 .share-note .mono{color:var(--ink-soft)}
+.rmedia{margin:20px auto;text-align:center;max-width:560px}
+.media-img{max-width:100%;max-height:56vh;border:1px solid var(--rule);display:block;margin:0 auto}
+.media-av{width:100%;max-width:520px;display:block;margin:0 auto}
+.media-note{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+.media-save{display:inline-block;margin-top:14px;text-decoration:none;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 footer{position:relative;z-index:2;padding:20px 28px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;border-top:1px solid var(--rule)}footer a{color:var(--gold-dim);text-decoration:none}footer a:hover{color:var(--gold)}footer strong{color:var(--gold);font-weight:400}
 h1,.sub{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
 </style>
@@ -219,6 +224,7 @@ h1,.sub{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
   <div id="proc-state" class="processing"><div><span class="dot"></span><span class="dot"></span><span class="dot"></span></div><div class="proc-label">Verifying</div></div>
   <div id="result-state" class="outcome">
     <div class="verdict" id="verdict"><div class="verdict-icon" id="r-icon"></div><div class="verdict-status" id="r-status"></div><div class="verdict-explain" id="r-explain"></div><div class="trust-block hidden" id="r-trust"></div><div class="verdict-meta hidden" id="r-meta"></div></div>
+    <div id="r-media" class="rmedia hidden"></div>
     <div id="details-panel" class="details-panel hidden"></div>
     <div id="r-honesty" class="honesty hidden">
       <h3>What this verification proves</h3>
@@ -452,7 +458,41 @@ function renderTrustBlock(r){
   if(verifiedUnknown)html+=`<div class="trust-not-equal">The bytes match. The signer is not trusted by you yet.</div>`;
   el.innerHTML=html;el.classList.remove('hidden');
 }
-function renderResult(r,fname){const v=$('verdict');$('details-panel').classList.add('hidden');$('r-meta').classList.add('hidden');$('r-meta').classList.remove('match');const s=r.status;v.className=`verdict ${s.toLowerCase()}`;$('r-icon').innerHTML=iconSvg(s);$('r-status').textContent=s;if(s==='Verified'){markVerified();track('verify_pass',{anchored:!!r.anchored,trust:classifyTrust(r),url_match:r._url_match===true});}else{track('verify_fail',{status:String(s||'unknown')});}let html=esc(r.message);if(s==='Verified'){const m=$('r-meta');m.classList.remove('hidden');let t='Verified';t+=r.anchored?' \u2022 Anchored creation date':' \u2022 Local creation date only';if(r.lineage==='Successor')t+=' \u2022 Lineage successor';else if(r.lineage==='Origin')t+=' \u2022 First in lineage';if(r._url_match===true){t+=' \u2022 Matches this URL';m.classList.add('match');}m.textContent=t;}if(r._url_match===false&&r._url_other){html+=`<span class="url-note">Different win tag. <a href="/v/${esc(r._url_other)}">See it \u2192</a></span>`;}$('r-explain').innerHTML=html;renderTrustBlock(r);const dt=(k,v)=>`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`;if(r.witness||r.born||r.payload_hash){const w=r.witness?.public_key_hex?`${r.witness.public_key_hex.slice(0,8)}\u2026${r.witness.public_key_hex.slice(56)}`:'unknown';const tm=r.anchored?'Anchored \u2014 RFC 3161':'Local \u2014 witness device clock';$('details-panel').innerHTML=[dt('File',fname),dt('Created',r.born||'unknown'),dt('Fingerprint',r.payload_hash||'unknown'),dt('Size',r.size_bytes!=null?`${r.size_bytes} bytes`:'unknown'),dt('Time',tm),dt('Signer',w),dt('Trust class',classifyTrust(r)),dt('Lineage',r.lineage||'Unknown'),dt('Verified by','WebAssembly verifier')].join('');$('details-panel').classList.remove('hidden');}renderHonesty(r);renderShare(r,fname);show('result-state');requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));}
+// ── Media: show/play the sealed file, and let the receiver save the original ──
+// The .win carries the raw bytes, so we pull the exact original out in the browser
+// (no server, no wasm) and render it. Preview ONLY on a Verified reading, ONLY for
+// safe media types via a Blob URL in an <img>/<audio>/<video> element — never
+// inline markup, so a hostile SVG/HTML payload can't run. Anything else is
+// download-only. A file that failed verification is never auto-previewed.
+function extractPayload(b){try{if(!b||b.length<16)return null;if(!(b[0]===87&&b[1]===73&&b[2]===78))return null;var nl=b[4]|(b[5]<<8)|(b[6]<<16)|(b[7]*16777216);if(nl<=0||nl>4096||8+nl+8>b.length)return null;var name=new TextDecoder().decode(b.slice(8,8+nl));var off=8+nl,fl=0;for(var i=0;i<8;i++)fl+=b[off+i]*Math.pow(2,8*i);var start=off+8;if(fl<0||start+fl>b.length)return null;return{name:name||'file',bytes:b.slice(start,start+fl)};}catch(e){return null;}}
+function mediaKind(name){var ext=(String(name).split('.').pop()||'').toLowerCase();var M={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',avif:'image/avif',bmp:'image/bmp',mp3:'audio/mpeg',wav:'audio/wav',ogg:'audio/ogg',oga:'audio/ogg',m4a:'audio/mp4',aac:'audio/aac',flac:'audio/flac',opus:'audio/ogg',mp4:'video/mp4',webm:'video/webm',ogv:'video/ogg',mov:'video/quicktime',m4v:'video/mp4'};var mime=M[ext]||'application/octet-stream';var kind=mime.slice(0,6)==='image/'?'image':mime.slice(0,6)==='audio/'?'audio':mime.slice(0,6)==='video/'?'video':'other';return{ext:ext,mime:mime,kind:kind};}
+let _mediaUrl=null;
+function clearMedia(){var box=$('r-media');if(box){box.classList.add('hidden');box.textContent='';}if(_mediaUrl){try{URL.revokeObjectURL(_mediaUrl);}catch(e){}_mediaUrl=null;}}
+function renderMedia(winBytes,status){
+  clearMedia();var box=$('r-media');if(!box)return;
+  var p=extractPayload(winBytes);if(!p)return;
+  var info=mediaKind(p.name);
+  _mediaUrl=URL.createObjectURL(new Blob([p.bytes],{type:info.mime}));
+  var CAP=157286400; // ~150MB: above this, don't render — just offer the download
+  var canPreview=(status==='Verified')&&(p.bytes.length<=CAP)&&(info.kind==='image'||info.kind==='audio'||info.kind==='video');
+  var frag=document.createDocumentFragment();
+  if(canPreview){
+    var el;
+    if(info.kind==='image'){el=document.createElement('img');el.className='media-img';el.alt=p.name;}
+    else if(info.kind==='audio'){el=document.createElement('audio');el.className='media-av';el.controls=true;}
+    else{el=document.createElement('video');el.className='media-av';el.controls=true;el.playsInline=true;}
+    el.src=_mediaUrl;frag.appendChild(el);
+  } else {
+    var note=document.createElement('div');note.className='media-note';
+    if(status!=='Verified')note.textContent='Not shown — this file did not pass verification. You can still save it, but it does not match its proof.';
+    else if(info.kind==='other')note.textContent='This file type can’t preview in a browser. Save it to open in its own app.';
+    else note.textContent='This file is large — save it to open.';
+    frag.appendChild(note);
+  }
+  var a=document.createElement('a');a.className='share-btn media-save';a.href=_mediaUrl;a.download=p.name;a.textContent='Save original file · '+p.name;
+  frag.appendChild(a);box.appendChild(frag);box.classList.remove('hidden');
+}
+function renderResult(r,fname){const v=$('verdict');$('details-panel').classList.add('hidden');$('r-meta').classList.add('hidden');$('r-meta').classList.remove('match');const s=r.status;v.className=`verdict ${s.toLowerCase()}`;$('r-icon').innerHTML=iconSvg(s);$('r-status').textContent=s;if(s==='Verified'){markVerified();track('verify_pass',{anchored:!!r.anchored,trust:classifyTrust(r),url_match:r._url_match===true});}else{track('verify_fail',{status:String(s||'unknown')});}let html=esc(r.message);if(s==='Verified'){const m=$('r-meta');m.classList.remove('hidden');let t='Verified';t+=r.anchored?' \u2022 Anchored creation date':' \u2022 Local creation date only';if(r.lineage==='Successor')t+=' \u2022 Lineage successor';else if(r.lineage==='Origin')t+=' \u2022 First in lineage';if(r._url_match===true){t+=' \u2022 Matches this URL';m.classList.add('match');}m.textContent=t;}if(r._url_match===false&&r._url_other){html+=`<span class="url-note">Different win tag. <a href="/v/${esc(r._url_other)}">See it \u2192</a></span>`;}$('r-explain').innerHTML=html;renderTrustBlock(r);const dt=(k,v)=>`<div class="detail"><span class="detail-k">${esc(k)}</span><span class="detail-v">${esc(v)}</span></div>`;if(r.witness||r.born||r.payload_hash){const w=r.witness?.public_key_hex?`${r.witness.public_key_hex.slice(0,8)}\u2026${r.witness.public_key_hex.slice(56)}`:'unknown';const tm=r.anchored?'Anchored \u2014 RFC 3161':'Local \u2014 witness device clock';$('details-panel').innerHTML=[dt('File',fname),dt('Created',r.born||'unknown'),dt('Fingerprint',r.payload_hash||'unknown'),dt('Size',r.size_bytes!=null?`${r.size_bytes} bytes`:'unknown'),dt('Time',tm),dt('Signer',w),dt('Trust class',classifyTrust(r)),dt('Lineage',r.lineage||'Unknown'),dt('Verified by','WebAssembly verifier')].join('');$('details-panel').classList.remove('hidden');}renderMedia(_pendingWinBytes,s);renderHonesty(r);renderShare(r,fname);show('result-state');requestAnimationFrame(()=>requestAnimationFrame(()=>v.classList.add('show')));}
 // ── Share loop ─────────────────────────────────────────────────────
 // The proof travels in the .win file, not a URL. The card and text
 // below are generated from the REAL verifier reading only. A non-
@@ -554,8 +594,8 @@ function wireShare(){
   b('sh-download').addEventListener('click',async function(){track('share',{channel:'download_card'});var blob=await cardBlob();if(!blob)return;var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='win-proof-'+((_shareR&&_shareR.payload_hash)||'card').slice(0,12)+'.png';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},2000);});
 }
 wireShare();
-$('r-again').addEventListener('click',()=>{$('file-input').value='';show('input-state');});
-$('r-seal-cta').addEventListener('click',()=>{$('file-input').value='';$('drop-label').textContent='Drop any file to seal it';show('input-state');});
+$('r-again').addEventListener('click',()=>{clearMedia();$('file-input').value='';show('input-state');});
+$('r-seal-cta').addEventListener('click',()=>{clearMedia();$('file-input').value='';$('drop-label').textContent='Drop any file to seal it';show('input-state');});
 const STATE_ORDER=['Verified','Won','Tampered','Invalid'];
 async function handleBatch(files){show('batch-state');const counts={Verified:0,Won:0,Tampered:0,Invalid:0};$('batch-list').innerHTML='';$('batch-progress').textContent=`0 of ${files.length}`;$('batch-counts').innerHTML=renderCountsHtml(counts,null);wireBF(null);const wonDownloads=[];for(let i=0;i<files.length;i++){let r;try{r=await processOne(files[i]);}catch(e){r={state:'Invalid',name:files[i].name,size:files[i].size};}counts[r.state]=(counts[r.state]||0)+1;if(r.state==='Won'&&r._winBlobUrl)wonDownloads.push({url:r._winBlobUrl,name:r._winName});$('batch-list').insertAdjacentHTML('beforeend',renderRow(r));$('batch-progress').textContent=`${i+1} of ${files.length}`;$('batch-counts').innerHTML=renderCountsHtml(counts,cbf);wireBF(cbf);if((i+1)%8===0)await new Promise(r=>setTimeout(r,0));}applyBF(cbf);for(const d of wonDownloads){const a=document.createElement('a');a.href=d.url;a.download=d.name;document.body.appendChild(a);a.click();a.remove();await new Promise(r=>setTimeout(r,80));}}
 async function processOne(f){const buf=new Uint8Array(await f.arrayBuffer());if(!isWin(buf)){try{const sr=seal_file(f.name,buf);const blob=bytesToBlob(sr.win_bytes,'application/octet-stream');const url=URL.createObjectURL(blob);const winName=sr.filename||(f.name+'.win');return{state:'Won',name:f.name,size:f.size,payload_hash:sr.payload_hash,_winBlobUrl:url,_winName:winName};}catch(e){return{state:'Invalid',name:f.name,size:f.size};}}let r;try{r=rWin(buf);}catch(e){return{state:'Invalid',name:f.name,size:f.size};}return{state:r.status,name:f.name,size:f.size,born:r.born,payload_hash:r.payload_hash,witness:r.witness?.public_key_hex};}

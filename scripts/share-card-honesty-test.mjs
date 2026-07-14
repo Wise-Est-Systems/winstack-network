@@ -137,6 +137,19 @@ ok(/_pendingWinBytes=isWin\(buf\)\?buf:null/.test(html), 'the verify path stashe
 ok(/EMBED_MAX_BYTES=\d+/.test(html) && /b\.length<=EMBED_MAX_BYTES/.test(html),
   'embedding is size-capped (oversized artifacts fall back, never a broken giant URL)');
 
+// 11. Media preview must be safe and honest: preview ONLY on a Verified reading,
+//     rendered ONLY as an <img>/<audio>/<video> from a Blob URL (never inline
+//     markup, so a hostile SVG/HTML payload can't execute), and never for a file
+//     that failed verification.
+ok(/canPreview=\(status==='Verified'\)/.test(html), 'media preview is gated on a Verified reading');
+ok(/createElement\('img'\)[\s\S]{0,400}?createElement\('audio'\)[\s\S]{0,400}?createElement\('video'\)/.test(html),
+  'media is rendered via createElement img/audio/video (safe elements)');
+ok(/el\.src=_mediaUrl/.test(html) && /URL\.createObjectURL\(new Blob\(\[p\.bytes\]/.test(html),
+  'media source is a Blob URL — the bytes are never injected as HTML');
+ok(!/r-media[\s\S]{0,80}?\.innerHTML\s*=\s*[^'"]*p\.bytes/.test(html), 'payload bytes are never written as innerHTML');
+ok(/status!=='Verified'\)note\.textContent='Not shown/.test(html), 'a file that failed verification is not previewed (honest note instead)');
+ok(/function extractPayload\(b\)\{[\s\S]*?b\[0\]===87&&b\[1\]===73&&b\[2\]===78/.test(html), 'extractPayload checks the WIN magic before trusting the container');
+
 console.log('');
 if (failed) { console.error(`share-card-honesty-test: ${failed} assertion(s) FAILED`); process.exit(1); }
 console.log('share-card-honesty-test: all assertions passed');
