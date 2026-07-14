@@ -96,7 +96,7 @@ ok(/seal-actions'\)\.classList\.toggle\('hidden',status!=='Verified'\)/.test(htm
   'post-seal share actions are gated on a Verified seal');
 ok(/_lastSealWin=\(status==='Verified'\)\?Uint8Array\.from\(r\.win_bytes\):null/.test(html),
   'sealed bytes are retained only when the seal is Verified (fails closed)');
-ok(/seal-share'\)\.addEventListener\([\s\S]{0,160}?rWin\(_lastSealWin\)[\s\S]{0,80}?renderResult\(chk,_lastSealName\)/.test(html),
+ok(/seal-share'\)\.addEventListener\([\s\S]{0,160}?rWin\(_lastSealWin\)[\s\S]{0,160}?renderResult\(chk,_lastSealName\)/.test(html),
   '"Verify & share" re-verifies the sealed bytes and lands on the standard result view');
 ok(/function receiverNote\(\)\{[\s\S]*?VERIFY_URL\+'\/v\/'\+_lastSealHash/.test(html),
   'receiver note offers the per-artifact /v/<hash> link');
@@ -121,6 +121,21 @@ ok(/sessionStorage\.setItem\('wnstk_v','1'\)/.test(html) && !/document\.cookie/.
   'verified-session flag uses sessionStorage, not a cookie');
 ok(/if\(status==='Verified'&&hasVerified\(\)\)track\('loop_close'\)/.test(html),
   'loop_close fires ONLY on a Verified seal that followed a verify (the true loop metric)');
+
+// 10. Self-contained share link (#p=). The whole .win rides in the URL fragment,
+//     and the receiver's page must run the REAL verifier on the decoded bytes —
+//     never trust the link. A tampered link therefore reads Tampered, not green.
+ok(/function packedPayload\(\)\{[\s\S]*?#p=/.test(html), 'packedPayload() reads the #p= fragment');
+ok(/boot\(\)\{[\s\S]{0,400}?packedPayload\(\)[\s\S]{0,120}?initPackedFlow\(packed\)[\s\S]{0,160}?return;[\s\S]{0,60}?urlHash\(\)/.test(html),
+  'boot() checks the self-contained link BEFORE the /v/<hash> route');
+ok(/function initPackedFlow\(b64\)\{[\s\S]*?b64urlDecode\(b64\)[\s\S]*?rWin\(bytes\)[\s\S]*?renderResult\(/.test(html),
+  'initPackedFlow decodes then runs the REAL verifier (rWin) on the bytes');
+ok(/if\(!isWin\(bytes\)\)/.test(html), 'initPackedFlow rejects a fragment that is not a .win container');
+ok(/verifyLink\(r\)\{if\(typeof _shareWinB64!=='undefined'&&_shareWinB64\)return VERIFY_URL\+'\/#p='\+_shareWinB64/.test(html),
+  'verifyLink embeds the whole artifact (#p=) when the bytes are present');
+ok(/_pendingWinBytes=isWin\(buf\)\?buf:null/.test(html), 'the verify path stashes the .win bytes for self-contained sharing');
+ok(/EMBED_MAX_BYTES=\d+/.test(html) && /b\.length<=EMBED_MAX_BYTES/.test(html),
+  'embedding is size-capped (oversized artifacts fall back, never a broken giant URL)');
 
 console.log('');
 if (failed) { console.error(`share-card-honesty-test: ${failed} assertion(s) FAILED`); process.exit(1); }

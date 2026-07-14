@@ -339,13 +339,20 @@ function markVerified(){try{sessionStorage.setItem('wnstk_v','1');}catch(e){}}
 function hasVerified(){try{return sessionStorage.getItem('wnstk_v')==='1';}catch(e){return false;}}
 function urlHash(){const m=location.pathname.match(/^\/v\/([a-f0-9]{32,128})\/?$/i);return m?m[1].toLowerCase():null;}
 let mode='homepage';let fetchedBundleJson=null;let fetchedBundleObj=null;let rWin,rBundle;
-async function boot(){try{await init();rWin=recognize_win;rBundle=recognize_bundle;}catch(e){fatal('Verifier unavailable','WebAssembly verifier could not load.');return;}const hash=urlHash();if(hash){mode='urlflow';await initUrlFlow(hash);}else{mode='homepage';initHomepageFlow();}}
+async function boot(){try{await init();rWin=recognize_win;rBundle=recognize_bundle;}catch(e){fatal('Verifier unavailable','WebAssembly verifier could not load.');return;}const packed=packedPayload();if(packed){mode='packed';initPackedFlow(packed);return;}const hash=urlHash();if(hash){mode='urlflow';await initUrlFlow(hash);}else{mode='homepage';initHomepageFlow();}}
+// Self-contained share link: the whole .win rides in the URL fragment (#p=…),
+// which the browser never sends to any server. We decode it and run the REAL
+// verifier on the actual bytes — a tampered link therefore reads Tampered and
+// can never show a green card. The receiver holds the artifact, so they can
+// re-share it onward, closing the loop.
+function packedPayload(){var m=(location.hash||'').match(/^#p=([A-Za-z0-9_\-]+)$/);return m?m[1]:null;}
+function initPackedFlow(b64){let bytes;try{bytes=b64urlDecode(b64);}catch(e){urlFlowLocalOnly('','This shared link is unreadable — verify the file yourself. Drop the .win file you received.');return;}if(!isWin(bytes)){urlFlowLocalOnly('','This shared link does not carry a .win artifact. Drop the .win file you received.');return;}_pendingWinBytes=bytes;let r;try{r=rWin(bytes);}catch(e){fatal('Error',String(e?.message||e));return;}track('verify_start',{mode:'packed',kind:'win'});renderResult(r,winFilename(bytes));}
 async function initUrlFlow(hash){let res;try{res=await fetch(`/v/${hash}.json`,{headers:{'Accept':'application/json'}});}catch(e){urlFlowLocalOnly(hash,'Couldn’t reach Truth.Systems. You can still verify offline — drop the .win file you received.');return;}if(res.status===404){urlFlowLocalOnly(hash,'No public preview is published for this artifact. You can still verify it yourself — drop the .win file you received.');return;}if(!res.ok){urlFlowLocalOnly(hash,'Couldn’t load the public preview. Verify the file yourself — drop the .win file you received.');return;}let bundle;try{fetchedBundleJson=await res.text();bundle=JSON.parse(fetchedBundleJson);}catch(e){urlFlowLocalOnly(hash,'The published preview is unreadable. Verify the file yourself — drop the .win file you received.');return;}if(!bundle.object||!bundle.object.payload_hash||bundle.object.payload_hash.toLowerCase()!==hash){urlFlowLocalOnly(hash,'The published preview does not match this link. Trust only your own check — drop the .win file you received.');return;}fetchedBundleObj=bundle;track('vlink_open',{mode:'preview'});renderPreview(bundle);$('title').innerHTML='Is this file <em>verified</em>?';$('subtitle').textContent='Drop the file you received.';$('drop-label').textContent='Drop the file here';$('preview-block').classList.remove('hidden');show('input-state');}
 // Fail OPEN: a /v/<hash> link with no usable published preview must still pull the
 // receiver into LOCAL verification (Law #3 — verification never depends on
 // Truth.Systems). We advertise no data we don't hold; the only claim is the URL's
 // target fingerprint, which the local check will confirm or deny on drop.
-function urlFlowLocalOnly(hash,note){track('vlink_open',{mode:'local_only'});fetchedBundleJson=null;fetchedBundleObj=null;$('pv-witness').textContent='not published here';$('pv-born').textContent='not published here';$('pv-time').textContent='verify locally';$('pv-hash').textContent=hash;$('title').innerHTML='Verify this <em>.win</em>';$('subtitle').textContent=note;$('drop-label').textContent='Drop the .win file to verify locally';$('preview-block').classList.remove('hidden');show('input-state');}
+function urlFlowLocalOnly(hash,note){track('vlink_open',{mode:'local_only'});fetchedBundleJson=null;fetchedBundleObj=null;$('pv-witness').textContent='in the .win file';$('pv-born').textContent='in the .win file';$('pv-time').textContent='verify locally';$('pv-hash').textContent=hash;$('title').innerHTML='Verify this <em>.win</em>';$('subtitle').textContent=note;$('drop-label').textContent='Drop the .win file to verify locally';$('preview-block').classList.remove('hidden');show('input-state');}
 function renderPreview(b){const c=b.creator_identity||{};const k=c.public_key_hex||'';$('pv-witness').textContent=k?`${k.slice(0,8)}…${k.slice(56)}`:'unknown';$('pv-born').textContent=b.object.origin?.created_at||'unknown';$('pv-time').textContent=b.object.time_event?.time_source==='External'?'Anchored (RFC 3161)':'Local creation date only';$('pv-hash').textContent=b.object.payload_hash;}
 // ── Pre-loaded hero demo: real seal -> real one-byte tamper -> real re-verify.
 // Uses the SAME wasm (seal_file / recognize_win) the product uses. Nothing is
@@ -399,7 +406,7 @@ $('seal-actions').classList.toggle('hidden',status!=='Verified');
 track('seal',{status:String(status),after_verify:hasVerified()});if(status==='Verified'&&hasVerified())track('loop_close');
 show('seal-state');if(status==='Verified')setTimeout(()=>a.click(),50);}
 function receiverNote(){var link=/^[a-f0-9]{32,128}$/.test(_lastSealHash)?VERIFY_URL+'/v/'+_lastSealHash:VERIFY_URL;return'I sent this as a .win file so you can independently check whether the protected content changed after I sealed it. Open it with the W.I.N. verifier or verify it at Truth.Systems — you’ll need this .win file itself.\nVerify: '+link;}
-$('seal-share').addEventListener('click',()=>{if(!_lastSealWin)return;let chk;try{chk=rWin(_lastSealWin);}catch(e){fatal('Error',String(e?.message||e));return;}renderResult(chk,_lastSealName);});
+$('seal-share').addEventListener('click',()=>{if(!_lastSealWin)return;let chk;try{chk=rWin(_lastSealWin);}catch(e){fatal('Error',String(e?.message||e));return;}_pendingWinBytes=_lastSealWin;renderResult(chk,_lastSealName);});
 $('seal-note').addEventListener('click',async function(){track('share',{channel:'receiver_note'});await copyTo(receiverNote());flash(this,'Copied ✓');}.bind($('seal-note')));
 // The .win file IS the proof — send the artifact itself, not a link. On phones the
 // file rides the native share sheet; on desktop it (re)downloads the .win and copies
@@ -409,7 +416,7 @@ async function shareWinFile(){if(!_lastSealWin){return;}var name=_lastSealName;v
 $('seal-sendfile').addEventListener('click',shareWinFile);
 $('seal-again').addEventListener('click',()=>{$('file-input').value='';show('input-state');});
 function wireDrop(){const input=$('file-input');const zone=$('drop');input.setAttribute('multiple','');input.addEventListener('change',()=>{if(input.files?.length)dispatch(input.files);});zone.addEventListener('dragover',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.add('over');});zone.addEventListener('dragleave',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over');});zone.addEventListener('drop',(e)=>{e.preventDefault();e.stopPropagation();zone.classList.remove('over');document.body.classList.remove('body-over');dispatch(e.dataTransfer?.files);});document.body.addEventListener('dragover',(e)=>{e.preventDefault();document.body.classList.add('body-over');});document.body.addEventListener('dragleave',(e)=>{if(!e.relatedTarget)document.body.classList.remove('body-over');});document.body.addEventListener('drop',(e)=>{e.preventDefault();document.body.classList.remove('body-over');dispatch(e.dataTransfer?.files);});}
-async function handleFile(file){show('proc-state');const buf=new Uint8Array(await file.arrayBuffer());if(isWin(buf)){track('verify_start',{mode:mode==='urlflow'?'url':'drop',kind:'win'});let r;try{r=rWin(buf);}catch(e){fatal('Error',String(e?.message||e));return;}if(mode==='urlflow'&&r.payload_hash){const u=urlHash();if(r.payload_hash.toLowerCase()===u)r._url_match=true;else{r._url_match=false;r._url_other=r.payload_hash.toLowerCase();}}renderResult(r,file.name);return;}if(mode==='urlflow'){if(!fetchedBundleJson){$('subtitle').textContent='That was the original file, not the sealed .win. Drop the .win file you received.';show('input-state');return;}track('verify_start',{mode:'url',kind:'bundle'});let r;try{r=rBundle(fetchedBundleJson,buf);}catch(e){fatal('Error',String(e?.message||e));return;}renderResult(r,file.name);return;}await sealFile(file,buf);}
+async function handleFile(file){show('proc-state');const buf=new Uint8Array(await file.arrayBuffer());_pendingWinBytes=isWin(buf)?buf:null;if(isWin(buf)){track('verify_start',{mode:mode==='urlflow'?'url':'drop',kind:'win'});let r;try{r=rWin(buf);}catch(e){fatal('Error',String(e?.message||e));return;}if(mode==='urlflow'&&r.payload_hash){const u=urlHash();if(r.payload_hash.toLowerCase()===u)r._url_match=true;else{r._url_match=false;r._url_other=r.payload_hash.toLowerCase();}}renderResult(r,file.name);return;}if(mode==='urlflow'){if(!fetchedBundleJson){$('subtitle').textContent='That was the original file, not the sealed .win. Drop the .win file you received.';show('input-state');return;}track('verify_start',{mode:'url',kind:'bundle'});let r;try{r=rBundle(fetchedBundleJson,buf);}catch(e){fatal('Error',String(e?.message||e));return;}renderResult(r,file.name);return;}await sealFile(file,buf);}
 // Trust class display: a Verified file with an Unknown signer is NOT
 // the same as a Verified file from an Official key. Never let one
 // read as the other in the UI.
@@ -452,11 +459,20 @@ function renderResult(r,fname){const v=$('verdict');$('details-panel').classList
 // Verified reading never yields a green "VERIFIED" card: the status
 // label and colour come from ONE map, cardConfig(), keyed on r.status.
 const VERIFY_URL='https://truth.systems';
-// Per-artifact verify link. Points the receiver at THIS artifact's page so the
-// proof pulls them into the flow. Falls back to the homepage only if we somehow
-// lack a valid fingerprint. The /v/<hash> page fails open to local verification,
-// so the link is useful even when the proof was never published to our server.
-function verifyLink(r){var h=r&&r.payload_hash?String(r.payload_hash).toLowerCase():'';return /^[a-f0-9]{32,128}$/.test(h)?VERIFY_URL+'/v/'+h:VERIFY_URL;}
+// The share carries the WHOLE artifact. When we hold the .win bytes and they fit
+// in a URL, verifyLink() embeds the entire container in the link fragment (#p=…),
+// so one click self-verifies in the receiver's browser — no file to drop, and
+// nothing uploaded (a URL fragment is never sent to any server). Falls back to the
+// per-artifact /v/<hash> page (then the homepage) when there are no bytes or the
+// artifact is too big to embed.
+let _pendingWinBytes=null,_shareWinB64=null;const EMBED_MAX_BYTES=20000;
+function b64urlEncode(bytes){var s='';for(var i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function b64urlDecode(str){str=String(str).replace(/-/g,'+').replace(/_/g,'/');while(str.length%4)str+='=';var bin=atob(str),out=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out;}
+function computeShareArtifact(){_shareWinB64=null;try{var b=_pendingWinBytes;if(b&&b.length>0&&b.length<=EMBED_MAX_BYTES)_shareWinB64=b64urlEncode(b);}catch(e){_shareWinB64=null;}}
+function winFilename(b){try{if(!b||b.length<8)return'shared.win';var n=b[4]|(b[5]<<8)|(b[6]<<16)|(b[7]*16777216);if(n<=0||n>4096||8+n>b.length)return'shared.win';return new TextDecoder().decode(b.slice(8,8+n))||'shared.win';}catch(e){return'shared.win';}}
+// Self-contained link when we have the bytes (the typeof guard keeps the isolated
+// unit test's fingerprint-only path intact); otherwise the per-artifact /v/<hash>.
+function verifyLink(r){if(typeof _shareWinB64!=='undefined'&&_shareWinB64)return VERIFY_URL+'/#p='+_shareWinB64;var h=r&&r.payload_hash?String(r.payload_hash).toLowerCase():'';return /^[a-f0-9]{32,128}$/.test(h)?VERIFY_URL+'/v/'+h:VERIFY_URL;}
 /*CARD_STATUS_START*/
 const CARD_STATUS={
   Verified:{label:'.win VERIFIED',sub:'Protected content unchanged since sealing.',color:'#c9a84c',verified:true},
@@ -508,11 +524,17 @@ function drawShareCard(r,fname){
   g.fillStyle='#6a6050';g.font='400 13px Inter,Helvetica,Arial,sans-serif';g.fillText('NON ROGAT FIDEM',W-72,H-32);g.textAlign='left';
 }
 function renderShare(r,fname){
-  _shareR=r;_shareF=fname||'file';
+  _shareR=r;_shareF=fname||'file';computeShareArtifact();
   var box=$('r-share');
   // Only a genuine Verified reading opens the share loop.
   if(!r||r.status!=='Verified'){box.classList.add('hidden');return;}
-  drawShareCard(r,fname);track('share_card');box.classList.remove('hidden');
+  drawShareCard(r,fname);track('share_card');
+  // Tell the truth for THIS artifact: a small one rides entirely in the link and
+  // self-verifies on click (nothing uploaded); a big one can't, so send the file.
+  $('sh-note').innerHTML=_shareWinB64
+    ?'This link carries the whole artifact. Anyone who opens it verifies it in their own browser — instantly, with nothing uploaded. The <span class="mono">.win</span> file works the same, even offline.'
+    :'This artifact is large, so the link points to its fingerprint. Send the <span class="mono">.win</span> file itself — the receiver drops it at <span class="mono">truth.systems</span> and verifies, offline if they want.';
+  box.classList.remove('hidden');
 }
 function shareText(r){return'I verified this .win artifact. Its protected content matches what was committed when it was sealed.\nVerify it yourself: '+verifyLink(r)+'\nProof or nothing.';}
 function summaryText(r,fname){var fp=fmtFp(r.payload_hash);return['.win verification — truth.systems','File: '+(fname||'file'),'Result: VERIFIED — protected content unchanged since sealing','Fingerprint (SHA-256): '+(fp[2]||'unknown'),'Signer key: '+((r.witness&&r.witness.public_key_hex)||'unknown'),'Sealed: '+(r.born||'unknown'),'','This proves the file is byte-for-byte unchanged since it was sealed by this key.','It does not prove the signer’s real-world identity or that the contents are true.','Verify it yourself: '+verifyLink(r)].join('\n');}
