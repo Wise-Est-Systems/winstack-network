@@ -1,0 +1,28 @@
+[package]
+name = "win-conformance"
+publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "win-conformance"
+path = "src/bin/win-conformance.rs"
+
+[[bin]]
+name = "win-conformance-generate"
+path = "src/bin/generate.rs"
+
+[dependencies]
+win-transition = { path = "../win-transition" }
+canon-types = { workspace = true }
+wise-crypto = { workspace = true }
+policy-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+
+[lints]
+workspace = true

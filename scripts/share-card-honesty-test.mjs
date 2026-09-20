@@ -122,20 +122,25 @@ ok(/sessionStorage\.setItem\('wnstk_v','1'\)/.test(html) && !/document\.cookie/.
 ok(/if\(status==='Verified'&&hasVerified\(\)\)track\('loop_close'\)/.test(html),
   'loop_close fires ONLY on a Verified seal that followed a verify (the true loop metric)');
 
-// 10. Self-contained share link (#p=). The whole .win rides in the URL fragment,
-//     and the receiver's page must run the REAL verifier on the decoded bytes —
-//     never trust the link. A tampered link therefore reads Tampered, not green.
-ok(/function packedPayload\(\)\{[\s\S]*?#p=/.test(html), 'packedPayload() reads the #p= fragment');
-ok(/boot\(\)\{[\s\S]{0,400}?packedPayload\(\)[\s\S]{0,120}?initPackedFlow\(packed\)[\s\S]{0,160}?return;[\s\S]{0,60}?urlHash\(\)/.test(html),
-  'boot() checks the self-contained link BEFORE the /v/<hash> route');
-ok(/function initPackedFlow\(b64\)\{[\s\S]*?b64urlDecode\(b64\)[\s\S]*?rWin\(bytes\)[\s\S]*?renderResult\(/.test(html),
-  'initPackedFlow decodes then runs the REAL verifier (rWin) on the bytes');
-ok(/if\(!isWin\(bytes\)\)/.test(html), 'initPackedFlow rejects a fragment that is not a .win container');
-ok(/verifyLink\(r\)\{if\(typeof _shareWinB64!=='undefined'&&_shareWinB64\)return VERIFY_URL\+'\/#p='\+_shareWinB64/.test(html),
-  'verifyLink embeds the whole artifact (#p=) when the bytes are present');
-ok(/_pendingWinBytes=isWin\(buf\)\?buf:null/.test(html), 'the verify path stashes the .win bytes for self-contained sharing');
-ok(/EMBED_MAX_BYTES=\d+/.test(html) && /b\.length<=EMBED_MAX_BYTES/.test(html),
-  'embedding is size-capped (oversized artifacts fall back, never a broken giant URL)');
+// 10. The proof is the FILE, never a link. There must be NO artifact-in-URL
+//     machinery — no #p= fragment, no base64 embed, no size cap. verifyLink() is
+//     only ever a proof-free signpost, and sharing the proof SENDS THE .win FILE.
+ok(!/#p=/.test(html), 'no #p= self-contained-link machinery remains');
+ok(!/packedPayload|initPackedFlow|_shareWinB64|EMBED_MAX_BYTES|b64urlEncode|b64urlDecode|computeShareArtifact/.test(html),
+  'artifact-in-URL functions and state are fully removed (proof never rides in a link)');
+ok(/boot\(\)\{[\s\S]{0,300}?const hash=urlHash\(\);if\(hash\)/.test(html) && !/packedPayload\(\)/.test(html),
+  'boot() goes straight to the /v/<hash> route — no packed-link branch');
+{
+  const vlm2 = html.match(/function verifyLink\(r\)\{.*\}/);
+  ok(!!vlm2 && !/[#]|_shareWinB64|b64/.test(vlm2[0]),
+    'verifyLink() carries no proof — no fragment, no bytes, only a /v/<hash> pointer');
+}
+ok(/_pendingWinBytes=isWin\(buf\)\?buf:null/.test(html),
+  'the verify path holds the .win bytes so the FILE itself can be shared');
+ok(/async function nativeShare\(\)\{[\s\S]*?new File\(\[bytes\][\s\S]*?navigator\.share\(\{files:\[file\]/.test(html),
+  'sharing the proof sends the actual .win FILE (navigator.share files), not a link');
+ok(/async function nativeShare\(\)\{[\s\S]*?a\.download=name/.test(html),
+  'nativeShare falls back to saving the .win file when native file-share is unavailable');
 
 // 11. Media preview must be safe and honest: preview ONLY on a Verified reading,
 //     rendered ONLY as an <img>/<audio>/<video> from a Blob URL (never inline

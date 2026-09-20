@@ -236,7 +236,7 @@ h1,.sub{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
       <div class="share-head">Send the proof onward</div>
       <div class="share-card-wrap"><canvas id="share-card" width="1200" height="630" aria-label="Shareable proof card"></canvas></div>
       <div class="share-actions">
-        <button class="share-btn primary" id="sh-native">Share this proof</button>
+        <button class="share-btn primary" id="sh-native">Send the .win file</button>
         <button class="share-btn" id="sh-x">Post to X</button>
         <button class="share-btn" id="sh-li">LinkedIn</button>
         <button class="share-btn" id="sh-bs">Bluesky</button>
@@ -345,14 +345,10 @@ function markVerified(){try{sessionStorage.setItem('wnstk_v','1');}catch(e){}}
 function hasVerified(){try{return sessionStorage.getItem('wnstk_v')==='1';}catch(e){return false;}}
 function urlHash(){const m=location.pathname.match(/^\/v\/([a-f0-9]{32,128})\/?$/i);return m?m[1].toLowerCase():null;}
 let mode='homepage';let fetchedBundleJson=null;let fetchedBundleObj=null;let rWin,rBundle;
-async function boot(){try{await init();rWin=recognize_win;rBundle=recognize_bundle;}catch(e){fatal('Verifier unavailable','WebAssembly verifier could not load.');return;}const packed=packedPayload();if(packed){mode='packed';initPackedFlow(packed);return;}const hash=urlHash();if(hash){mode='urlflow';await initUrlFlow(hash);}else{mode='homepage';initHomepageFlow();}}
-// Self-contained share link: the whole .win rides in the URL fragment (#p=…),
-// which the browser never sends to any server. We decode it and run the REAL
-// verifier on the actual bytes — a tampered link therefore reads Tampered and
-// can never show a green card. The receiver holds the artifact, so they can
-// re-share it onward, closing the loop.
-function packedPayload(){var m=(location.hash||'').match(/^#p=([A-Za-z0-9_\-]+)$/);return m?m[1]:null;}
-function initPackedFlow(b64){let bytes;try{bytes=b64urlDecode(b64);}catch(e){urlFlowLocalOnly('','This shared link is unreadable — verify the file yourself. Drop the .win file you received.');return;}if(!isWin(bytes)){urlFlowLocalOnly('','This shared link does not carry a .win artifact. Drop the .win file you received.');return;}_pendingWinBytes=bytes;let r;try{r=rWin(bytes);}catch(e){fatal('Error',String(e?.message||e));return;}track('verify_start',{mode:'packed',kind:'win'});renderResult(r,winFilename(bytes));}
+async function boot(){try{await init();rWin=recognize_win;rBundle=recognize_bundle;}catch(e){fatal('Verifier unavailable','WebAssembly verifier could not load.');return;}const hash=urlHash();if(hash){mode='urlflow';await initUrlFlow(hash);}else{mode='homepage';initHomepageFlow();}}
+// The proof lives in the .win file, never in a link. A URL is only ever a
+// proof-free signpost (/v/<hash>) that invites the receiver to verify the file
+// they hold. We do NOT carry artifact bytes in a URL — you share the file.
 async function initUrlFlow(hash){let res;try{res=await fetch(`/v/${hash}.json`,{headers:{'Accept':'application/json'}});}catch(e){urlFlowLocalOnly(hash,'Couldn’t reach Truth.Systems. You can still verify offline — drop the .win file you received.');return;}if(res.status===404){urlFlowLocalOnly(hash,'No public preview is published for this artifact. You can still verify it yourself — drop the .win file you received.');return;}if(!res.ok){urlFlowLocalOnly(hash,'Couldn’t load the public preview. Verify the file yourself — drop the .win file you received.');return;}let bundle;try{fetchedBundleJson=await res.text();bundle=JSON.parse(fetchedBundleJson);}catch(e){urlFlowLocalOnly(hash,'The published preview is unreadable. Verify the file yourself — drop the .win file you received.');return;}if(!bundle.object||!bundle.object.payload_hash||bundle.object.payload_hash.toLowerCase()!==hash){urlFlowLocalOnly(hash,'The published preview does not match this link. Trust only your own check — drop the .win file you received.');return;}fetchedBundleObj=bundle;track('vlink_open',{mode:'preview'});renderPreview(bundle);$('title').innerHTML='Is this file <em>verified</em>?';$('subtitle').textContent='Drop the file you received.';$('drop-label').textContent='Drop the file here';$('preview-block').classList.remove('hidden');show('input-state');}
 // Fail OPEN: a /v/<hash> link with no usable published preview must still pull the
 // receiver into LOCAL verification (Law #3 — verification never depends on
@@ -499,20 +495,12 @@ function renderResult(r,fname){const v=$('verdict');$('details-panel').classList
 // Verified reading never yields a green "VERIFIED" card: the status
 // label and colour come from ONE map, cardConfig(), keyed on r.status.
 const VERIFY_URL='https://truth.systems';
-// The share carries the WHOLE artifact. When we hold the .win bytes and they fit
-// in a URL, verifyLink() embeds the entire container in the link fragment (#p=…),
-// so one click self-verifies in the receiver's browser — no file to drop, and
-// nothing uploaded (a URL fragment is never sent to any server). Falls back to the
-// per-artifact /v/<hash> page (then the homepage) when there are no bytes or the
-// artifact is too big to embed.
-let _pendingWinBytes=null,_shareWinB64=null;const EMBED_MAX_BYTES=20000;
-function b64urlEncode(bytes){var s='';for(var i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
-function b64urlDecode(str){str=String(str).replace(/-/g,'+').replace(/_/g,'/');while(str.length%4)str+='=';var bin=atob(str),out=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out;}
-function computeShareArtifact(){_shareWinB64=null;try{var b=_pendingWinBytes;if(b&&b.length>0&&b.length<=EMBED_MAX_BYTES)_shareWinB64=b64urlEncode(b);}catch(e){_shareWinB64=null;}}
-function winFilename(b){try{if(!b||b.length<8)return'shared.win';var n=b[4]|(b[5]<<8)|(b[6]<<16)|(b[7]*16777216);if(n<=0||n>4096||8+n>b.length)return'shared.win';return new TextDecoder().decode(b.slice(8,8+n))||'shared.win';}catch(e){return'shared.win';}}
-// Self-contained link when we have the bytes (the typeof guard keeps the isolated
-// unit test's fingerprint-only path intact); otherwise the per-artifact /v/<hash>.
-function verifyLink(r){if(typeof _shareWinB64!=='undefined'&&_shareWinB64)return VERIFY_URL+'/#p='+_shareWinB64;var h=r&&r.payload_hash?String(r.payload_hash).toLowerCase():'';return /^[a-f0-9]{32,128}$/.test(h)?VERIFY_URL+'/v/'+h:VERIFY_URL;}
+// The proof is the file, not the link. We hold the verified .win bytes so we can
+// SEND THE FILE — that is the share. A link is only a proof-free signpost: the
+// per-artifact /v/<hash> page (falling back to the homepage) which invites the
+// receiver to verify the .win they hold. No artifact bytes ever ride in a URL.
+let _pendingWinBytes=null;
+function verifyLink(r){var h=r&&r.payload_hash?String(r.payload_hash).toLowerCase():'';return /^[a-f0-9]{32,128}$/.test(h)?VERIFY_URL+'/v/'+h:VERIFY_URL;}
 /*CARD_STATUS_START*/
 const CARD_STATUS={
   Verified:{label:'.win VERIFIED',sub:'Protected content unchanged since sealing.',color:'#c9a84c',verified:true},
@@ -564,16 +552,15 @@ function drawShareCard(r,fname){
   g.fillStyle='#6a6050';g.font='400 13px Inter,Helvetica,Arial,sans-serif';g.fillText('NON ROGAT FIDEM',W-72,H-32);g.textAlign='left';
 }
 function renderShare(r,fname){
-  _shareR=r;_shareF=fname||'file';computeShareArtifact();
+  _shareR=r;_shareF=fname||'file';
   var box=$('r-share');
   // Only a genuine Verified reading opens the share loop.
   if(!r||r.status!=='Verified'){box.classList.add('hidden');return;}
   drawShareCard(r,fname);track('share_card');
-  // Tell the truth for THIS artifact: a small one rides entirely in the link and
-  // self-verifies on click (nothing uploaded); a big one can't, so send the file.
-  $('sh-note').innerHTML=_shareWinB64
-    ?'This link carries the whole artifact. Anyone who opens it verifies it in their own browser — instantly, with nothing uploaded. The <span class="mono">.win</span> file works the same, even offline.'
-    :'This artifact is large, so the link points to its fingerprint. Send the <span class="mono">.win</span> file itself — the receiver drops it at <span class="mono">truth.systems</span> and verifies, offline if they want.';
+  // The proof is the file. Sharing means sending the .win itself — the receiver
+  // opens it and sees everything you saw, plus the item and its origin. The link
+  // is only a proof-free signpost.
+  $('sh-note').innerHTML='The proof is the <span class="mono">.win</span> file — so send the file. Whoever opens it sees exactly what you verified, the item itself, and where it came from. The link is just a signpost; it carries no proof.';
   box.classList.remove('hidden');
 }
 function shareText(r){return'I verified this .win artifact. Its protected content matches what was committed when it was sealed.\nVerify it yourself: '+verifyLink(r)+'\nProof or nothing.';}
@@ -582,7 +569,11 @@ function cardBlob(){return new Promise(function(res){var cv=$('share-card');if(!
 function copyTo(text){if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(text);return new Promise(function(res){try{var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();res();}catch(e){res();}});}
 function flash(btn,label){if(!btn)return;var old=btn.textContent;btn.textContent=label;btn.classList.add('copied');setTimeout(function(){btn.textContent=old;btn.classList.remove('copied');},1600);}
 function openIntent(url){window.open(url,'_blank','noopener,noreferrer');}
-async function nativeShare(){track('share',{channel:'native'});var text=shareText(_shareR);try{var blob=await cardBlob();if(blob&&navigator.canShare){var file=new File([blob],'win-proof.png',{type:'image/png'});if(navigator.canShare({files:[file]})){await navigator.share({files:[file],text:text,title:'.win verified'});return;}}}catch(e){}try{if(navigator.share){await navigator.share({text:text,url:verifyLink(_shareR),title:'.win verified'});return;}}catch(e){}await copyTo(text);flash($('sh-native'),'Copied ✓');}
+// Sharing the proof = sending the .win file itself. We share the actual verified
+// bytes as a file (the whole container — item + origin + proof travel together).
+// Only if the platform can't share a file do we fall back to saving it and
+// copying the receiver note. No proof ever rides in a link.
+async function nativeShare(){var text=shareText(_shareR);var bytes=_pendingWinBytes;var name=/\.win$/i.test(_shareF||'')?_shareF:((_shareF||'file')+'.win');if(bytes&&bytes.length){var file=new File([bytes],name,{type:'application/octet-stream'});try{if(navigator.canShare&&navigator.canShare({files:[file]})){track('share',{channel:'win_file',mode:'native'});await navigator.share({files:[file],title:name,text:text});return;}}catch(e){}track('share',{channel:'win_file',mode:'download'});var url=URL.createObjectURL(new Blob([bytes],{type:'application/octet-stream'}));var a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},2000);await copyTo(text);flash($('sh-native'),'Saved + note copied ✓');return;}track('share',{channel:'native'});try{if(navigator.share){await navigator.share({text:text,url:verifyLink(_shareR),title:'.win verified'});return;}}catch(e){}await copyTo(text);flash($('sh-native'),'Copied ✓');}
 function wireShare(){
   var b=function(id){return $(id);};
   b('sh-native').addEventListener('click',nativeShare);

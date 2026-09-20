@@ -1,0 +1,42 @@
+===== ACCEPTED  (accepted-transition.win) =====
+CONTAINER STRUCTURE       VALID
+CONTENT INTEGRITY         VALID
+SIGNATURES                VALID
+SIGNING KEY (recorder)    key:c993166381d67f…
+REAL-WORLD IDENTITY       NOT ESTABLISHED
+AUTHORIZATION             SCOPED TO LocalWrite
+POLICY EVALUATION         NONE
+EXECUTION RECEIPT         PRESENT
+OUTCOME                   EXECUTED
+FACTUAL CLAIMS            NOT INDEPENDENTLY ESTABLISHED
+EXTERNAL DEPENDENCIES     NONE — verified offline
+OVERALL: PASS
+
+===== REFUSED  (refused-transition.win) =====
+CONTAINER STRUCTURE       VALID
+CONTENT INTEGRITY         N/A — no output content
+SIGNATURES                VALID
+SIGNING KEY (recorder)    key:c993166381d67f…
+REAL-WORLD IDENTITY       NOT ESTABLISHED
+AUTHORIZATION             SCOPED TO LocalWrite
+POLICY EVALUATION         NONE
+EXECUTION RECEIPT         NONE — action was refused
+OUTCOME                   REFUSED — AuthorizationScopeExceeded
+FACTUAL CLAIMS            NOT INDEPENDENTLY ESTABLISHED
+EXTERNAL DEPENDENCIES     NONE — verified offline
+OVERALL: PASS
+
+===== TAMPERED  (tampered-example.win) =====
+CONTAINER STRUCTURE       VALID
+CONTENT INTEGRITY         MISMATCH — content altered after sealing
+SIGNATURES                VALID
+SIGNING KEY (recorder)    key:c993166381d67f…
+REAL-WORLD IDENTITY       NOT ESTABLISHED
+AUTHORIZATION             SCOPED TO LocalWrite
+POLICY EVALUATION         NONE
+EXECUTION RECEIPT         PRESENT
+OUTCOME                   EXECUTED
+FACTUAL CLAIMS            NOT INDEPENDENTLY ESTABLISHED
+EXTERNAL DEPENDENCIES     NONE — verified offline
+OVERALL: FAIL (see rows above)
+

@@ -14,6 +14,8 @@ members = [
     "crates/window-api",
     "crates/cli",
     "crates/win-format",
+    "crates/win-transition",
+    "crates/win-conformance",
     "desktop",
 ]
 
@@ -86,6 +88,7 @@ verifier = { path = "crates/verifier" }
 registry-core = { path = "crates/registry-core" }
 window-api = { path = "crates/window-api" }
 win-format = { path = "crates/win-format" }
+win-transition = { path = "crates/win-transition" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

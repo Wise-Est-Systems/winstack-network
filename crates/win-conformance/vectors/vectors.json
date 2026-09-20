@@ -1,0 +1,138 @@
+{
+  "protocol": "WIN-UTP/0.1",
+  "artifact_format": "WIN-UTP-ARTIFACT/0.1",
+  "vectors": [
+    {
+      "id": "accepted-text-summary",
+      "description": "Text document summarized under a LocalWrite grant; executes and verifies.",
+      "file": "accepted-text-summary.win",
+      "expect": {
+        "readable": true,
+        "container_structure_valid": true,
+        "content_integrity": "Valid",
+        "transition_valid": true,
+        "outcome": "executed",
+        "all_checks_pass": true,
+        "authorizer_identity": "not_established"
+      }
+    },
+    {
+      "id": "accepted-object-description",
+      "description": "A JPEG yields an honest object description (type/size/identity), executes, verifies.",
+      "file": "accepted-object-description.win",
+      "expect": {
+        "readable": true,
+        "container_structure_valid": true,
+        "content_integrity": "Valid",
+        "transition_valid": true,
+        "outcome": "executed",
+        "all_checks_pass": true
+      }
+    },
+    {
+      "id": "refused-publish-scope",
+      "description": "Publish requested under a LocalWrite-only grant: refused, no side effect, verifies.",
+      "file": "refused-publish-scope.win",
+      "expect": {
+        "readable": true,
+        "container_structure_valid": true,
+        "content_integrity": "NotApplicable",
+        "transition_valid": true,
+        "outcome": "refused",
+        "refusal_reason": "AuthorizationScopeExceeded",
+        "all_checks_pass": true
+      }
+    },
+    {
+      "id": "refused-policy-deny",
+      "description": "A Deny policy proof refuses the action; the refusal record still verifies.",
+      "file": "refused-policy-deny.win",
+      "expect": {
+        "readable": true,
+        "transition_valid": true,
+        "outcome": "refused",
+        "refusal_reason": "PolicyDenied",
+        "all_checks_pass": true
+      }
+    },
+    {
+      "id": "refused-self-approval",
+      "description": "Proposer identity equals authorizer identity: refused (AI is never the authority).",
+      "file": "refused-self-approval.win",
+      "expect": {
+        "readable": true,
+        "transition_valid": true,
+        "outcome": "refused",
+        "refusal_reason": "SelfApproval",
+        "all_checks_pass": true
+      }
+    },
+    {
+      "id": "refused-subject-mismatch",
+      "description": "The grant is bound to a different subject than the action targets: refused.",
+      "file": "refused-subject-mismatch.win",
+      "expect": {
+        "readable": true,
+        "transition_valid": true,
+        "outcome": "refused",
+        "refusal_reason": "SubjectMismatch",
+        "all_checks_pass": true
+      }
+    },
+    {
+      "id": "tampered-content",
+      "description": "Carried content byte flipped after sealing: content integrity MISMATCH, record still signed.",
+      "file": "tampered-content.win",
+      "expect": {
+        "readable": true,
+        "container_structure_valid": true,
+        "content_integrity": "Mismatch",
+        "transition_valid": true,
+        "outcome": "executed",
+        "all_checks_pass": false
+      }
+    },
+    {
+      "id": "forged-recorder-signature",
+      "description": "Recorder signature replaced: the sealed record fails signature verification.",
+      "file": "forged-recorder-signature.win",
+      "expect": {
+        "readable": true,
+        "container_structure_valid": true,
+        "transition_valid": false,
+        "all_checks_pass": false
+      }
+    },
+    {
+      "id": "wrong-embedded-recorder-key",
+      "description": "Artifact names an attacker's recorder key: signature does not verify under it.",
+      "file": "wrong-embedded-recorder-key.win",
+      "expect": {
+        "readable": true,
+        "transition_valid": false,
+        "all_checks_pass": false
+      }
+    },
+    {
+      "id": "container-damaged",
+      "description": "Container truncated mid-stream: reported as damage, not as a forged proof.",
+      "file": "container-damaged.win",
+      "expect": {
+        "readable": false,
+        "error_contains": "container"
+      }
+    },
+    {
+      "id": "identity-self-asserted",
+      "description": "Authorizer carries a self-signed name claim; with no trust list it reads CLAIMED.",
+      "file": "identity-self-asserted.win",
+      "expect": {
+        "readable": true,
+        "transition_valid": true,
+        "outcome": "executed",
+        "all_checks_pass": true,
+        "authorizer_identity": "self_asserted"
+      }
+    }
+  ]
+}

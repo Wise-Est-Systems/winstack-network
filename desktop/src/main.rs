@@ -283,6 +283,8 @@ fn find_available_port() -> u16 {
 
 fn main() {
     let nd = node_dir();
+    // Tell the API layer (window-api) which node dir to use for identity + trust.
+    std::env::set_var("WISE_NODE_DIR", &nd);
     ensure_node(&nd);
     let registry = load_registry(&nd);
     let shared = Arc::new(Mutex::new(registry));

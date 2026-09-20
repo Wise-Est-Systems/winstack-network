@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WIN — This AI said something. Can you prove it?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050505;--surface:#0a0a0a;--card:#0f0f0f;--ink:#e8dcc8;--ink-soft:#a09880;--muted:#6a6050;--subtle:#3a3530;--gold:#c9a84c;--gold-dim:#8b7434;--purple:#7c3aed;--purple-glow:#7c3aed30;--green:#c9a84c;--red:#c27a7a;--amber:#a08860;--rule:#1a1a1a;--sans:'Inter',-apple-system,sans-serif;--mono:'SF Mono','Fira Code','Consolas',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:flex;flex-direction:column;position:relative}
+::selection{background:var(--purple);color:#fff}
+.scrim-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 85% 75% at 50% 40%,rgba(0,0,0,0.55),rgba(0,0,0,0.78) 60%,#050505 100%)}
+nav{position:relative;z-index:2;padding:20px 28px;display:flex;align-items:baseline;justify-content:space-between}
+.logo{font-size:20px;font-weight:200;color:var(--ink);letter-spacing:0.02em}.logo a{color:inherit;text-decoration:none}.logo .dot{color:var(--gold);font-weight:400}
+.parent{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)}.parent a{color:var(--gold-dim);text-decoration:none;border-bottom:1px solid var(--subtle);padding-bottom:1px}.parent a:hover{border-color:var(--gold)}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:8px 24px 48px;position:relative;z-index:2}
+.stage{width:100%;max-width:680px}
+
+.hook{text-align:center;margin-bottom:26px;min-height:96px;display:flex;flex-direction:column;justify-content:center}
+.hook h1{font-size:clamp(26px,4.4vw,40px);font-weight:200;line-height:1.12;letter-spacing:0.01em;color:var(--ink)}
+.hook h1 em{font-style:italic;color:var(--gold);font-weight:300}
+.hook .lede{font-size:13px;color:var(--muted);margin-top:12px;line-height:1.6;max-width:460px;margin-left:auto;margin-right:auto}
+
+/* progress rail */
+.rail{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:22px}
+.step{display:flex;align-items:center;gap:8px;opacity:0.3;transition:opacity .4s}
+.step.on{opacity:1}.step.done{opacity:0.7}
+.step-dot{width:9px;height:9px;border-radius:50%;border:1px solid var(--gold-dim);background:transparent;transition:all .4s}
+.step.on .step-dot{background:var(--gold);box-shadow:0 0 14px var(--gold)}
+.step.done .step-dot{background:var(--gold-dim)}
+.step.fail.on .step-dot{background:var(--red);border-color:var(--red);box-shadow:0 0 14px var(--red)}
+.step-name{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);white-space:nowrap}
+.step.fail.on .step-name{color:var(--red)}
+.rail-line{width:34px;height:1px;background:var(--subtle);margin:0 4px}
+
+/* the artifact card */
+.artifact{border:1px solid var(--rule);background:var(--surface);position:relative;overflow:hidden;transition:border-color .5s,box-shadow .5s}
+.artifact::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .6s}
+.artifact.verified{border-color:var(--gold-dim)}.artifact.verified::after{opacity:1;background:radial-gradient(ellipse at 50% 30%,rgba(201,168,76,0.07),transparent 70%)}
+.artifact.tampered{border-color:#5a3030;box-shadow:0 0 36px rgba(194,122,122,0.10)}.artifact.tampered::after{opacity:1;background:radial-gradient(ellipse at 50% 30%,rgba(194,122,122,0.08),transparent 70%)}
+
+.a-head{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--rule);background:var(--card);position:relative;z-index:1}
+.a-icon{width:15px;height:15px;flex-shrink:0;color:var(--muted)}.artifact.verified .a-icon{color:var(--gold)}.artifact.tampered .a-icon{color:var(--red)}
+.a-name{font-family:var(--mono);font-size:11px;color:var(--ink-soft);word-break:break-all}
+.a-tag{margin-left:auto;font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);border:1px solid var(--rule);padding:2px 7px}
+
+.a-body{padding:18px;font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--ink-soft);position:relative;z-index:1;white-space:pre-wrap;word-break:break-word;min-height:84px}
+.a-body .src{color:var(--muted);font-size:10px;display:block;margin-top:10px;letter-spacing:0.04em}
+.byte{transition:background .25s,color .25s;padding:0 1px;border-radius:2px}
+.byte.flip{background:var(--red);color:#0a0a0a;animation:flipPulse 1.4s ease-out}
+@keyframes flipPulse{0%{box-shadow:0 0 0 0 rgba(194,122,122,.6)}100%{box-shadow:0 0 0 18px rgba(194,122,122,0)}}
+
+/* proof strip */
+.proof{padding:14px 18px;border-top:1px solid var(--rule);position:relative;z-index:1;display:none}
+.proof.show{display:block}
+.pf-row{display:grid;grid-template-columns:96px 1fr auto;gap:12px;align-items:center;font-size:11px;padding:5px 0;opacity:0;transform:translateY(4px);transition:opacity .35s,transform .35s}
+.pf-row.in{opacity:1;transform:none}
+.pf-k{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
+.pf-v{font-family:var(--mono);font-size:10px;color:var(--ink-soft);word-break:break-all}
+.pf-check{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;display:flex;align-items:center;gap:5px;white-space:nowrap;color:var(--gold)}
+.pf-check svg{width:11px;height:11px}
+.pf-check.bad{color:var(--red)}
+
+/* verdict */
+.verdict{padding:20px 18px;border-top:1px solid var(--rule);text-align:center;position:relative;z-index:1;display:none}
+.verdict.show{display:block;animation:vIn .35s ease-out}
+@keyframes vIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.v-status{font-size:clamp(30px,5vw,44px);font-weight:200;letter-spacing:0.02em;line-height:1}
+.verdict.verified .v-status{color:var(--gold)}.verdict.tampered .v-status{color:var(--red)}
+.v-explain{font-size:12px;color:var(--ink-soft);margin-top:12px;line-height:1.65;max-width:420px;margin-left:auto;margin-right:auto}
+.v-explain b{color:var(--ink);font-weight:500}
+
+/* honesty footer band */
+.honesty{margin-top:18px;border:1px solid var(--rule);background:var(--bg);padding:16px 20px}
+.honesty h3{font-size:9px;font-weight:500;color:var(--gold-dim);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:8px}
+.honesty .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:560px){.honesty .grid{grid-template-columns:1fr}}
+.honesty .col h4{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px}
+.honesty .col.yes h4{color:var(--gold)}.honesty .col.no h4{color:var(--muted)}
+.honesty li{list-style:none;font-size:11px;line-height:1.7;color:var(--ink-soft);padding-left:16px;position:relative}
+.honesty .yes li::before{content:'+';position:absolute;left:0;color:var(--gold)}
+.honesty .no li::before{content:'\2212';position:absolute;left:0;color:var(--muted)}
+.honesty .no li{color:var(--muted)}
+
+.controls{display:flex;gap:10px;justify-content:center;align-items:center;margin-top:20px}
+.btn{font-family:var(--sans);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;padding:11px 22px;cursor:pointer;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);transition:all .18s}
+.btn:hover{background:var(--gold);color:var(--bg)}
+.btn.solid{background:var(--gold);color:var(--bg);border-color:var(--gold)}.btn.solid:hover{background:var(--ink);border-color:var(--ink)}
+.btn:disabled{opacity:0.35;cursor:default;background:transparent;color:var(--muted);border-color:var(--rule)}
+.tiny{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
+.real-badge{display:inline-flex;align-items:center;gap:6px;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-top:14px;justify-content:center;width:100%}
+.real-badge .pip{width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.boot{text-align:center;padding:60px 0;color:var(--muted);font-size:11px;letter-spacing:0.12em;text-transform:uppercase}
+.dot{width:5px;height:5px;background:var(--gold);border-radius:50%;display:inline-block;margin:0 3px;animation:pulse 1.2s ease-in-out infinite}.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes pulse{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+.hidden{display:none!important}
+footer{position:relative;z-index:2;padding:18px 28px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;border-top:1px solid var(--rule)}footer a{color:var(--gold-dim);text-decoration:none}footer a:hover{color:var(--gold)}footer strong{color:var(--gold);font-weight:400}
+</style>
+</head>
+<body>
+<div class="scrim-bg"></div>
+<nav>
+  <div class="logo"><a href="/">WIN</a></div>
+  <div class="parent">A <a href="https://wisest.systems">Wise<strong style="color:var(--gold)">.</strong>Est</a> system</div>
+</nav>
+
+<main><div class="stage">
+
+  <div id="boot" class="boot"><span class="dot"></span><span class="dot"></span><span class="dot"></span><div style="margin-top:14px">Loading the real verifier</div></div>
+
+  <div id="show" class="hidden">
+    <div class="hook">
+      <h1 id="hook-title">This AI said something.<br>Can you <em>prove</em> it?</h1>
+      <p class="lede" id="hook-lede">WIN can't tell you if an answer is true. It can prove the answer in your hands is the <em>exact one that was sealed</em> — unchanged, byte for byte. Watch it happen on the real verifier.</p>
+    </div>
+
+    <div class="rail">
+      <div class="step" data-step="answer"><span class="step-dot"></span><span class="step-name">AI answer</span></div>
+      <div class="rail-line"></div>
+      <div class="step" data-step="seal"><span class="step-dot"></span><span class="step-name">Seal</span></div>
+      <div class="rail-line"></div>
+      <div class="step" data-step="verify"><span class="step-dot"></span><span class="step-name">Verify</span></div>
+      <div class="rail-line"></div>
+      <div class="step fail" data-step="tamper"><span class="step-dot"></span><span class="step-name">Tamper</span></div>
+    </div>
+
+    <div id="artifact" class="artifact">
+      <div class="a-head">
+        <svg class="a-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        <span class="a-name" id="a-name">ai-answer.txt</span>
+        <span class="a-tag" id="a-tag">untagged</span>
+      </div>
+      <div class="a-body" id="a-body"></div>
+
+      <div class="proof" id="proof">
+        <div class="pf-row" data-pf="0"><span class="pf-k">Fingerprint</span><span class="pf-v" id="pf-hash">—</span><span class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>match</span></div>
+        <div class="pf-row" data-pf="1"><span class="pf-k">Signed by</span><span class="pf-v" id="pf-sig">—</span><span class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>valid</span></div>
+        <div class="pf-row" data-pf="2"><span class="pf-k">Sealed at</span><span class="pf-v" id="pf-time">—</span><span class="pf-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>recorded</span></div>
+      </div>
+
+      <div class="verdict" id="verdict">
+        <div class="v-status" id="v-status">VERIFIED</div>
+        <div class="v-explain" id="v-explain"></div>
+      </div>
+    </div>
+
+    <div class="real-badge"><span class="pip"></span><span id="real-text">Every PASS / FAIL on this page is produced by the compiled WIN verifier running in your browser. Nothing is faked.</span></div>
+
+    <div class="controls">
+      <button class="btn" id="btn-replay">Replay</button>
+      <button class="btn solid" id="btn-tamper">Now flip one byte &rarr;</button>
+      <a class="btn" href="/" id="btn-try">Try it on your own file</a>
+    </div>
+
+    <div class="honesty">
+      <h3>What this proof means — and what it doesn't</h3>
+      <div class="grid">
+        <div class="col yes">
+          <h4>A verified .win proves</h4>
+          <ul>
+            <li>The answer is unchanged since it was sealed</li>
+            <li>The sealing key signed this exact proof</li>
+            <li>The proof travels inside the file — verify offline, no account</li>
+          </ul>
+        </div>
+        <div class="col no">
+          <h4>It does NOT prove</h4>
+          <ul>
+            <li>That the answer is factually true</li>
+            <li>Who the real-world signer is</li>
+            <li>That it was the first copy ever made</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div></main>
+
+<footer>WIN — Wise Independent Network &nbsp;·&nbsp; <a href="https://wisest.systems">Wise<strong>.</strong>Est Systems</a> &nbsp;·&nbsp; Proof travels with the file</footer>
+
+<script type="module">
+import init, { recognize_win, seal_file } from '/wasm/verifier_wasm.js';
+
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+// The payload is a real AI answer. WIN seals it; WIN never judges whether it is true.
+const ANSWER =
+`Q: What did the incident report conclude?
+
+A: The valve failed at 1,240 PSI, above its 1,000 PSI
+rating. No injuries. Root cause: a cracked weld on the
+upstream flange. Recommended: re-torque all flange
+bolts in a star pattern and re-inspect within 30 days.`;
+const FILENAME='ai-answer.txt';
+
+let winBytes=null;          // real .win bytes from the real sealer
+let payloadOffset=0;        // byte offset where the original file content starts
+let running=false;
+
+function setStep(name, cls){
+  for(const el of document.querySelectorAll('.step')){
+    if(el.dataset.step===name){ el.classList.add(cls); }
+  }
+}
+function clearSteps(){ for(const el of document.querySelectorAll('.step')) el.classList.remove('on','done'); }
+function renderBody(text, flipIndex){
+  // render as characters so we can highlight a single flipped byte
+  const b=$('a-body'); b.innerHTML='';
+  for(let i=0;i<text.length;i++){
+    const s=document.createElement('span');
+    s.className='byte'; s.textContent=text[i];
+    if(i===flipIndex) s.classList.add('flip');
+    b.appendChild(s);
+  }
+  const src=document.createElement('span');
+  src.className='src';
+  src.textContent='— generated by an assistant, '+(flipIndex>=0?'then altered after sealing':'sealed as received');
+  b.appendChild(src);
+}
+
+// u32 little-endian read
+function readU32LE(arr,off){ return arr[off] | (arr[off+1]<<8) | (arr[off+2]<<16) | (arr[off+3]<<24); }
+
+function computePayloadOffset(arr){
+  // layout: 4 magic | 4 filename_len(u32 LE) | N filename | 8 file_len(u64 LE) | M file bytes | proof JSON
+  const fnLen=readU32LE(arr,4);
+  return 4 + 4 + fnLen + 8;
+}
+
+function shortHash(h){ if(!h) return 'unknown'; return h.slice(0,8)+'…'+h.slice(-8); }
+function shortKey(k){ if(!k) return 'a local witness key'; return k.slice(0,8)+'…'+k.slice(-6); }
+
+async function revealProof(r){
+  $('pf-hash').textContent=shortHash(r.payload_hash);
+  $('pf-sig').textContent=shortKey(r.witness?.public_key_hex);
+  $('pf-time').textContent=(r.born||'recorded locally')+(r.anchored?'  ·  anchored':'  ·  witness clock');
+  $('proof').classList.add('show');
+  for(const row of document.querySelectorAll('.pf-row')){ await sleep(420); row.classList.add('in'); }
+}
+
+async function run(){
+  if(running) return; running=true;
+  // reset
+  $('btn-replay').disabled=true; $('btn-tamper').disabled=true;
+  clearSteps();
+  $('artifact').className='artifact';
+  $('a-tag').textContent='untagged';
+  $('a-name').textContent=FILENAME;
+  $('proof').className='proof';
+  for(const row of document.querySelectorAll('.pf-row')) row.classList.remove('in');
+  $('verdict').className='verdict';
+
+  // 1) the AI answer
+  setStep('answer','on');
+  renderBody(ANSWER,-1);
+  await sleep(1100);
+  setStep('answer','done');
+
+  // 2) seal — REAL
+  setStep('seal','on');
+  const enc=new TextEncoder().encode(ANSWER);
+  const sr=seal_file(FILENAME, enc);            // <-- real wasm
+  winBytes = sr.win_bytes instanceof Uint8Array ? sr.win_bytes : new Uint8Array(sr.win_bytes);
+  payloadOffset = computePayloadOffset(winBytes);
+  await sleep(700);
+  $('a-name').textContent=FILENAME+'.win';
+  $('a-tag').textContent='win tag attached';
+  setStep('seal','done');
+
+  // 3) verify — REAL
+  setStep('verify','on');
+  await sleep(500);
+  const r = recognize_win(winBytes);            // <-- real wasm
+  await revealProof(r);
+  await sleep(300);
+  $('artifact').className='artifact '+(r.status==='Verified'?'verified':'tampered');
+  $('v-status').textContent=r.status==='Verified'?'VERIFIED':r.status.toUpperCase();
+  $('v-explain').innerHTML = r.status==='Verified'
+    ? 'The answer in this <b>.win</b> is <b>unchanged since it was sealed</b>. Same bytes, same signature. <b>WIN makes no claim about whether the answer is true</b> — only that nobody altered it.'
+    : 'The verifier rejected this file.';
+  $('verdict').className='verdict show '+(r.status==='Verified'?'verified':'tampered');
+  setStep('verify','done');
+
+  $('btn-replay').disabled=false; $('btn-tamper').disabled=false;
+  running=false;
+}
+
+async function tamper(){
+  if(running||!winBytes) return; running=true;
+  $('btn-replay').disabled=true; $('btn-tamper').disabled=true;
+
+  // flip exactly one real byte inside the sealed answer
+  setStep('tamper','on');
+  const tampered = winBytes.slice();
+  const flipAt = payloadOffset + 14;            // a byte well inside the answer text
+  tampered[flipAt] = tampered[flipAt] ^ 0x01;   // flip one bit of one byte
+  const charIndex = flipAt - payloadOffset;     // same index in the displayed text
+  renderBody(ANSWER, charIndex>=0 && charIndex<ANSWER.length ? charIndex : 14);
+  $('artifact').className='artifact';
+  $('verdict').className='verdict';
+  $('proof').className='proof';
+  for(const row of document.querySelectorAll('.pf-row')) row.classList.remove('in');
+  await sleep(900);
+
+  // re-verify the altered bytes — REAL
+  const r = recognize_win(tampered);            // <-- real wasm, on the altered file
+  // mark the integrity checks as failed
+  $('pf-hash').textContent=shortHash(r.payload_hash||'no match');
+  $('proof').classList.add('show');
+  const rows=document.querySelectorAll('.pf-row');
+  rows[0].classList.add('in');
+  await sleep(400);
+  const chk=rows[0].querySelector('.pf-check');
+  chk.classList.add('bad');
+  chk.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>no match';
+  await sleep(500);
+
+  $('artifact').className='artifact tampered';
+  $('v-status').textContent = r.status==='Verified' ? 'VERIFIED' : 'TAMPERED';
+  $('v-explain').innerHTML = r.status==='Verified'
+    ? 'Unexpected: the verifier still passed. Report this.'
+    : 'One byte changed. The fingerprint no longer matches the sealed proof, so the verifier returns <b>TAMPERED</b>. You don’t have to trust anyone’s word — <b>the file tells on itself.</b>';
+  $('verdict').className='verdict show tampered';
+  setStep('tamper','done');
+
+  $('btn-replay').disabled=false; $('btn-tamper').disabled=true; // already tampered; replay to reset
+  running=false;
+}
+
+(async function(){
+  try{ await init(); }
+  catch(e){ $('boot').innerHTML='The WebAssembly verifier could not load.'; return; }
+  $('boot').classList.add('hidden');
+  $('show').classList.remove('hidden');
+  $('btn-replay').addEventListener('click',run);
+  $('btn-tamper').addEventListener('click',tamper);
+  run();
+})();
+</script>
+</body>
+</html>

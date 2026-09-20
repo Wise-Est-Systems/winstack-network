@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#050505" />
+<title>Wise — Governed Actions</title>
+<style>
+  /* Matches truth.systems: near-black, warm parchment ink, gold accent,
+     thin type, sharp borders, uppercase micro-labels. Self-contained
+     (system SF fallback — no external font fetch, stays offline-clean). */
+  :root {
+    --bg:#050505; --surface:#0a0a0a; --card:#0f0f0f;
+    --ink:#e8dcc8; --ink-soft:#a09880; --muted:#6a6050; --subtle:#3a3530;
+    --gold:#c9a84c; --gold-dim:#8b7434; --purple:#7c3aed; --purple-glow:#7c3aed30;
+    --red:#c27a7a; --amber:#a08860; --rule:#1a1a1a;
+    /* aliases so existing markup keeps working */
+    --line:#1a1a1a; --panel:#0a0a0a; --ok:#c9a84c; --bad:#c27a7a; --warn:#a08860; --accent:#c9a84c;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --mono:'SF Mono','Fira Code',ui-monospace,Menlo,Consolas,monospace;
+  }
+  * { box-sizing:border-box; }
+  ::selection { background:var(--purple); color:#fff; }
+  body {
+    margin:0; padding:26px 22px 40px; font-family:var(--sans); font-size:15px; line-height:1.55;
+    color:var(--ink); -webkit-font-smoothing:antialiased;
+    background:radial-gradient(ellipse 90% 65% at 50% 22%, #0b0a07, #050505 68%) fixed;
+  }
+  h1 { font-size:20px; font-weight:300; letter-spacing:.02em; color:var(--ink); margin:0 0 4px; }
+  h1 em { font-style:italic; color:var(--gold); font-weight:300; }
+  .sub { color:var(--muted); font-size:12.5px; line-height:1.65; margin:0 0 20px; }
+  .panel { background:var(--surface); border:1px solid var(--rule); padding:20px; margin-bottom:14px; }
+  .hidden { display:none; }
+  .drop {
+    border:1px solid var(--rule); background:var(--surface); padding:48px 24px; text-align:center;
+    color:var(--muted); cursor:pointer; transition:all .25s;
+  }
+  .drop:hover { border-color:var(--gold-dim); background:var(--card); }
+  .drop.over { border-color:var(--gold); background:var(--card); box-shadow:0 0 40px var(--purple-glow); }
+  .drop strong { display:block; font-size:17px; font-weight:300; color:var(--ink); }
+  .drop span { display:inline-block; margin-top:8px; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .row { display:flex; justify-content:space-between; gap:14px; padding:8px 0; border-bottom:1px solid var(--rule); }
+  .row:last-child { border-bottom:0; }
+  .row .k { color:var(--muted); font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding-top:2px; min-width:96px; }
+  .row .v { text-align:right; word-break:break-all; color:var(--ink-soft); font-size:13px; }
+  button { font-family:var(--sans); font-size:11.5px; letter-spacing:.05em; text-transform:uppercase;
+           border:0; border-radius:0; padding:11px 16px; cursor:pointer; transition:all .2s; }
+  .primary { background:var(--gold); color:#050505; font-weight:600; }
+  .primary:hover { background:#dbb95a; }
+  .ghost { background:transparent; color:var(--ink-soft); border:1px solid var(--rule); }
+  .ghost:hover { border-color:var(--gold-dim); color:var(--ink); }
+  .danger { background:transparent; color:var(--red); border:1px solid var(--rule); }
+  .danger:hover { border-color:var(--red); }
+  .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+  pre.matrix { background:#070706; border:1px solid var(--rule); padding:16px; color:var(--ink-soft);
+               font-family:var(--mono); font-size:12px; line-height:1.6; overflow-x:auto; white-space:pre; }
+  .badge { display:inline-block; padding:3px 11px; border-radius:0; font-size:10px; font-weight:600;
+           letter-spacing:.1em; text-transform:uppercase; border:1px solid var(--rule); }
+  .b-ok { color:var(--gold); border-color:var(--gold-dim); }
+  .b-bad { color:var(--red); border-color:#5a3030; }
+  .b-warn { color:var(--amber); border-color:var(--gold-dim); }
+  .summary { background:#070706; border:1px solid var(--rule); padding:14px; white-space:pre-wrap;
+             font-size:12.5px; color:var(--ink-soft); font-family:var(--mono); line-height:1.6; }
+  .note { color:var(--muted); font-size:11.5px; line-height:1.6; margin-top:12px; }
+  a.link { color:var(--gold-dim); text-decoration:none; font-size:12.5px; border-bottom:1px solid var(--subtle); }
+  a.link:hover { border-color:var(--gold); color:var(--gold); }
+  .err { color:var(--red); font-size:12.5px; }
+  input[type=text] { background:var(--card) !important; border:1px solid var(--rule) !important;
+                     color:var(--ink) !important; font-family:var(--mono); border-radius:0; }
+  input[type=text]:focus { outline:none; border-color:var(--gold-dim) !important; }
+  label.k { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+</style>
+</head>
+<body>
+  <h1>W.I.N. — Governed Actions</h1>
+  <p class="sub">Bring a document in. A local proposer suggests a change; you decide; the result is sealed and independently verifiable. <a class="link" href="verify.html">Verify a .win →</a> · <a class="link" href="#" id="open-settings">Identity &amp; trust →</a></p>
+
+  <!-- SETTINGS (identity + trust) -->
+  <section id="settings" class="panel hidden">
+    <h1>Identity &amp; trust</h1>
+    <p class="sub">Your identity is self-asserted — a claim, not proof. A recipient sees it as CLAIMED until they add your key to their own trust list.</p>
+    <div class="row"><span class="k">Your authorizing key</span><span class="v" id="s-key">—</span></div>
+    <label class="k" style="display:block;margin:12px 0 4px">Your name (self-asserted)</label>
+    <input id="s-name" type="text" placeholder="e.g. Acme Ops" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)" />
+    <label class="k" style="display:block;margin:12px 0 4px">Org / context (optional)</label>
+    <input id="s-context" type="text" placeholder="e.g. acme.co" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)" />
+    <div class="actions"><button class="primary" id="s-save">Save identity</button></div>
+
+    <h1 style="margin-top:22px;font-size:16px">Keys you trust</h1>
+    <p class="sub">Web of trust: you vouch for keys you know. A trusted key reads TRUSTED when you verify its artifacts.</p>
+    <div id="s-trust-list"></div>
+    <label class="k" style="display:block;margin:12px 0 4px">Add a key (64-char hex)</label>
+    <input id="s-trust-key" type="text" placeholder="public key" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-family:ui-monospace,monospace;font-size:12px" />
+    <label class="k" style="display:block;margin:10px 0 4px">Label</label>
+    <input id="s-trust-label" type="text" placeholder="e.g. Acme Ops (design partner)" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)" />
+    <div class="actions">
+      <button class="primary" id="s-trust-add">Trust this key</button>
+      <button class="ghost" id="s-close">Close</button>
+    </div>
+  </section>
+
+  <!-- IMPORT -->
+  <section id="import" class="panel">
+    <div id="drop" class="drop">
+      <strong>Bring a document into W.I.N.</strong><br />
+      <span>Drop a file here, or click to choose.</span>
+      <input id="file" type="file" class="hidden" />
+    </div>
+  </section>
+
+  <!-- REVIEW (human decision screen) -->
+  <section id="review" class="panel hidden">
+    <h1>Proposed action — your decision</h1>
+    <p class="sub">Nothing has been created yet. Review, then authorize or cancel.</p>
+    <div class="row"><span class="k">Proposed action</span><span class="v" id="r-action"></span></div>
+    <div class="row"><span class="k">Source</span><span class="v" id="r-source"></span></div>
+    <div class="row"><span class="k">Content identity</span><span class="v" id="r-subject"></span></div>
+    <div class="row"><span class="k">Proposer</span><span class="v" id="r-proposer"></span></div>
+    <div class="row"><span class="k">Authority required</span><span class="v" id="r-authority"></span></div>
+    <div class="row"><span class="k">External actions</span><span class="v" id="r-external"></span></div>
+    <div class="row"><span class="k">Claims</span><span class="v" id="r-claims"></span></div>
+    <p class="sub" style="margin-top:14px">Proposed summary (preview):</p>
+    <div class="summary" id="r-summary"></div>
+    <div class="actions">
+      <button class="primary" id="authorize">Authorize local write</button>
+      <button class="ghost" id="cancel">Cancel</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="result" class="panel hidden">
+    <h1 id="res-title">Summary created</h1>
+    <div id="res-meta"></div>
+    <pre class="matrix" id="res-matrix"></pre>
+    <div id="res-trust"></div>
+    <div class="actions">
+      <button class="primary" id="dl-win">Export .win</button>
+      <button class="ghost" id="verify-win">Verify this .win</button>
+      <button class="danger" id="try-publish">Try to publish it (see refusal)</button>
+      <button class="ghost" id="done">Start over</button>
+    </div>
+    <p class="note">A PASS proves the container is intact, the content matches the sealed hash, and every signature was made by the keys named inside — <strong>not</strong> who owns those keys. That is why REAL-WORLD IDENTITY reads NOT ESTABLISHED.</p>
+  </section>
+
+  <!-- REFUSAL -->
+  <section id="refusal" class="panel hidden">
+    <h1><span class="badge b-warn">ACTION REFUSED</span></h1>
+    <div id="ref-meta"></div>
+    <pre class="matrix" id="ref-matrix"></pre>
+    <div class="actions">
+      <button class="primary" id="dl-refusal">Export refusal proof</button>
+      <button class="ghost" id="back-result">Back</button>
+    </div>
+    <p class="note">The publish never happened — no network call, no file. The refusal itself is signed and sealed, so it can be inspected and verified later.</p>
+  </section>
+
+  <p id="error" class="err"></p>
+
+<script>
+(function () {
+  var API = window.WISE_API_BASE || 'http://127.0.0.1:13845';
+  function authHeaders() { var h = {}; if (window.WISE_TOKEN) h['Authorization'] = 'Bearer ' + window.WISE_TOKEN; return h; }
+  function $(id) { return document.getElementById(id); }
+  function show(id) { ['import','review','result','refusal'].forEach(function (s) { $(s).classList.toggle('hidden', s !== id); }); }
+  function err(m) { $('error').textContent = m || ''; }
+
+  var currentFile = null;
+  var lastWinB64 = null, lastWinName = null, lastRefusalB64 = null, lastRefusalName = null;
+
+  function postFile(path, file) {
+    var fd = new FormData();
+    fd.append('file', file, file.name);
+    return fetch(API + path, { method: 'POST', body: fd, headers: authHeaders() })
+      .then(function (r) { return r.json(); });
+  }
+
+  function b64ToBlob(b64) {
+    var bin = atob(b64), arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: 'application/octet-stream' });
+  }
+  function download(b64, name) {
+    var url = URL.createObjectURL(b64ToBlob(b64));
+    var a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  // ---- Import ----
+  var drop = $('drop'), fileInput = $('file');
+  drop.addEventListener('click', function () { fileInput.click(); });
+  drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
+  drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
+  drop.addEventListener('drop', function (e) {
+    e.preventDefault(); drop.classList.remove('over');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', function () { if (fileInput.files.length) handleFile(fileInput.files[0]); });
+
+  function handleFile(file) {
+    err(''); currentFile = file;
+    postFile('/transition/propose', file).then(function (p) {
+      if (p.error) { err(p.error); return; }
+      $('r-action').textContent = p.proposed_action;
+      $('r-source').textContent = p.source_filename;
+      $('r-subject').textContent = p.subject_content_id;
+      $('r-proposer').textContent = p.proposer;
+      $('r-authority').textContent = p.required_authority;
+      $('r-external').textContent = p.external_actions;
+      $('r-claims').textContent = (p.claims || []).join('; ');
+      $('r-summary').textContent = p.summary_text;
+      show('review');
+    }).catch(function (e) { err('Could not reach the local W.I.N. service: ' + e); });
+  }
+
+  // ---- Authorize ----
+  $('cancel').addEventListener('click', function () { show('import'); });
+  $('authorize').addEventListener('click', function () {
+    if (!currentFile) return;
+    postFile('/transition/summarize', currentFile).then(function (r) {
+      if (r.error) { err(r.error); return; }
+      lastWinB64 = r.win_base64; lastWinName = r.win_filename;
+      $('res-title').textContent = r.outcome === 'EXECUTED' ? 'Summary created' : 'Not created';
+      $('res-meta').innerHTML =
+        row('Outcome', badge(r.outcome === 'EXECUTED' ? 'b-ok' : 'b-bad', r.outcome)) +
+        row('Authorization', 'VALID FOR LocalWrite') +
+        row('Result identity', esc(r.resulting_state_id || '—')) +
+        row('Portable proof', esc(r.win_filename));
+      $('res-matrix').textContent = r.matrix;
+      renderTrustAffordance(r.verification);
+      show('result');
+    }).catch(function (e) { err('Authorize failed: ' + e); });
+  });
+
+  // ---- Result actions ----
+  $('dl-win').addEventListener('click', function () { if (lastWinB64) download(lastWinB64, lastWinName); });
+  $('done').addEventListener('click', function () { show('import'); });
+  $('verify-win').addEventListener('click', function () {
+    if (!lastWinB64) return;
+    var blob = b64ToBlob(lastWinB64);
+    var f = new File([blob], lastWinName, { type: 'application/octet-stream' });
+    postFile('/transition/verify', f).then(function (v) {
+      $('res-matrix').textContent = (v.matrix || '') + '\nOVERALL: ' + (v.all_checks_pass ? 'PASS' : 'FAIL');
+      renderTrustAffordance(v.verification);
+    });
+  });
+  $('try-publish').addEventListener('click', function () {
+    if (!currentFile) return;
+    postFile('/transition/publish', currentFile).then(function (r) {
+      if (r.error) { err(r.error); return; }
+      lastRefusalB64 = r.win_base64; lastRefusalName = r.win_filename;
+      $('ref-meta').innerHTML =
+        row('Requested', 'External publication') +
+        row('Permitted authority', 'Local file creation only') +
+        row('Reason', esc(r.refusal_reason || 'AUTHORIZATION_SCOPE_EXCEEDED')) +
+        row('External side effect', 'NOT EXECUTED') +
+        row('Refusal recorded', 'YES');
+      $('ref-matrix').textContent = r.matrix;
+      show('refusal');
+    }).catch(function (e) { err('Publish attempt failed: ' + e); });
+  });
+
+  // ---- Refusal actions ----
+  $('dl-refusal').addEventListener('click', function () { if (lastRefusalB64) download(lastRefusalB64, lastRefusalName); });
+  $('back-result').addEventListener('click', function () { show('result'); });
+
+  // ---- Settings: identity + trust ----
+  function toggleSettings(open) {
+    $('settings').classList.toggle('hidden', !open);
+    if (open) { loadIdentity(); loadTrust(); }
+  }
+  $('open-settings').addEventListener('click', function (e) { e.preventDefault(); toggleSettings(true); });
+  $('s-close').addEventListener('click', function () { toggleSettings(false); });
+
+  function loadIdentity() {
+    fetch(API + '/identity', { headers: authHeaders() }).then(function (r) { return r.json(); })
+      .then(function (d) {
+        $('s-key').textContent = d.public_key ? (d.public_key.slice(0, 24) + '…') : '—';
+        $('s-name').value = d.name || '';
+        $('s-context').value = d.context || '';
+      }).catch(function () {});
+  }
+  $('s-save').addEventListener('click', function () {
+    var h = authHeaders(); h['Content-Type'] = 'application/json';
+    fetch(API + '/identity', { method: 'POST', headers: h,
+      body: JSON.stringify({ name: $('s-name').value, context: $('s-context').value }) })
+      .then(function (r) { return r.json(); })
+      .then(function () { $('s-save').textContent = 'Saved ✓'; setTimeout(function () { $('s-save').textContent = 'Save identity'; }, 1200); });
+  });
+
+  function loadTrust() {
+    fetch(API + '/trust', { headers: authHeaders() }).then(function (r) { return r.json(); })
+      .then(function (keys) { renderTrust(keys || []); }).catch(function () {});
+  }
+  function renderTrust(keys) {
+    if (!keys.length) { $('s-trust-list').innerHTML = '<p class="sub">No trusted keys yet.</p>'; return; }
+    $('s-trust-list').innerHTML = keys.map(function (k) {
+      return '<div class="row"><span class="v">' + esc(k.label || '(no label)') + '<br><span class="k" style="font-family:ui-monospace,monospace;font-size:11px">' + esc(k.key.slice(0, 24)) + '…</span></span>' +
+        '<span><button class="danger" data-untrust="' + esc(k.key) + '">Remove</button></span></div>';
+    }).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-untrust]'), function (b) {
+      b.addEventListener('click', function () { removeTrust(b.getAttribute('data-untrust')); });
+    });
+  }
+  function addTrust(key, label) {
+    var h = authHeaders(); h['Content-Type'] = 'application/json';
+    return fetch(API + '/trust', { method: 'POST', headers: h, body: JSON.stringify({ key: key, label: label }) })
+      .then(function (r) { if (!r.ok) throw new Error('bad key'); return r.json(); })
+      .then(function (keys) { renderTrust(keys); });
+  }
+  function removeTrust(key) {
+    var h = authHeaders(); h['Content-Type'] = 'application/json';
+    fetch(API + '/trust/remove', { method: 'POST', headers: h, body: JSON.stringify({ key: key }) })
+      .then(function (r) { return r.json(); }).then(renderTrust);
+  }
+  $('s-trust-add').addEventListener('click', function () {
+    var key = $('s-trust-key').value.trim();
+    if (!key) return;
+    addTrust(key, $('s-trust-label').value.trim()).then(function () {
+      $('s-trust-key').value = ''; $('s-trust-label').value = '';
+    }).catch(function () { err('That does not look like a 64-char hex key.'); });
+  });
+
+  // Offer to trust an artifact's authorizer key when it is merely self-asserted.
+  function renderTrustAffordance(verification) {
+    var el = $('res-trust'); el.innerHTML = '';
+    if (!verification || !verification.signing_keys) return;
+    var id = verification.authorizer_identity;
+    var claimed = id && id.SelfAsserted ? id.SelfAsserted.claimed : null;
+    if (!claimed) return; // already Trusted, or nothing claimed
+    var key = verification.signing_keys.authorizer_pk;
+    el.innerHTML = '<p class="note">This key <strong>claims</strong> to be "' + esc(claimed) + '" but you have not trusted it. ' +
+      '<button class="ghost" id="res-trust-btn">Trust this key as "' + esc(claimed) + '"</button></p>';
+    $('res-trust-btn').addEventListener('click', function () {
+      addTrust(key, claimed).then(function () {
+        el.innerHTML = '<p class="note">Trusted. Re-verify to see it read TRUSTED.</p>';
+      });
+    });
+  }
+
+  // helpers
+  function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  function row(k, v) { return '<div class="row"><span class="k">' + esc(k) + '</span><span class="v">' + v + '</span></div>'; }
+  function badge(cls, t) { return '<span class="badge ' + cls + '">' + esc(t) + '</span>'; }
+})();
+</script>
+</body>
+</html>

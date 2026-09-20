@@ -558,6 +558,7 @@ dependencies = [
  "uuid",
  "verifier",
  "win-format",
+ "win-transition",
  "wise-crypto",
 ]
 
@@ -5526,8 +5527,38 @@ dependencies = [
 ]
 
 [[package]]
+name = "win-conformance"
+version = "0.2.0"
+dependencies = [
+ "canon-types",
+ "policy-core",
+ "serde",
+ "serde_json",
+ "uuid",
+ "win-transition",
+ "wise-crypto",
+]
+
+[[package]]
 name = "win-format"
 version = "0.1.0"
+
+[[package]]
+name = "win-transition"
+version = "0.2.0"
+dependencies = [
+ "canon-types",
+ "chrono",
+ "hex",
+ "policy-core",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "uuid",
+ "win-format",
+ "wise-crypto",
+]
 
 [[package]]
 name = "winapi"
@@ -5565,6 +5596,7 @@ name = "window-api"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "base64 0.22.1",
  "canon-types",
  "chrono",
  "graph-index",
@@ -5586,6 +5618,7 @@ dependencies = [
  "uuid",
  "verifier",
  "win-format",
+ "win-transition",
  "wise-crypto",
 ]
 

@@ -12,6 +12,9 @@ use std::sync::{Arc, Mutex};
 use tower_http::cors::CorsLayer;
 use uuid::Uuid;
 
+pub mod identity;
+pub mod transition;
+
 pub type SharedRegistry = Arc<Mutex<Registry>>;
 
 /// Generate a cryptographically random session token (hex string).
@@ -1405,6 +1408,34 @@ pub fn build_router(registry: SharedRegistry, session_token: Option<String>) -> 
         .route("/prove", post(prove_upload).layer(body_limit))
         .route("/seal", post(seal_upload).layer(body_limit))
         .route("/save-and-open", post(save_and_open).layer(body_limit))
+        // Governed-transition surface (self-contained; operate on uploaded bytes).
+        .route(
+            "/transition/propose",
+            post(transition::propose)
+                .layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
+        )
+        .route(
+            "/transition/summarize",
+            post(transition::summarize)
+                .layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
+        )
+        .route(
+            "/transition/publish",
+            post(transition::publish)
+                .layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
+        )
+        .route(
+            "/transition/verify",
+            post(transition::verify)
+                .layer(axum::extract::DefaultBodyLimit::max(256 * 1024 * 1024)),
+        )
+        // Identity + trust management (local, self-contained).
+        .route(
+            "/identity",
+            get(identity::get_identity).post(identity::set_identity),
+        )
+        .route("/trust", get(identity::list_trust).post(identity::add_trust))
+        .route("/trust/remove", post(identity::remove_trust))
         .layer(axum::Extension(token))
         .layer({
             // Only allow requests from the Tauri app origin and localhost

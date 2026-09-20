@@ -1,0 +1,10 @@
+Truth.Systems — example .win payload
+====================================
+This file was sealed into example.win by the WIN verifier.
+
+Reproduce the proof yourself:
+  shasum -a 256 example.txt
+It returns the exact fingerprint the seal reports.
+Change one byte and the seal breaks.
+
+NON ROGAT FIDEM — it does not ask for faith.

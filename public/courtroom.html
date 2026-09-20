@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WIN — "How do I know this wasn't modified?"</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050505;--surface:#0a0a0a;--card:#0f0f0f;--ink:#e8dcc8;--ink-soft:#a09880;--muted:#6a6050;--subtle:#3a3530;--gold:#c9a84c;--gold-dim:#8b7434;--purple:#7c3aed;--purple-glow:#7c3aed30;--red:#c27a7a;--amber:#a08860;--rule:#1a1a1a;--sans:'Inter',-apple-system,sans-serif;--mono:'SF Mono','Fira Code','Consolas',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:flex;flex-direction:column;position:relative}
+::selection{background:var(--purple);color:#fff}
+.scrim-bg{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 88% 72% at 50% 38%,rgba(0,0,0,0.5),rgba(0,0,0,0.8) 62%,#050505 100%)}
+nav{position:relative;z-index:2;padding:20px 28px;display:flex;align-items:baseline;justify-content:space-between}
+.logo{font-size:20px;font-weight:200;color:var(--ink);letter-spacing:0.02em}.logo a{color:inherit;text-decoration:none}.logo .dot{color:var(--gold);font-weight:400}
+.parent{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)}.parent a{color:var(--gold-dim);text-decoration:none;border-bottom:1px solid var(--subtle);padding-bottom:1px}.parent a:hover{border-color:var(--gold)}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:8px 24px 44px;position:relative;z-index:2}
+.stage{width:100%;max-width:640px}
+
+/* spoken line */
+.say{min-height:96px;display:flex;flex-direction:column;justify-content:center;margin-bottom:20px;text-align:center}
+.who{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;transition:color .3s}
+.who.win{color:var(--gold)}
+.quote{font-size:clamp(20px,3.4vw,30px);font-weight:200;line-height:1.25;color:var(--ink);letter-spacing:0.01em}
+.quote em{font-style:italic;color:var(--gold);font-weight:300}
+.quote.q::before{content:'\201C'}.quote.q::after{content:'\201D'}
+
+/* exhibit */
+.exhibit{border:1px solid var(--rule);background:var(--surface);position:relative;overflow:hidden;transition:border-color .5s,box-shadow .5s}
+.exhibit.verified{border-color:var(--gold-dim);box-shadow:0 0 32px rgba(201,168,76,0.08)}
+.exhibit.tampered{border-color:#5a3030;box-shadow:0 0 32px rgba(194,122,122,0.10)}
+.e-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--rule);background:var(--card)}
+.e-stamp{font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-dim);border:1px solid var(--gold-dim);padding:3px 8px;font-weight:500}
+.exhibit.tampered .e-stamp{color:var(--red);border-color:#5a3030}
+.e-name{font-family:var(--mono);font-size:11px;color:var(--ink-soft)}
+.e-kind{margin-left:auto;font-size:8px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);border:1px solid var(--rule);padding:2px 7px}
+.e-body{padding:16px;font-family:var(--mono);font-size:11.5px;line-height:1.7;color:var(--ink-soft);white-space:pre-wrap;min-height:118px}
+.byte{padding:0 1px;border-radius:2px;transition:background .25s,color .25s}
+.byte.flip{background:var(--red);color:#0a0a0a;font-weight:600;animation:flipPulse 1.4s ease-out}
+@keyframes flipPulse{0%{box-shadow:0 0 0 0 rgba(194,122,122,.6)}100%{box-shadow:0 0 0 16px rgba(194,122,122,0)}}
+
+.checks{padding:6px 16px 12px;border-top:1px solid var(--rule)}
+.chk{display:grid;grid-template-columns:20px 1fr auto;gap:10px;align-items:center;padding:8px 0;font-size:11.5px;opacity:0;transform:translateX(-6px);transition:opacity .35s,transform .35s}
+.chk.in{opacity:1;transform:none}
+.chk .ic{width:18px;height:18px;color:var(--muted)}
+.chk.good .ic{color:var(--gold)}.chk.bad .ic{color:var(--red)}
+.chk .k{color:var(--ink-soft)}
+.chk .v{font-family:var(--mono);font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-align:right;white-space:nowrap}
+.chk.good .v{color:var(--gold)}.chk.bad .v{color:var(--red)}
+
+.verdict{padding:18px 16px;border-top:1px solid var(--rule);text-align:center;display:none}
+.verdict.show{display:block;animation:vIn .35s ease-out}
+@keyframes vIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.v-status{font-size:clamp(26px,4.4vw,38px);font-weight:200;letter-spacing:0.02em;line-height:1}
+.exhibit.verified .v-status{color:var(--gold)}.exhibit.tampered .v-status{color:var(--red)}
+.v-sub{font-size:11.5px;color:var(--ink-soft);margin-top:9px;line-height:1.6;max-width:400px;margin-left:auto;margin-right:auto}
+.v-sub b{color:var(--ink);font-weight:500}
+.timer{position:absolute;top:12px;right:16px;font-family:var(--mono);font-size:9px;letter-spacing:0.1em;color:var(--muted);z-index:2}
+
+.honesty{margin-top:16px;border:1px solid var(--rule);background:var(--bg);padding:13px 18px;font-size:10.5px;color:var(--muted);line-height:1.6;text-align:center}
+.honesty b{color:var(--gold-dim);font-weight:500}
+.controls{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.btn{font-family:var(--sans);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;padding:11px 22px;cursor:pointer;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);transition:all .18s;text-decoration:none}
+.btn:hover{background:var(--gold);color:var(--bg)}
+.btn:disabled{opacity:0.35;cursor:default;background:transparent;color:var(--muted);border-color:var(--rule)}
+.boot{text-align:center;padding:60px 0;color:var(--muted);font-size:11px;letter-spacing:0.12em;text-transform:uppercase}
+.dot{width:5px;height:5px;background:var(--gold);border-radius:50%;display:inline-block;margin:0 3px;animation:pulse 1.2s ease-in-out infinite}.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes pulse{0%,100%{opacity:.2;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+.hidden{display:none!important}
+footer{position:relative;z-index:2;padding:18px 28px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;border-top:1px solid var(--rule)}footer a{color:var(--gold-dim);text-decoration:none}footer a:hover{color:var(--gold)}footer strong{color:var(--gold);font-weight:400}
+</style>
+</head>
+<body>
+<div class="scrim-bg"></div>
+<nav>
+  <div class="logo"><a href="/">WIN</a></div>
+  <div class="parent">A <a href="https://wisest.systems">Wise<strong style="color:var(--gold)">.</strong>Est</a> system</div>
+</nav>
+
+<main><div class="stage">
+  <div id="boot" class="boot"><span class="dot"></span><span class="dot"></span><span class="dot"></span><div style="margin-top:14px">Loading the real verifier</div></div>
+
+  <div id="show" class="hidden">
+    <div class="say">
+      <div class="who" id="who">Opposing counsel</div>
+      <div class="quote q" id="quote">How do we know this exhibit wasn't <em>modified?</em></div>
+    </div>
+
+    <div class="exhibit" id="exhibit">
+      <div class="timer" id="timer"></div>
+      <div class="e-head">
+        <span class="e-stamp" id="stamp">Exhibit 7</span>
+        <span class="e-name">witness-statement.txt.win</span>
+        <span class="e-kind" id="kind">sealed copy</span>
+      </div>
+      <div class="e-body" id="body"></div>
+      <div class="checks" id="checks">
+        <div class="chk" id="c0"><span class="ic" id="i0"></span><span class="k">Fingerprint matches the sealed proof</span><span class="v" id="v0">checking</span></div>
+        <div class="chk" id="c1"><span class="ic" id="i1"></span><span class="k">Signature on the proof is valid</span><span class="v" id="v1">checking</span></div>
+        <div class="chk" id="c2"><span class="ic" id="i2"></span><span class="k">Seal time is recorded in the file</span><span class="v" id="v2">checking</span></div>
+      </div>
+      <div class="verdict" id="verdict">
+        <div class="v-status" id="v-status">UNCHANGED</div>
+        <div class="v-sub" id="v-sub"></div>
+      </div>
+    </div>
+
+    <div class="honesty" id="honesty">A verified <b>.win</b> proves the exhibit is <b>unchanged since it was sealed</b> — it does not prove who sealed it or that its contents are true.</div>
+
+    <div class="controls">
+      <button class="btn" id="btn-replay" disabled>Replay</button>
+      <a class="btn" href="/">Seal an exhibit &rarr;</a>
+    </div>
+  </div>
+</div></main>
+
+<footer>WIN — Wise Independent Network &nbsp;·&nbsp; <a href="https://wisest.systems">Wise<strong>.</strong>Est Systems</a> &nbsp;·&nbsp; Don't take their word. Check the file.</footer>
+
+<script type="module">
+import init, { recognize_win, seal_file } from '/wasm/verifier_wasm.js';
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>';
+const CROSS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+const DOT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>';
+
+const STMT =
+`WITNESS STATEMENT
+Date of incident:  2026-05-14
+The valve was last inspected on 2026-05-02.
+Pressure reading at failure:  1,240 PSI.
+Signed:  on-site inspector`;
+const FILE='witness-statement.txt';
+
+let winBytes=null, payloadOffset=0, running=false;
+function readU32LE(a,o){return a[o]|(a[o+1]<<8)|(a[o+2]<<16)|(a[o+3]<<24);}
+function computeOffset(a){const n=readU32LE(a,4);return 4+4+n+8;}
+function render(text, flipIndex){
+  const el=$('body'); el.innerHTML='';
+  for(let i=0;i<text.length;i++){const s=document.createElement('span');s.className='byte';
+    if(flipIndex===i){s.textContent=String.fromCharCode(text.charCodeAt(i)^0x08);s.classList.add('flip');}
+    else s.textContent=text[i];
+    el.appendChild(s);}
+}
+async function runTimer(ms){
+  $('timer').textContent='0.0s';
+  const start=performance.now();
+  return new Promise(res=>{
+    const iv=setInterval(()=>{const t=(performance.now()-start)/1000;
+      if(t>=ms/1000){$('timer').textContent=(ms/1000).toFixed(1)+'s';clearInterval(iv);res();}
+      else $('timer').textContent=t.toFixed(1)+'s';},60);
+  });
+}
+function resetChecks(){
+  for(let i=0;i<3;i++){$('c'+i).className='chk';$('i'+i).innerHTML=DOT;$('v'+i).textContent='checking';}
+}
+
+async function run(){
+  if(running) return; running=true;
+  $('btn-replay').disabled=true;
+  $('exhibit').className='exhibit'; $('verdict').className='verdict';
+  $('who').className='who'; $('who').textContent='Opposing counsel';
+  $('quote').className='quote q'; $('quote').innerHTML='How do we know this exhibit wasn’t <em>modified?</em>';
+  $('stamp').textContent='Exhibit 7'; $('kind').textContent='sealed copy'; $('timer').textContent='';
+  resetChecks();
+  render(STMT,-1);
+  await sleep(2000);
+
+  // counsel for WIN responds
+  $('who').className='who win'; $('who').textContent='You';
+  $('quote').className='quote'; $('quote').innerHTML='Drop it in the verifier. <em>Three seconds.</em>';
+  await sleep(1500);
+
+  // real seal + verify
+  const enc=new TextEncoder().encode(STMT);
+  const sr=seal_file(FILE, enc);
+  winBytes = sr.win_bytes instanceof Uint8Array ? sr.win_bytes : new Uint8Array(sr.win_bytes);
+  payloadOffset = computeOffset(winBytes);
+  const r = recognize_win(winBytes); // real
+
+  // tick the three checks over ~3s while timer runs
+  const timer = runTimer(3000);
+  const ticks=['match','valid','recorded'];
+  for(let i=0;i<3;i++){
+    await sleep(900);
+    $('c'+i).className='chk good in'; $('i'+i).innerHTML=CHECK; $('v'+i).textContent=ticks[i];
+  }
+  await timer;
+
+  $('exhibit').className='exhibit '+(r.status==='Verified'?'verified':'tampered');
+  $('v-status').textContent = r.status==='Verified'?'UNCHANGED':r.status.toUpperCase();
+  $('v-sub').innerHTML = r.status==='Verified'
+    ? 'Same bytes as when it was sealed. <b>The file proves it itself</b> — offline, no account, in three seconds.'
+    : 'The verifier rejected this exhibit.';
+  $('verdict').className='verdict show';
+  await sleep(2400);
+
+  // the twist — the "other side's copy"
+  $('who').className='who'; $('who').textContent='And the copy they edited?';
+  $('quote').className='quote'; $('quote').innerHTML='Same file. <em>One number changed.</em>';
+  $('stamp').textContent='Altered copy'; $('kind').textContent='one byte changed';
+  $('exhibit').className='exhibit';
+  $('verdict').className='verdict';
+  resetChecks();
+  const flip = STMT.indexOf('1,240')+1; // the '1' in 1,240 PSI
+  render(STMT, flip);
+  await sleep(1600);
+
+  const tampered = winBytes.slice();
+  const at = payloadOffset + flip;
+  tampered[at] = tampered[at] ^ 0x08;
+  const bad = recognize_win(tampered); // real
+
+  $('c0').className='chk bad in'; $('i0').innerHTML=CROSS; $('v0').textContent='no match';
+  await sleep(700);
+  $('exhibit').className='exhibit '+(bad.status==='Verified'?'verified':'tampered');
+  $('v-status').textContent = bad.status==='Verified'?'UNCHANGED':'TAMPERED';
+  $('v-sub').innerHTML = bad.status==='Verified'
+    ? 'Unexpected pass — report this.'
+    : 'The fingerprint no longer matches the sealed proof. <b>Inadmissible on its face.</b> You didn’t take their word — you checked the file.';
+  $('verdict').className='verdict show';
+
+  $('btn-replay').disabled=false;
+  running=false;
+}
+
+(async function(){
+  try{ await init(); }catch(e){ $('boot').textContent='The WebAssembly verifier could not load.'; return; }
+  $('boot').classList.add('hidden'); $('show').classList.remove('hidden');
+  $('btn-replay').addEventListener('click',run);
+  run();
+})();
+</script>
+</body>
+</html>

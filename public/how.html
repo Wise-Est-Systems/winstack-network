@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How W.I.N. proves itself — Truth.Systems</title>
+<meta name="description" content="Computers and AI act on their own now. W.I.N. gives every action a receipt that can't be faked — change one letter and it turns red, and anyone can check it themselves. Verify it, don't trust it.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#050505">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="canonical" href="https://truth.systems/how">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Truth.Systems">
+<meta property="og:title" content="Watch a system prove its own honesty.">
+<meta property="og:description" content="Every action a computer takes gets a receipt that can't be faked. Change one letter and it turns red — and anyone can check it themselves, without trusting the machine.">
+<meta property="og:url" content="https://truth.systems/how">
+<meta property="og:image" content="https://truth.systems/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@WiseEstSystems">
+<meta name="twitter:creator" content="@WiseEstSystems">
+<meta name="twitter:title" content="Watch a system prove its own honesty.">
+<meta name="twitter:description" content="Every action a computer takes gets a receipt that can't be faked. Change one letter and it turns red — and anyone can check it themselves. Verify it, don't trust it.">
+<meta name="twitter:image" content="https://truth.systems/og.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050505;--surface:#0a0a0a;--card:#0f0f0f;--ink:#e8dcc8;--ink-soft:#a09880;--muted:#6a6050;--subtle:#3a3530;--gold:#c9a84c;--gold-dim:#8b7434;--purple:#7c3aed;--purple-glow:#7c3aed30;--red:#c27a7a;--amber:#a08860;--rule:#1a1a1a;--sans:'Inter',-apple-system,sans-serif;--mono:'SF Mono','Fira Code','Consolas',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:flex;flex-direction:column;position:relative}
+::selection{background:var(--purple);color:#fff}
+#particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.scrim-bg{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse 85% 75% at 50% 45%,rgba(0,0,0,0.86),rgba(0,0,0,0.66) 55%,rgba(0,0,0,0.40) 100%)}
+nav{position:relative;z-index:2;padding:20px 28px;display:flex;align-items:baseline;justify-content:space-between}
+.logo{font-size:20px;font-weight:200;color:var(--ink);letter-spacing:0.02em}.logo a{color:inherit;text-decoration:none}.logo .dot{color:var(--gold);font-weight:400}
+.parent{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)}.parent a{color:var(--gold-dim);text-decoration:none;border-bottom:1px solid var(--subtle);padding-bottom:1px}.parent a:hover{border-color:var(--gold)}
+
+main{flex:1;position:relative;z-index:2;padding:32px 28px 56px}
+.wrap{width:100%;max-width:760px;margin:0 auto}
+.section{margin-top:64px}
+.eyebrow{font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:16px}
+.eyebrow .n{color:var(--muted);margin-right:8px}
+h1{font-size:clamp(32px,5.4vw,52px);font-weight:200;color:var(--ink);line-height:1.08;letter-spacing:0.01em;max-width:15ch}
+h1 em{font-style:italic;color:var(--gold);font-weight:300}
+h2{font-size:clamp(22px,3.4vw,30px);font-weight:200;color:var(--ink);line-height:1.15;letter-spacing:0.01em;margin-bottom:14px;max-width:22ch}
+h2 em{font-style:italic;color:var(--gold);font-weight:300}
+p{color:var(--ink-soft);line-height:1.72;font-size:14px;font-weight:300}
+p.lede{font-size:16px;color:var(--ink-soft);margin-top:20px;max-width:52ch}
+p.lede b{color:var(--ink);font-weight:400}
+.muted{color:var(--muted)}
+.prose{max-width:56ch}
+a{color:var(--gold);text-decoration:none}
+h1,.lede{text-shadow:0 2px 18px rgba(0,0,0,0.85),0 0 3px rgba(0,0,0,0.6)}
+
+.claim{border:1px solid var(--rule);border-left:1px solid var(--gold-dim);background:var(--surface);padding:20px 22px;margin-top:28px;max-width:58ch}
+.claim .k{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-dim);display:block;margin-bottom:10px}
+.claim p{font-size:13.5px;color:var(--ink-soft);margin:0}
+.claim b{color:var(--ink);font-weight:400}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);background:var(--surface);margin-top:34px}
+.stats .cell{padding:20px 16px;border-right:1px solid var(--rule)}
+.stats .cell:last-child{border-right:none}
+.stats .v{font-family:var(--sans);font-weight:200;font-size:30px;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums}
+.stats .l{font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-top:10px;line-height:1.4}
+@media (max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}.stats .cell:nth-child(2){border-right:none}.stats .cell:nth-child(1),.stats .cell:nth-child(2){border-bottom:1px solid var(--rule)}}
+
+.flow{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.step{flex:1 1 130px;border:1px solid var(--rule);background:var(--surface);padding:15px 16px}
+.step .s{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)}
+.step .t{font-family:var(--mono);font-size:13px;color:var(--ink);margin-top:8px;letter-spacing:0.02em}
+.step .d{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+.step.key .t{color:var(--gold)}
+.step.split .t{color:var(--amber)}
+.lifeline{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.02em;margin-top:16px;line-height:1.8}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+@media (max-width:680px){.grid2{grid-template-columns:1fr}}
+.vc{border:1px solid var(--rule);background:var(--surface)}
+.vc.pass{border-color:var(--gold-dim)}
+.vc.fail{border-color:#5a3030}
+.vc-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--rule)}
+.vc-file{font-family:var(--mono);font-size:12px;color:var(--ink-soft)}
+.vc-file .bad{color:var(--red)}
+.vc-sub{font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+.vc-rows{padding:8px 0}
+.r{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 16px;font-family:var(--mono);font-size:11px}
+.r .lab{color:var(--muted);letter-spacing:0.02em}
+.r .val{letter-spacing:0.05em;color:var(--gold)}
+.r .val.neu{color:var(--ink-soft)}
+.r.hit{background:rgba(194,122,122,0.07)}
+.r.hit .lab{color:var(--ink-soft)}
+.r.hit .val{color:var(--red)}
+.vc-status{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;border-top:1px solid var(--rule)}
+.vc-status .big{font-size:22px;font-weight:200;letter-spacing:0.02em}
+.vc.pass .vc-status .big{color:var(--gold)}
+.vc.fail .vc-status .big{color:var(--red)}
+.vc-status .exit{font-size:9px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted)}
+.between{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.6;max-width:56ch;margin-left:auto;margin-right:auto}
+
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+@media (max-width:680px){.cards{grid-template-columns:1fr}}
+.card{border:1px solid var(--rule);background:var(--surface);padding:20px}
+.card h3{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-dim);font-weight:400;margin-bottom:14px}
+.lang{display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12px;padding:9px 0;border-bottom:1px solid var(--rule);color:var(--ink-soft)}
+.lang:last-child{border-bottom:none}
+.lang .score{color:var(--gold);letter-spacing:0.04em}
+.fp{font-family:var(--mono);font-size:11px;color:var(--muted);word-break:break-all;line-height:1.75}
+.fp b{color:var(--gold);font-weight:400}
+
+.bound{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin-top:22px}
+@media (max-width:560px){.bound{grid-template-columns:1fr}}
+.role{border:1px solid var(--rule);background:var(--surface);padding:18px;text-align:center}
+.role .rn{font-family:var(--mono);font-size:12px;color:var(--ink);letter-spacing:0.04em}
+.role .rk{font-size:10px;color:var(--muted);letter-spacing:0.04em;margin-top:7px;text-transform:uppercase}
+.neq{font-family:var(--mono);font-size:26px;font-weight:200;color:var(--amber);text-align:center}
+.refuse{font-family:var(--mono);font-size:12px;color:var(--red);border:1px solid #5a3030;background:rgba(194,122,122,0.06);padding:13px 16px;margin-top:16px;letter-spacing:0.02em}
+
+.honesty{border:1px solid var(--rule);background:var(--bg);padding:22px 24px;margin-top:22px}
+.honesty .h{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:16px}
+.limits{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:560px){.limits{grid-template-columns:1fr}}
+.limit .tagn{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);display:block;margin-bottom:7px}
+.limit p{font-size:12px;color:var(--muted);margin:0;line-height:1.6}
+
+.cta{border:1px solid var(--gold-dim);background:var(--surface);padding:28px 26px;margin-top:22px;text-align:center}
+.cta h2{margin:0 auto 8px;max-width:none}
+.cta p{max-width:48ch;margin:0 auto 22px}
+.cta-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.cmd{font-family:var(--mono);font-size:13px;background:var(--bg);border:1px solid var(--rule);border-left:1px solid var(--gold-dim);padding:16px 18px;margin:0 auto 22px;max-width:48ch;text-align:left;overflow-x:auto}
+.cmd .line{white-space:nowrap;line-height:2.1}
+.cmd .p{color:var(--gold);margin-right:10px;user-select:none}
+.cmd .c{color:var(--ink-soft)}
+.cmd .cm{color:var(--muted)}
+.btn{display:inline-block;font-family:var(--sans);font-size:12px;letter-spacing:0.08em;text-transform:uppercase;padding:13px 26px;cursor:pointer;text-decoration:none;transition:all 0.18s}
+.btn.primary{background:var(--gold);color:#050505;font-weight:500;border:1px solid var(--gold)}
+.btn.primary:hover{background:#e0bd5a}
+.btn.ghost{background:transparent;border:1px solid var(--rule);color:var(--ink-soft)}
+.btn.ghost:hover{border-color:var(--gold-dim);color:var(--ink)}
+.motto{font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-top:20px}
+.motto em{color:var(--gold-dim);font-style:normal}
+
+footer{position:relative;z-index:2;padding:22px 28px;text-align:center;color:var(--muted);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;border-top:1px solid var(--rule);margin-top:56px}
+footer a{color:var(--gold-dim);text-decoration:none}footer a:hover{color:var(--gold)}footer strong{color:var(--gold);font-weight:400}
+
+:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+<div class="scrim-bg"></div>
+
+<nav>
+  <div class="logo"><a href="/">WIN</a></div>
+  <div class="parent">A <a href="https://wisest.systems">Wise<strong style="color:var(--gold)">.</strong>Est</a> system</div>
+</nav>
+
+<main><div class="wrap">
+
+  <section>
+    <p class="eyebrow">Non rogat fidem &mdash; it does not ask for faith</p>
+    <h1>Watch a system <em>prove</em> its own honesty.</h1>
+    <p class="lede">Computers and AI now make choices and take actions on their own. W.I.N. gives every
+      one of those actions a receipt that <b>can't be faked or quietly changed</b>. Alter a single
+      letter of it later and it turns red &mdash; and anyone can check that for themselves, without
+      trusting the machine that made it.</p>
+
+    <div class="claim">
+      <span class="k">In plain words</span>
+      <p>It seals what a computer did into a receipt no one can forge. It never lets the same party
+        both <b>ask for</b> an action and <b>approve</b> it. And a second, completely separate checker
+        can confirm every receipt &mdash; so you never have to take anyone's word for it.</p>
+      <p style="margin-top:12px;font-size:11.5px;color:var(--muted)"><span style="color:var(--gold-dim)">For engineers:</span>
+        a governed-execution kernel with canonical content identity, structurally-unforgeable role
+        separation, signed refusals, an offline-verifiable .win container, and a second independent
+        verifier in another language.</p>
+    </div>
+
+    <div class="stats">
+      <div class="cell"><div class="v">97</div><div class="l">tests, all passing</div></div>
+      <div class="cell"><div class="v">2</div><div class="l">languages, one verdict</div></div>
+      <div class="cell"><div class="v">8/8</div><div class="l">checks, both agree</div></div>
+      <div class="cell"><div class="v">0</div><div class="l">network calls to verify</div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="eyebrow"><span class="n">01</span> The idea</p>
+    <h2>Someone used to be <em>answerable</em>.</h2>
+    <p class="prose muted">It used to be that one person asked for something, approved it, and did it &mdash;
+      so when it went wrong, you knew exactly who to look at. Their conscience was the record. When
+      software makes the decision, that person is gone, and so is the record. W.I.N. rebuilds it as a set
+      of steps a machine has to follow, where <span style="color:var(--ink-soft)">whoever asks for an
+      action can never be the one who approves it</span>, and every step is written down and sealed.</p>
+    <div class="flow">
+      <div class="step"><div class="s">it starts</div><div class="t">PROPOSE</div><div class="d">A machine's action is only a guess, with its provenance attached.</div></div>
+      <div class="step key"><div class="s">the rules</div><div class="t">CHECK</div><div class="d">Integrity verified, policy evaluated &mdash; fail-closed.</div></div>
+      <div class="step key"><div class="s">separate party</div><div class="t">AUTHORIZE</div><div class="d">A different key grants it. Verifying is not authorizing.</div></div>
+      <div class="step split"><div class="s">or not</div><div class="t">EXECUTE&nbsp;|&nbsp;REFUSE</div><div class="d">It happens, or it is refused &mdash; and the refusal is signed too.</div></div>
+      <div class="step"><div class="s">the receipt</div><div class="t">SEAL</div><div class="d">The whole thing becomes a .win anyone can check.</div></div>
+    </div>
+    <p class="lifeline">observe &rarr; propose &rarr; canonicalize &rarr; evaluate evidence &rarr; evaluate policy &rarr; authorize &rarr; execute | refuse &rarr; capture &rarr; commit state &rarr; record history &rarr; seal</p>
+  </section>
+
+  <section class="section">
+    <p class="eyebrow"><span class="n">02</span> The proof, in one glance</p>
+    <h2>The same receipt. One letter changed. It <em>knows</em>.</h2>
+    <p class="prose muted">On the left, a real sealed action. On the right, the exact same thing with a
+      single letter secretly changed afterward. The checker reads only the file itself &mdash; and
+      catches the change instantly, refusing it. Green means untouched. Red means someone got in.</p>
+    <div class="grid2">
+      <div class="vc pass">
+        <div class="vc-head"><span class="vc-file">proof.win</span><span class="vc-sub">genuine</span></div>
+        <div class="vc-rows">
+          <div class="r"><span class="lab">CONTAINER STRUCTURE</span><span class="val">VALID</span></div>
+          <div class="r"><span class="lab">CONTENT INTEGRITY</span><span class="val">VALID</span></div>
+          <div class="r"><span class="lab">RECORD SEAL</span><span class="val">VALID</span></div>
+          <div class="r"><span class="lab">PROPOSAL SIGNATURE</span><span class="val">VALID</span></div>
+          <div class="r"><span class="lab">AUTHORIZATION SIG</span><span class="val">VALID</span></div>
+          <div class="r"><span class="lab">PROPOSER&ne;AUTHORIZER</span><span class="val">OK</span></div>
+          <div class="r"><span class="lab">EXECUTION RECEIPT</span><span class="val">VALID</span></div>
+          <div class="r"><span class="lab">OUTCOME</span><span class="val neu">EXECUTED</span></div>
+        </div>
+        <div class="vc-status"><span class="big">VERIFIED</span><span class="exit">passed</span></div>
+      </div>
+      <div class="vc fail">
+        <div class="vc-head"><span class="vc-file">proof.win <span class="bad">+1 letter</span></span><span class="vc-sub">one letter changed</span></div>
+        <div class="vc-rows">
+          <div class="r"><span class="lab">CONTAINER STRUCTURE</span><span class="val">VALID</span></div>
+          <div class="r hit"><span class="lab">CONTENT INTEGRITY</span><span class="val">MISMATCH</span></div>
+          <div class="r"><span class="lab">RECORD SEAL</span><span class="val">VALID</span></div>
+          <div class="r"><span class="lab">PROPOSAL SIGNATURE</span><span class="val">VALID</span></div>
+          <div class="r"><span class="lab">AUTHORIZATION SIG</span><span class="val">VALID</span></div>
+          <div class="r"><span class="lab">PROPOSER&ne;AUTHORIZER</span><span class="val">OK</span></div>
+          <div class="r"><span class="lab">EXECUTION RECEIPT</span><span class="val">VALID</span></div>
+          <div class="r"><span class="lab">OUTCOME</span><span class="val neu">EXECUTED</span></div>
+        </div>
+        <div class="vc-status"><span class="big">TAMPERED</span><span class="exit">blocked &middot; fails safe</span></div>
+      </div>
+    </div>
+    <p class="between">The receipt's fingerprint no longer matches what was sealed &mdash; so it can't be trusted.</p>
+  </section>
+
+  <section class="section">
+    <p class="eyebrow"><span class="n">03</span> Why you can believe the verdict</p>
+    <h2>Two independent programs. The same answer. <em>Every time.</em></h2>
+    <p class="prose muted">The whole point of a checker is that you shouldn't have to trust it. So there are
+      two, built separately, by different methods. If they ever disagreed &mdash; even by one letter
+      &mdash; that <span style="color:var(--ink-soft)">is</span> the bug. They never do.</p>
+    <div class="cards">
+      <div class="card">
+        <h3>Checked by both, side by side</h3>
+        <div class="lang"><span>Checker one</span><span class="score">every test passed</span></div>
+        <div class="lang"><span>Checker two &middot; totally separate</span><span class="score">every test passed</span></div>
+        <p class="muted" style="font-size:12px;margin-top:14px">real, tampered, forged, damaged &mdash; both sort every case the same way.</p>
+      </div>
+      <div class="card">
+        <h3>The same thing in always makes the same receipt</h3>
+        <p class="muted" style="font-size:12.5px;margin-bottom:8px">Every sealed receipt has one exact fingerprint. If it came out even slightly different on another computer, the whole thing would fail on purpose.</p>
+        <div class="fp">sha256:<b>6050aad31225b2a104965fc1875e6012<wbr>862a9293e6d35320694acb7900803598</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <p class="eyebrow"><span class="n">04</span> The heart of it</p>
+    <h2>No one approves their <em>own</em> action.</h2>
+    <p class="prose muted">This is the rule that used to live in one person's conscience. Here it's a wall
+      the code can't get around &mdash; like a vault that needs two different people's keys. Whoever asks
+      for an action can never be the one who approves it. Try to be both, and it refuses &mdash; and even
+      the refusal is a sealed record you can check.</p>
+    <div class="bound">
+      <div class="role"><div class="rn">THE ONE ASKING</div><div class="rk">wants something done</div></div>
+      <div class="neq">&ne;</div>
+      <div class="role"><div class="rn">THE ONE APPROVING</div><div class="rk">signs off on it</div></div>
+    </div>
+    <div class="refuse">same party tries to do both &rarr; REFUSED &mdash; you can't approve your own request</div>
+  </section>
+
+  <section class="section">
+    <p class="eyebrow"><span class="n">05</span> What it is <em>not</em></p>
+    <div class="honesty">
+      <div class="h">The honesty is the point</div>
+      <div class="limits">
+        <div class="limit"><span class="tagn">can't do yet</span><p>It proves which digital key signed something &mdash; not which human was holding that key.</p></div>
+        <div class="limit"><span class="tagn">not yet</span><p>No outside security firm has audited it. The two checkers agreeing is our own work, not a stranger's stamp.</p></div>
+        <div class="limit"><span class="tagn">on purpose</span><p>Its word-filters match exact text, not meaning &mdash; a limit we say out loud instead of hiding.</p></div>
+        <div class="limit"><span class="tagn">not our job</span><p>It watches what an AI says and does. It doesn't build, run, or own the AI itself.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="cta">
+      <p class="eyebrow" style="color:var(--gold)">Now go check it</p>
+      <h2 style="color:var(--ink)">Don't take the page's word for it.</h2>
+      <p class="muted">Two ways, both real. Drop a file into the verifier in your browser &mdash; nothing to
+        install, nothing uploaded. Or clone the source and run the whole proof in your terminal:</p>
+      <div class="cmd">
+        <div class="line"><span class="p">$</span><span class="c">git clone https://github.com/Wise-Est-Systems/win</span></div>
+        <div class="line"><span class="p">$</span><span class="c">cd win &amp;&amp; bash verify_it_yourself.sh</span></div>
+      </div>
+      <div class="cta-row">
+        <a class="btn primary" href="/">Verify a file in your browser &rarr;</a>
+        <a class="btn ghost" href="https://github.com/Wise-Est-Systems/win">Read the source</a>
+      </div>
+      <p class="motto" style="margin-top:16px">Terminal path needs Rust &amp; Go. No install? Use the browser button &mdash; it works on any device.</p>
+      <p class="motto"><em>Verify, or it's a lie.</em></p>
+    </div>
+  </section>
+
+</div></main>
+
+<footer>
+  <a href="https://wisest.systems">Wise<strong>.</strong>Est</a> &middot;
+  <a href="/">Verify a file</a> &middot;
+  <a href="https://proofs.systems">What is a .win?</a> &middot;
+  <a href="https://github.com/Wise-Est-Systems">Source</a> &middot;
+  <a href="https://x.com/WiseEstSystems" rel="me" target="_blank">@WiseEstSystems</a><br>
+  WIN &middot; A Wise.Est system &middot; Proof or nothing.
+</footer>
+
+<script>
+(function(){
+  var cv=document.getElementById('particles');if(!cv)return;
+  var gl=cv.getContext('webgl',{antialias:true,powerPreference:'high-performance'})||cv.getContext('experimental-webgl');
+  if(!gl)return;
+  var DPR=Math.min(window.devicePixelRatio||1,1.25);
+  function size(){var w=window.innerWidth,h=window.innerHeight;cv.width=Math.floor(w*DPR);cv.height=Math.floor(h*DPR);cv.style.width=w+'px';cv.style.height=h+'px';gl.viewport(0,0,cv.width,cv.height);}
+  size();window.addEventListener('resize',size);
+  var VS='attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}';
+  var FS=[
+    'precision highp float;',
+    'uniform float uTime;uniform float uScroll;uniform vec2 uMouse;uniform vec2 uRes;',
+    'float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}',
+    'float noise(vec2 p){vec2 i=floor(p),f=fract(p);float a=hash(i),b=hash(i+vec2(1.,0.)),c=hash(i+vec2(0.,1.)),d=hash(i+vec2(1.,1.));vec2 u=f*f*(3.-2.*f);return mix(mix(a,b,u.x),mix(c,d,u.x),u.y);}',
+    'float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*noise(p);p=p*2.02;a*=.5;}return v;}',
+    'void main(){',
+    '  vec2 vUv=gl_FragCoord.xy/uRes;',
+    '  float asp=uRes.x/uRes.y;',
+    '  vec2 p=(vUv-0.5)*vec2(asp,1.0);',
+    '  float t=uTime*0.05*(1.0+uScroll*2.5);',
+    '  vec2 q=vec2(fbm(p*2.0+vec2(0.0,t)),fbm(p*2.0+vec2(5.2,-t)));',
+    '  vec2 r=p*3.0+q*1.7;',
+    '  float field=fbm(r+vec2(t*1.5,0.0));',
+    '  float ln=abs(fract(field*6.0)-0.5);',
+    '  float fil=smoothstep(0.07,0.0,ln);',
+    '  vec2 g=abs(fract(p*9.0+vec2(0.0,t*2.0))-0.5);',
+    '  float grid=smoothstep(0.47,0.5,max(g.x,g.y))*0.12;',
+    '  vec2 m=(uMouse-0.5)*vec2(asp,1.0);',
+    '  float md=length(p-m);',
+    '  float mg=exp(-md*md*5.0);',
+    '  fil+=mg*0.7*smoothstep(0.85,0.0,ln);',
+    '  float pulse=smoothstep(0.88,1.0,fract(field*3.0-t*4.0))*fil;',
+    '  vec3 gold=vec3(0.79,0.66,0.30);',
+    '  vec3 purp=vec3(0.49,0.23,0.93);',
+    '  vec3 col=vec3(0.0);',
+    '  col+=gold*fil*(0.85+mg*1.2);',
+    '  col+=purp*pulse*1.5;',
+    '  col+=gold*grid;',
+    '  col+=purp*mg*0.30;',
+    '  float vig=smoothstep(1.45,0.25,length((vUv-0.5)*2.0));',
+    '  col*=vig;',
+    '  col*=(1.0+uScroll*0.25);',
+    '  gl_FragColor=vec4(col,1.0);',
+    '}'
+  ].join('\n');
+  function sh(ty,src){var s=gl.createShader(ty);gl.shaderSource(s,src);gl.compileShader(s);return s;}
+  var prog=gl.createProgram();
+  gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));
+  gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));
+  gl.linkProgram(prog);
+  if(!gl.getProgramParameter(prog,gl.LINK_STATUS))return;
+  gl.useProgram(prog);
+  var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  var la=gl.getAttribLocation(prog,'a');gl.enableVertexAttribArray(la);gl.vertexAttribPointer(la,2,gl.FLOAT,false,0,0);
+  var uTime=gl.getUniformLocation(prog,'uTime'),uScroll=gl.getUniformLocation(prog,'uScroll'),uMouse=gl.getUniformLocation(prog,'uMouse'),uRes=gl.getUniformLocation(prog,'uRes');
+  var mx=0.5,my=0.5,smx=0.5,smy=0.5,scr=0,tgt=0,hidden=false,t0=null;
+  document.addEventListener('mousemove',function(e){mx=e.clientX/window.innerWidth;my=1.0-e.clientY/window.innerHeight;});
+  document.addEventListener('touchmove',function(e){if(e.touches&&e.touches[0]){mx=e.touches[0].clientX/window.innerWidth;my=1.0-e.touches[0].clientY/window.innerHeight;}},{passive:true});
+  function onScroll(){var d=document.body.scrollHeight-window.innerHeight;tgt=d>0?window.scrollY/d:0;}
+  window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+  document.addEventListener('visibilitychange',function(){hidden=document.hidden;});
+  function frame(ts){
+    requestAnimationFrame(frame);
+    if(hidden)return;
+    if(t0===null)t0=ts;
+    var t=(ts-t0)*0.001;
+    scr+=(tgt-scr)*0.05;smx+=(mx-smx)*0.06;smy+=(my-smy)*0.06;
+    gl.uniform1f(uTime,t);gl.uniform1f(uScroll,scr);gl.uniform2f(uMouse,smx,smy);gl.uniform2f(uRes,cv.width,cv.height);
+    gl.drawArrays(gl.TRIANGLES,0,3);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

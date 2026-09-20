@@ -1,0 +1,31 @@
+── building the win CLI ──────────────────────────────────────────
+  built: /Users/thekingflame/Desktop/WinStack_Network_v1/target/debug/win
+
+── 1. SEAL ──────────────────────────────────────────────────────
+  Sealed        answer.txt
+  →             answer.txt.win
+  Share URL     https://winstack.dev/v/bfefe031fea096a1ac95e53b0c7d6dcfebbe935eb9208d6400129655c5152112
+
+
+── 2. VERIFY (expect: Verified) ─────────────────────────────────
+  Verified      sha256:bfefe031fea0  answer.txt.win
+    The file matches the proof inside this .win container. No byte changes detected.
+  exit code: 0
+
+── 3. TAMPER — flip one byte inside the sealed container ─────────
+  changed the sealed answer from $12,400 to $12,500 (1 byte at offset 82)
+
+── 4. VERIFY AGAIN (expect: Tampered, nonzero exit) ─────────────
+  Tampered      answer.txt.win
+    The file no longer matches the proof inside this .win container. At least one byte changed.
+    file      sha256:a48fc28b336130ccdb13550d41138e343ae909bf8f11bc5ebe1504fdb9bebb3c
+    expected  sha256:bfefe031fea096a1ac95e53b0c7d6dcfebbe935eb9208d6400129655c5152112
+  exit code: 1  (nonzero = caught)
+
+── 5. SAME CHECK WITH NO NETWORK (P12: verifies with the org gone) 
+  verifying with no_proxy='*' http(s)_proxy pointed at a dead port...
+  Verified      sha256:bfefe031fea0  clean.txt.win
+    The file matches the proof inside this .win container. No byte changes detected.
+  exit code: 0  (network unreachable, still verified)
+
+── done. Every line above is real CLI output on real bytes. ─────

@@ -3,6 +3,11 @@ use clap::{Parser, Subcommand};
 use std::io::Read as _;
 use std::path::PathBuf;
 use wise_crypto as crypto;
+use win_transition::{
+    govern, render_verification_matrix, seal_win, verify_win, Authority, Authorizer, Executor as _,
+    FilesystemExecutor, GovernRequest, PortableProof, Recorder, RequestedAction,
+    TransitionPublicKeys,
+};
 
 // Shared node loading logic
 #[path = "../node.rs"]
@@ -53,6 +58,30 @@ enum Commands {
         file: PathBuf,
         #[arg(long)]
         tsa_root: Vec<String>,
+    },
+    /// Summarize a document under W.I.N. governance → a `.win` transition
+    /// artifact. A local proposer suggests the summary; a scoped local-write
+    /// authorization permits it; the executor writes it; the whole governed
+    /// transition is sealed and can be verified with `win verify`.
+    Summarize {
+        /// The source document to summarize.
+        file: PathBuf,
+        /// Output path for the sealed `.win` artifact.
+        /// Default: `<file>.summary.win` beside the source.
+        #[arg(long)]
+        out: Option<PathBuf>,
+        /// Also write the plain summary text to this path.
+        /// Default: `<file>.summary.txt` beside the source.
+        #[arg(long)]
+        summary_out: Option<PathBuf>,
+        /// Self-asserted name for the authorizing identity (e.g. "Acme Ops").
+        /// Attached as a CLAIM — a recipient sees it as SELF-ASSERTED until they
+        /// choose to trust the key. Persisted after first use.
+        #[arg(long = "as")]
+        as_name: Option<String>,
+        /// Self-asserted context/org for the authorizing identity.
+        #[arg(long)]
+        context: Option<String>,
     },
     /// Inspect a .win file — show contents and proof details without extracting
     Inspect { file: PathBuf },
@@ -489,6 +518,62 @@ fn verify_bundle(artifact_bytes: &[u8], bundle: &ProofBundle, tsa_root: &[String
     }
 }
 
+/// Let the CLI's trusted-keys list answer identity questions for the engine.
+impl win_transition::TrustLookup for trust::TrustStore {
+    fn is_trusted(&self, key_hex: &str) -> bool {
+        trust::TrustStore::is_trusted(self, key_hex)
+    }
+    fn label_for(&self, key_hex: &str) -> Option<String> {
+        trust::TrustStore::label_for(self, key_hex).map(std::string::ToString::to_string)
+    }
+}
+
+/// Load — or create on first use — the persistent authorizer identity key,
+/// stored owner-only at `<node_dir>/win-identity.json`.
+fn load_or_create_identity(node_dir: &std::path::Path) -> (uuid::Uuid, [u8; 32]) {
+    #[derive(serde::Serialize, serde::Deserialize)]
+    struct Stored {
+        identity_id: uuid::Uuid,
+        secret_hex: String,
+    }
+    let path = node_dir.join("win-identity.json");
+    if let Ok(txt) = std::fs::read_to_string(&path) {
+        if let Ok(s) = serde_json::from_str::<Stored>(&txt) {
+            if let Ok(bytes) = hex::decode(&s.secret_hex) {
+                if let Ok(arr) = <[u8; 32]>::try_from(bytes.as_slice()) {
+                    return (s.identity_id, arr);
+                }
+            }
+        }
+    }
+    let kp = crypto::KeyPair::generate();
+    let secret = kp.secret_key_bytes();
+    let id = uuid::Uuid::new_v4();
+    let _ = std::fs::create_dir_all(node_dir);
+    let stored = Stored {
+        identity_id: id,
+        secret_hex: hex::encode(secret),
+    };
+    if let Ok(json) = serde_json::to_string(&stored) {
+        let _ = std::fs::write(&path, json);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let _ = std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600));
+        }
+    }
+    (id, secret)
+}
+
+/// Build a path beside `file` with `suffix` appended to its full name
+/// (e.g. `report.pdf` + `.summary.win` → `report.pdf.summary.win`).
+fn sibling(file: &std::path::Path, suffix: &str) -> PathBuf {
+    let name = file.file_name().unwrap_or_default().to_string_lossy();
+    file.parent()
+        .unwrap_or_else(|| std::path::Path::new("."))
+        .join(format!("{name}{suffix}"))
+}
+
 fn main() {
     let cli = Cli::parse();
 
@@ -650,6 +735,32 @@ fn main() {
                     }
                     std::process::exit(1);
                 });
+            // W.I.N. Unified Transition Protocol artifact? Route to the
+            // governed-transition verifier and print its matrix. Non-transition
+            // `.win` files (the existing seal format) fall through unchanged.
+            if proof_text.contains("WIN-UTP-ARTIFACT") {
+                // Resolve identity against this machine's trusted-keys list, so a
+                // trusted authorizer key reads TRUSTED rather than SELF-ASSERTED.
+                let trust_store = trust::TrustStore::load(&resolve_node_dir());
+                match win_transition::verify_win_with_trust(&raw, &trust_store) {
+                    Ok(v) => {
+                        print!("{}", render_verification_matrix(&v));
+                        if v.all_checks_pass() {
+                            println!("OVERALL: PASS   {}", file.display());
+                        } else {
+                            println!("OVERALL: FAIL   {}", file.display());
+                            std::process::exit(1);
+                        }
+                    },
+                    Err(e) => {
+                        println!("  Invalid       {}", file.display());
+                        println!("    {}", e);
+                        std::process::exit(1);
+                    },
+                }
+                return;
+            }
+
             let bundle: ProofBundle = serde_json::from_str(&proof_text).unwrap_or_else(|e| {
                 println!("  Invalid       {}", file.display());
                 println!("    This .win container is not valid or cannot be verified.");
@@ -662,6 +773,112 @@ fn main() {
                 &tsa_root,
                 &file.display().to_string(),
             );
+        },
+
+        // ── SUMMARIZE: governed document transformation → .win transition ──
+        Commands::Summarize {
+            file,
+            out,
+            summary_out,
+            as_name,
+            context,
+        } => {
+            if !file.exists() {
+                eprintln!("ERROR: file not found: {}", file.display());
+                std::process::exit(2);
+            }
+            let source = std::fs::read(&file).unwrap_or_else(|e| {
+                eprintln!("ERROR: could not read file: {}", e);
+                std::process::exit(2);
+            });
+            let subject = format!("sha256:{}", crypto::sha256_hex(&source));
+            let summary = win_transition::proposers::propose_summary(&source);
+
+            // The authorizer uses a PERSISTENT identity key from the node dir, so
+            // the same "who authorized" key is reused across runs (and can be
+            // trusted by a recipient). Executor/recorder stay session-scoped.
+            let node_dir = resolve_node_dir();
+            let (authz_id, authz_secret) = load_or_create_identity(&node_dir);
+            let authorizer =
+                Authorizer::new(authz_id, crypto::KeyPair::from_secret_bytes(&authz_secret));
+            let proposer_id = uuid::Uuid::new_v4();
+            let executor = FilesystemExecutor::new(uuid::Uuid::new_v4(), crypto::KeyPair::generate());
+            let recorder = Recorder::new(uuid::Uuid::new_v4(), crypto::KeyPair::generate());
+
+            let summary_path = summary_out.unwrap_or_else(|| sibling(&file, ".summary.txt"));
+            let grant = authorizer.issue_grant(Authority::LocalWrite, &subject);
+            let action = RequestedAction::new(
+                "create_file",
+                &subject,
+                summary_path.to_string_lossy(),
+                Authority::LocalWrite,
+            );
+            let transition = govern(
+                GovernRequest {
+                    proposer_identity_id: proposer_id,
+                    proposer_model: Some(AiModelInfo {
+                        model_name: "win-local-extractive-proposer".to_string(),
+                        model_version: "0.1".to_string(),
+                    }),
+                    prior_state_id: Some(subject.clone()),
+                    subject_content_id: subject.clone(),
+                    action,
+                    grant,
+                    authorizer_public_key: authorizer.public_key_hex(),
+                    policy: None,
+                    policy_evaluator_public_key: None,
+                    content: summary.as_bytes(),
+                },
+                &executor,
+                &recorder,
+            );
+
+            let keys = TransitionPublicKeys::new(
+                recorder.public_key_hex(),
+                authorizer.public_key_hex(),
+                executor.public_key_hex(),
+                None,
+            );
+            let out_path = out.unwrap_or_else(|| sibling(&file, ".summary.win"));
+            let internal = out_path
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string();
+            let executed = transition.was_executed();
+            // Self-asserted identity for the persistent authorizer key. A CLAIM,
+            // not proof — a recipient sees SELF-ASSERTED until they trust the key.
+            let identity = win_transition::assert_identity(
+                &crypto::KeyPair::from_secret_bytes(&authz_secret),
+                as_name.clone(),
+                context.clone(),
+                win_transition::Persistence::Persistent,
+            );
+            let proof =
+                PortableProof::new(transition, keys).with_identities(vec![identity]);
+            let win_bytes = seal_win(&proof, &internal, summary.as_bytes());
+            std::fs::write(&out_path, &win_bytes).unwrap_or_else(|e| {
+                eprintln!("ERROR: could not write .win: {}", e);
+                std::process::exit(2);
+            });
+
+            if executed {
+                println!("Summary created");
+                println!("  source integrity: VALID (sha256 identity computed at import)");
+                println!("  authorization:    VALID FOR LocalWrite");
+                println!("  execution:        COMPLETED");
+                println!("  summary text:     {}", summary_path.display());
+                println!("  portable proof:   {}", out_path.display());
+                println!();
+                match verify_win(&win_bytes) {
+                    Ok(v) => print!("{}", render_verification_matrix(&v)),
+                    Err(e) => println!("  (verification error: {e})"),
+                }
+            } else {
+                println!("Summary was NOT created — the governed transition was refused.");
+                println!("  portable refusal proof: {}", out_path.display());
+                std::process::exit(1);
+            }
         },
 
         // ── INSPECT: show what's inside a .win ──

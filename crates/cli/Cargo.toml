@@ -22,6 +22,7 @@ graph-index = { workspace = true }
 verifier = { workspace = true }
 registry-core = { workspace = true }
 win-format = { path = "../win-format" }
+win-transition = { path = "../win-transition" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 uuid = { workspace = true }

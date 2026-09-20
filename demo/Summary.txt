@@ -1,0 +1,7 @@
+SUMMARY (win-local-extractive-proposer v0.1)
+
+Lead: This Agreement is entered into between Party A and Party B on the terms below.
+
+Source statistics: 48 words across 4 lines.
+
+Note: this summary is derived mechanically from the identified source. It is not an independent validation of the source's factual claims.
